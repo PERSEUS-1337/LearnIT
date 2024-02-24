@@ -30,7 +30,7 @@
 			{#if page.status > 499}
 				<a href="/login" class="btn btn-info btn-xs">Back to Login Page</a>
 			{:else}
-				<a href="/app" class="btn btn-info btn-xs">Back to App</a>
+				<a href="/" class="btn btn-info btn-xs">Back to App</a>
 			{/if}
 		</div>
 	</div>

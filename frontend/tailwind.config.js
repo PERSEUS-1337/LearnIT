@@ -18,6 +18,17 @@ export default {
 					success: '#36d399',
 					warning: '#fbbd23',
 					error: '#f87272'
+				},
+				learnit_theme: {
+					primary: '#0E8388',
+					secondary: '#2E4F4F',
+					accent: '#CBE4DE',
+					neutral: '#2C3333',
+					'base-100': '#efefef',
+					info: '#7ED4FC',
+					success: '#6EE7B7',
+					warning: '#FDBA72',
+					error: '#F87272'
 				}
 			}
 		]
