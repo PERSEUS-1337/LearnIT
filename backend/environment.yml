@@ -16,3 +16,4 @@ dependencies:
   - black
   - xenon
   - pydantic
+  - fastapi
