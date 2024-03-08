@@ -3,9 +3,19 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
 from models.books import Book, BookUpdate
+import middleware.api_msg as api_msg
 
 
 def create_book(request: Request, book: Book = Body(...)):
+    # Check if a book with the same title already exists
+    existing_book = request.app.database["books"].find_one({"title": book.title})
+    if existing_book:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"A book with the title '{book.title}' already exists."
+        )
+
+    # If no existing book, proceed with creating the new book
     book = jsonable_encoder(book)
     new_book = request.app.database["books"].insert_one(book)
     created_book = request.app.database["books"].find_one(

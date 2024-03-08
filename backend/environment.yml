@@ -14,6 +14,7 @@ dependencies:
   - black
   - xenon
   - pydantic
+  - pydantic[email]
   - fastapi
   - python-jose[cryptography]
   - passlib[bcrypt]

@@ -1,11 +1,21 @@
-# models/user.py
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
+
 
 class User(BaseModel):
-    username: str
-    email: str | None = None
-    full_name: str | None = None
-    disabled: bool | None = None
+    fname: str
+    lname: str
+    usertype: str  # You might want to use an Enum for limited choices (admin or user)
+    email: EmailStr
+    password: str
 
-class UserInDB(User):
-    hashed_password: str
+    class Config:
+        # Using the Pydantic Config class to set additional configurations
+        schema_extra = {
+            "example": {
+                "fname": "John",
+                "lname": "Doe",
+                "usertype": "user",
+                "email": "john.doe@example.com",
+                "password": "secretpassword",
+            }
+        }
