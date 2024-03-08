@@ -9,11 +9,12 @@ dependencies:
   - OpenAI
   - chardet
   - cchardet
-  - tiktoken
-  - dotenv
   - pypdf
   - pypdfium2
   - black
   - xenon
   - pydantic
   - fastapi
+  - python-jose[cryptography]
+  - passlib[bcrypt]
+  - pymongo[srv]
