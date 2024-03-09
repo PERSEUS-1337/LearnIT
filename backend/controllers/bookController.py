@@ -1,9 +1,8 @@
 from fastapi import Request, Body, Response, HTTPException, status
-from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 
 from models.books import Book, BookUpdate
-import middleware.apiMsg as api_msg
 
 
 def create_book(request: Request, book: Book = Body(...)):

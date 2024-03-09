@@ -1,4 +1,5 @@
-from typing import List, Annotated
+from typing import Annotated
+
 from fastapi import APIRouter, Request, Depends
 
 from controllers.userController import get_all_users
@@ -15,6 +16,6 @@ async def get_all_users_route(req: Request, current_user: Annotated[User, Depend
 
 
 @router.get("/me", response_description="Get current logged in user details")
-async def get_curr_user_route():
+async def get_curr_user_route(req: Request, current_user: Annotated[User, Depends(auth_curr_user)]):
     # Your logic to get current user details here
-    pass
+    return current_user

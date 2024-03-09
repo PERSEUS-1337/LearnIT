@@ -1,6 +1,22 @@
-from typing import List
-
 from pydantic import BaseModel, EmailStr
+
+
+class RegisterForm(BaseModel):
+    full_name: str
+    username: str
+    email: str
+    password: str
+
+
+class User(BaseModel):
+    username: str
+    email: str
+    full_name: str
+    disabled: bool
+
+
+class UserInDB(User):
+    hashed_password: str
 
 
 class Token(BaseModel):
@@ -10,18 +26,3 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: str | None = None
-
-
-class User(BaseModel):
-    username: str
-    email: str | None = None
-    full_name: str | None = None
-    disabled: bool | None = None
-
-
-class UserInDB(User):
-    hashed_password: str
-
-
-# class UserList(BaseModel):
-#     users: List[User]
