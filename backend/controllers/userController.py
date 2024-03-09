@@ -1,7 +1,7 @@
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 
-from middleware.api_msg import APIMessages
+from middleware.apiMsg import APIMessages
 
 
 def get_all_users(req: Request):

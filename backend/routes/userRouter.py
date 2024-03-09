@@ -1,20 +1,20 @@
-from fastapi import APIRouter, Body, Request, Response, status
-from fastapi.responses import JSONResponse
-from typing import List
+from typing import List, Annotated
+from fastapi import APIRouter, Request, Depends
+
+from controllers.userController import get_all_users
+from middleware.requireAuth import auth_curr_user
+from models.user import User
 
 router = APIRouter()
 
-from models.user import User
-from middleware.api_msg import APIMessages
 
-@router.get("/all", response_description="Get all users", response_class=List[User], tags=["users"])
-async def get_all_users():
+@router.get("/all", response_description="Get all users")
+async def get_all_users_route(req: Request, current_user: Annotated[User, Depends(auth_curr_user)]):
     # Your get all users logic here
-    pass
+    return get_all_users(req)
 
-@router.get("/me", response_description="Get current logged in user details", response_class=List[User], tags=["user"])
-async def get_current_user():
+
+@router.get("/me", response_description="Get current logged in user details")
+async def get_curr_user_route():
     # Your logic to get current user details here
     pass
-
-
