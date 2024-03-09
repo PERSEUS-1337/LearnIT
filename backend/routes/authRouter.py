@@ -5,14 +5,29 @@ from typing import List
 router = APIRouter()
 
 from models.user import User
-from middleware.api_msg import APIMessages as api
+from middleware.api_msg import APIMessages
+
+import controllers.userController as user_api
 
 
-@router.get("/users", response_description="Get all users", response_class=List[User])
-def get_all_users_route(request: Request):
-    users = list(request.app.database["users"].find(limit=100))
+@router.get("/all", response_description="Get all users", response_class=List[User], tags=["users"])
+async def get_all_users(req: Request):
+    # Your get all users logic here
+    # pass
+    return user_api.get_all_users(req)
 
-    if not users:
-        return JSONResponse(content={"message": api.PROFILE_NOT_FOUND}, status_code=status.HTTP_404_NOT_FOUND)
+@router.post("/register", response_description="Register a user", response_class=List[User], tags=["authentication"])
+async def register_user():
+    # Your registration logic here
+    pass
 
-    return users
+@router.post("/login", response_description="Login user", response_class=List[User], tags=["authentication"])
+async def login_user():
+    # Your login logic here
+    pass
+
+@router.post("/logout", response_description="Logout user", response_class=List[User], tags=["authentication"])
+async def logout_user():
+    # Your logout logic here
+    pass
+
