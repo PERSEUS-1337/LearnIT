@@ -31,4 +31,4 @@ def shutdown_db_client():
 
 
 # app.include_router(book_router, tags=["books"], prefix="/api/book")
-app.include_router(auth_router, tags=["auth"], prefix="/api/auth")
+app.include_router(auth_router, tags=["auth"], prefix="/auth")

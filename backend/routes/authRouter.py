@@ -1,21 +1,23 @@
-from typing import List, Annotated
-from fastapi import APIRouter, Body, Request, Response, status, Depends, Form
+from typing import Annotated
+from fastapi import APIRouter, Request, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
-from controllers.authController import get_current_active_user, login_for_access_token
+from controllers.authController import login_for_access_token
+from controllers.userController import get_all_users
+from middleware.require_auth import get_current_user
 from models.user import User
 from middleware.api_msg import APIMessages
 
-import controllers.userController as user_api
+
 
 router = APIRouter()
 
 
 @router.get("/all", response_description="Get all users")
-async def get_all_users(req: Request):
+async def get_all_users_route(req: Request):
     # Your get all users logic here
     # pass
-    return user_api.get_all_users(req)
+    return get_all_users(req)
 
 
 @router.post("/token")
@@ -25,14 +27,14 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 @router.get("/me/", response_model=User)
 async def read_users_me(
-        current_user: Annotated[User, Depends(get_current_active_user)]
+        current_user: Annotated[User, Depends(get_current_user)]
 ):
     return current_user
 
 
 @router.get("/me/items/")
 async def read_own_items(
-        current_user: Annotated[User, Depends(get_current_active_user)]
+        current_user: Annotated[User, Depends(get_current_user)]
 ):
     return [{"item_id": "Foo", "owner": current_user.username}]
 
