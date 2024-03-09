@@ -1,21 +1,21 @@
 from pydantic import BaseModel, EmailStr
 
 
-class User(BaseModel):
-    fname: str
-    lname: str
-    usertype: str  # You might want to use an Enum for limited choices (admin or user)
-    email: EmailStr
-    password: str
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
-    class Config:
-        # Using the Pydantic Config class to set additional configurations
-        schema_extra = {
-            "example": {
-                "fname": "John",
-                "lname": "Doe",
-                "usertype": "user",
-                "email": "john.doe@example.com",
-                "password": "secretpassword",
-            }
-        }
+
+class TokenData(BaseModel):
+    username: str | None = None
+
+
+class User(BaseModel):
+    username: str
+    email: str | None = None
+    full_name: str | None = None
+    disabled: bool | None = None
+
+
+class UserInDB(User):
+    hashed_password: str
