@@ -11,11 +11,9 @@ router = APIRouter()
 
 @router.get("/all", response_description="Get all users")
 async def get_all_users_route(req: Request, current_user: Annotated[UserBase, Depends(auth_curr_user)]):
-    # Your get all users logic here
     return get_all_users(req)
 
 
 @router.get("/me", response_description="Get current logged in user details")
-async def get_curr_user_route(req: Request, current_user: Annotated[UserBase, Depends(auth_curr_user)]):
-    # Your logic to get current user details here
+async def get_curr_user_route(current_user: Annotated[UserBase, Depends(auth_curr_user)]):
     return current_user

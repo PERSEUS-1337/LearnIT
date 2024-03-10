@@ -27,7 +27,7 @@ class UserReg(UserBase):
 
 class UserInDB(UserBase):
     hashed_password: str
-    date_created: datetime
+    # date_created: datetime
 
     class Config(UserBase.Config):
         pass
