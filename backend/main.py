@@ -1,3 +1,4 @@
+import uvicorn
 from fastapi import FastAPI
 from dotenv import dotenv_values
 from pymongo import MongoClient
@@ -10,7 +11,7 @@ config = dotenv_values(".env")
 app = FastAPI()
 
 
-@app.get("/api")
+@app.get("/")
 async def root():
     return {"message": "Hello World"}
 
@@ -36,3 +37,7 @@ def shutdown_db_client():
 app.include_router(auth_router, tags=["auth"], prefix="/auth")
 app.include_router(user_router, tags=["user"], prefix="/user")
 app.include_router(book_router, tags=["book"], prefix="/book")
+
+
+# if __name__ == "__main__":
+#     uvicorn.run(app, port=5000, reload=True)

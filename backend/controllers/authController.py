@@ -2,12 +2,14 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, status, Request, Body
-from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+
 from jose import jwt
 from passlib.context import CryptContext
 
-from models.user import Token, User, UserInDB, RegisterForm
+from models.user import Token, UserInDB, UserReg
+from middleware.apiMsg import APIMessages
 
 # config = dotenv_values(".env")
 
@@ -48,11 +50,12 @@ def get_user(db, username: str) -> UserInDB:
         return UserInDB(**user_dict)
 
 
-def authenticate_user(fake_db, username: str, password: str):
-    user = get_user(fake_db, username)
+def authenticate_user(db, username: str, password: str):
+    user = db.find_one({"username": username})
+    print(user)
     if not user:
         return False
-    if not verify_password(password, user.hashed_password):
+    if not verify_password(password, user['hashed_password']):
         return False
     return user
 
@@ -68,8 +71,9 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
-    user = authenticate_user(fake_users_db, form_data.username, form_data.password)
+async def login_for_access_token(req: Request, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
+    user = authenticate_user(req.app.database["users"], form_data.username, form_data.password)
+    print(user)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -78,34 +82,43 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": user["username"]}, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
 
 
-def create_user(req: Request, user: RegisterForm = Body(...)):
-    # full_name, username, email, password = user
+def create_user(req: Request, user: UserReg = Body(...)):
+    try:
+        user_exists = req.app.database["users"].find_one({"email": user.username})
 
-    existing_user = req.app.database["users"].find_one({"username": user.username})
-    if existing_user:
+        if user_exists:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"A user with the username '{user.username}' already exists."
+            )
+
+        hashed_pass = get_password_hash(user.password)
+        time_now = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        new_user_data = UserInDB(username=user.username, email=user.email,
+                                 full_name=user.full_name, hashed_password=hashed_pass,
+                                 date_created=time_now)
+
+        new_user_data = new_user_data.dict()
+        insert_result = req.app.database["users"].insert_one(new_user_data)
+
+        return JSONResponse(
+            status_code=status.HTTP_201_CREATED,
+            content={"message": APIMessages.USER_CREATED})
+    except HTTPException as he:
+        # Re-raise if it already has a status code
+        raise he
+
+    except Exception as e:
+        # Print the error
+        print(f"An unexpected error occurred: {str(e)}")
+        # Handle exceptions here and return a proper status code and detail message
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"A user with the username '{user.username}' already exists."
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An unexpected error occurred: {str(e)}"
         )
-
-    user_data = jsonable_encoder(user)
-    
-    # Add date_created property
-    user_data["hashed_password"] = get_password_hash(user_data["password"])
-
-    user_data["date_created"] = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
-
-    # new_user = UserInDB(username=user)
-
-    # If no existing user, proceed with creating the new user
-    new_user = req.app.database["users"].insert_one(user_data)
-    created_user = req.app.database["users"].find_one(
-        {"_id": new_user.inserted_id}
-    )
-
-    return created_user

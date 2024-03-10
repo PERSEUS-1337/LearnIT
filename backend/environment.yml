@@ -18,4 +18,6 @@ dependencies:
   - fastapi
   - python-jose[cryptography]
   - passlib[bcrypt]
+  - passlib
+  - bcrypt
   - pymongo[srv]
