@@ -47,5 +47,45 @@ class APIMessages:
     # Maintenance and Downtime
     MAINTENANCE_MODE = "The server is currently undergoing maintenance."
 
+    # User Account Management
+    USER_CREATED = "User account successfully created."
+    USER_UPDATED = "User account successfully updated."
+    USER_DELETED = "User account successfully deleted."
+    PASSWORD_CHANGED = "Password successfully changed."
+
+    # User Account Errors
+    USER_NOT_FOUND = "User not found."
+    USERS_NOT_FOUND = "Users not found."
+    USER_ALREADY_EXISTS = "User with this username already exists"
+
+    # Authentication and Login
+    LOGIN_SUCCESSFUL = "Login successful."
+    LOGOUT_SUCCESSFUL = "Logout successful."
+
+    # Password Reset
+    PASSWORD_RESET_REQUESTED = "Password reset requested. Check your email for instructions."
+    PASSWORD_RESET_SUCCESSFUL = "Password successfully reset."
+
+    # Account Activation
+    ACCOUNT_ACTIVATION_REQUIRED = "Account activation is required. Check your email for instructions."
+    ACCOUNT_ACTIVATION_SUCCESSFUL = "Account successfully activated."
+
+    # Session Management
+    SESSION_EXPIRED = "Session expired. Please log in again."
+
+    # Two-Factor Authentication (2FA)
+    TWO_FACTOR_ENABLED = "Two-factor authentication successfully enabled."
+    TWO_FACTOR_DISABLED = "Two-factor authentication successfully disabled."
+    TWO_FACTOR_REQUIRED = "Two-factor authentication required for this action."
+
+    # Permissions
+    INSUFFICIENT_PRIVILEGES = "You do not have sufficient privileges for this action."
+
+    # Security Alerts
+    SECURITY_ALERT = "Security alert: Unusual activity detected on your account."
+
+    # Routes
+    AUTH_ROUTE_SUCCESS = "This is the AUTH Route"
+
     # Custom Application-Specific Messages
     # Add your custom messages here
