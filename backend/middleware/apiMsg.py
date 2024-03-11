@@ -53,6 +53,11 @@ class APIMessages:
     USER_DELETED = "User account successfully deleted."
     PASSWORD_CHANGED = "Password successfully changed."
 
+    # User Account Errors
+    USER_NOT_FOUND = "User not found."
+    USERS_NOT_FOUND = "Users not found."
+    USER_ALREADY_EXISTS = "User with this username already exists"
+
     # Authentication and Login
     LOGIN_SUCCESSFUL = "Login successful."
     LOGOUT_SUCCESSFUL = "Logout successful."
@@ -73,50 +78,14 @@ class APIMessages:
     TWO_FACTOR_DISABLED = "Two-factor authentication successfully disabled."
     TWO_FACTOR_REQUIRED = "Two-factor authentication required for this action."
 
-    # Token Handling
-    INVALID_TOKEN = "Invalid or expired token."
-    TOKEN_REFRESH_SUCCESSFUL = "Token refresh successful."
-
-    # User Profile
-    PROFILE_UPDATED = "User profile successfully updated."
-    PROFILE_NOT_FOUND = "User profile not found."
-
     # Permissions
     INSUFFICIENT_PRIVILEGES = "You do not have sufficient privileges for this action."
-
-    # Social Authentication
-    SOCIAL_AUTH_SUCCESSFUL = "Successfully authenticated using social media."
-
-    # Account Suspension
-    ACCOUNT_SUSPENDED = "Your account has been suspended. Contact support for assistance."
-
-    # Email Verification
-    EMAIL_VERIFICATION_REQUIRED = "Email verification is required. Check your email for instructions."
-    EMAIL_VERIFICATION_SUCCESSFUL = "Email address successfully verified."
-
-    # Device Management (for multi-device sessions)
-    DEVICE_ADDED = "Device successfully added."
-    DEVICE_REMOVED = "Device successfully removed."
-    DEVICE_NOT_FOUND = "Device not found."
-
-    # Consent and Terms
-    CONSENT_REQUIRED = "Consent is required to proceed."
-
-    # Multi-Factor Authentication (MFA)
-    MFA_REQUIRED = "Multi-factor authentication required for this action."
 
     # Security Alerts
     SECURITY_ALERT = "Security alert: Unusual activity detected on your account."
 
-    # Account Lockout
-    ACCOUNT_LOCKED = "Your account has been locked due to multiple failed login attempts. Please try again later."
-
-    # Third-Party Integration
-    INTEGRATION_SUCCESSFUL = "Integration with third-party service successful."
-
-    # Custom Application-Specific Messages
-    # Add your custom messages here
-
+    # Routes
+    AUTH_ROUTE_SUCCESS = "This is the AUTH Route"
 
     # Custom Application-Specific Messages
     # Add your custom messages here

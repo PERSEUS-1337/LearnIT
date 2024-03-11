@@ -8,21 +8,18 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from middleware.apiMsg import APIMessages
 from models.user import Token, UserInDB, UserReg
-from utils.authUtils import verify_password, get_password_hash, check_user_details, create_access_token
+from utils.authUtils import verify_password, get_password_hash, get_user_creds, create_access_token
 
 config = dotenv_values(".env")
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 
 async def login_user(req: Request, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     try:
-        user = check_user_details(req.app.database["users"], form_data.username)
-
+        user = get_user_creds(req.app.database["users"], form_data.username)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=APIMessages.PROFILE_NOT_FOUND,
+                detail=APIMessages.USER_NOT_FOUND,
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
@@ -57,11 +54,11 @@ async def login_user(req: Request, form_data: Annotated[OAuth2PasswordRequestFor
 
 async def register_user(req: Request, user: UserReg = Body(...)):
     try:
-        user_exists = check_user_details(req.app.database["users"], user.username)
+        user_exists = get_user_creds(req.app.database["users"], user.username)
         if user_exists:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=f"A user with the username '{user.username}' already exists.",
+                detail=APIMessages.USER_ALREADY_EXISTS,
                 headers={"WWW-Authenticate": "Bearer"},
             )
 

@@ -4,7 +4,7 @@ from dotenv import dotenv_values
 from jose import jwt
 from passlib.context import CryptContext
 
-from models.user import UserInDB
+from models.user import UserCreds
 
 config = dotenv_values(".env")
 
@@ -30,12 +30,10 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-def check_user_details(db, username: str) -> UserInDB:
+def get_user_creds(db, username: str) -> UserCreds:
     user_data = db.find_one({"username": username})
 
     if user_data:
-        # If user is found, create a UserBase object using the retrieved data
-        return UserInDB(**user_data)
+        return UserCreds(**user_data)
     else:
-        # If user is not found, return None or handle as needed
         return None

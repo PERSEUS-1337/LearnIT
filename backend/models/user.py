@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
@@ -27,10 +29,34 @@ class UserReg(UserBase):
 
 class UserInDB(UserBase):
     hashed_password: str
+
     # date_created: datetime
 
     class Config(UserBase.Config):
         pass
+
+
+class UserCreds(BaseModel):
+    username: str
+    hashed_password: str
+
+    class Config(UserBase.Config):
+        pass
+
+
+class UserUpdate(BaseModel):
+    username: Optional[str]
+    full_name: Optional[str]
+    email: Optional[EmailStr]
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "title": "Don Quixote",
+                "author": "Miguel de Cervantes",
+                "synopsis": "Don Quixote is a Spanish novel by Miguel de Cervantes..."
+            }
+        }
 
 
 class Token(BaseModel):
