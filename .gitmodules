@@ -4,3 +4,6 @@
 [submodule "testing/datasets/scitldr-learnit-dataset-training"]
 	path = testing/datasets/scitldr-learnit-dataset-training
 	url = https://github.com/PERSEUS-1337/scitldr-learnit-dataset-training.git
+[submodule "testing/datasets/SciTLDR"]
+	path = testing/datasets/SciTLDR
+	url = https://github.com/PERSEUS-1337/scitldr-learnit-dataset-training.git
