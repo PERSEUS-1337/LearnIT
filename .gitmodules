@@ -1,0 +1,3 @@
+[submodule "testing/datasets/scitldr"]
+	path = testing/datasets/scitldr
+	url = https://github.com/allenai/scitldr.git
