@@ -1,32 +1,41 @@
 import os
 from dotenv import load_dotenv
 
-from langchain.vectorstores import Chroma
-from langchain.embeddings import OpenAIEmbeddings
+from langchain_community.vectorstores import Chroma
+from langchain_community.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.document_loaders import PyPDFLoader, PyPDFium2Loader, TextLoader
+from langchain_community.document_loaders import (
+    PyPDFLoader,
+    PyPDFium2Loader,
+    TextLoader,
+    PyMuPDFLoader,
+)
 from langchain.prompts import PromptTemplate
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.chains import LLMChain, RetrievalQA
+from langchain_community.llms import HuggingFaceEndpoint
+
 
 load_dotenv()
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv("HUGGINGFACEHUB_API_TOKEN")
 
 
 def process_document(file, size, overlap, loader_choice):
     # Append the file string to "./documents"
-    file_path = os.path.join("./documents", file)
+    file_path = os.path.join("./datasets/documents", file)
 
     # Initialize PyPDFLoader with the file path
     if loader_choice == "PyPDFLoader":
         loader = PyPDFLoader(file_path)
     elif loader_choice == "PyPDFium2Loader":
         loader = PyPDFium2Loader(file_path)
+    elif loader_choice == "PyMuPDFLoader":
+        loader = PyMuPDFLoader(file_path)
     elif loader_choice == "TextLoader":
         loader = TextLoader(file_path)
 
     document = loader.load()
-    print(document)
 
     # Split texts into chunks
     text_splitter = RecursiveCharacterTextSplitter(
@@ -35,13 +44,16 @@ def process_document(file, size, overlap, loader_choice):
     )
     text_chunks = text_splitter.split_documents(document)
 
-    print(len(text_chunks))
+    print(text_chunks)
+
+    # print(len(text_chunks))
     prev_chunk = ""
     for i, chunk in enumerate(text_chunks):
         chunk.metadata["index"] = i
         chunk.metadata["prev_chunk"] = prev_chunk
-        print(f"{i}: {chunk.page_content}\n")
+        # print(f"{i}: {chunk.page_content}\n")
         prev_chunk = chunk.page_content
+        # chunk.metadata["global"] = document
 
     return text_chunks
 
@@ -75,10 +87,15 @@ def setup_db(chunks, file):
 
 def setup_chain(db, chosen_model):
     # Set up the turbo LLM
+    HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+    repo_id = "microsoft/phi-1_5"
+    hf_llm = HuggingFaceEndpoint(
+        repo_id=repo_id, max_length=128, temperature=0.5, token=HUGGINGFACEHUB_API_TOKEN
+    )
     turbo_llm = ChatOpenAI(temperature=0, model_name=chosen_model)
     retriever = db.as_retriever(search_kwargs={"k": 10})
     chain = RetrievalQA.from_chain_type(
-        llm=turbo_llm,
+        llm=hf_llm,
         chain_type="stuff",
         retriever=retriever,
         return_source_documents=True,
@@ -102,6 +119,11 @@ def llm_process(chunk, chosen_model):
     # Set up the turbo LLM
     turbo_llm = ChatOpenAI(temperature=0, model_name=chosen_model)
 
+    HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+    repo_id = "microsoft/phi-1_5"
+    hf_llm = HuggingFaceEndpoint(
+        repo_id=repo_id, max_length=128, temperature=0.5, token=HUGGINGFACEHUB_API_TOKEN
+    )
     # Create a proper prompt template
     # prompt_template = PromptTemplate.from_template(
     #     """
@@ -114,31 +136,49 @@ def llm_process(chunk, chosen_model):
     #     Using the context from the previous chunk that you already have, and the title of the paper, you will now use it to aid your condensing of the following text, and this is the only thing that you will reply back, once you have condensed it: {curr_chunk}. Make sure to, again, retain as much information as possible, while trying to reduce the word count even further, only retaining the most important information in the chunk.
     #     """
     # )
+    # prompt_template = PromptTemplate.from_template(
+    #     """
+    #     You are a very good summarizer. You will not be adding things to the text such as "the article discusses" or "the text says".
+    #     Stay true to the text.
+    #
+    #     Condense the following text while retaining as much crucial detail as you can: {curr_chunk}
+    #
+    #     Use the following previous chunk as context on how to condense the current chunk: {prev_chunk}
+    #     """
+    # )
+
+    # prompt_template = PromptTemplate.from_template(
+    #     """
+    #     You excel at summarization without adding unnecessary details. Avoid phrases like "the article discusses" or "the text says". Stay true to the text.
+    #
+    #     Condense the following passage while preserving key details: {curr_chunk}
+    #
+    #     If {curr_chunk} appears to have irrelevant information, such as referrences, links, footnotes, and overall incoherent text that may represent other artifacts in the PDF, do not return anything and do not process anything, just return this message: "This contains irrelevant text".
+    #
+    #     Else, Use the preceding context to guide your summary. Reference the previous chunk ({prev_chunk}) to ensure coherence and maintain context.
+    #     """
+    # )
     prompt_template = PromptTemplate.from_template(
         """
-        You are a very good summarizer. You will not be adding things to the text such as "the article discusses" or "the text says".
-        Stay true to the text.
+        You excel at summarization without adding unnecessary details. Avoid phrases like "the article discusses" or "the text says". Stay true to the text.
 
-        Condense the following text while retaining as much crucial detail as you can: {curr_chunk}
-
-        Use the following previous chunk as context on how to condense the current chunk: {prev_chunk}
-        """
+        Condense the following passage while preserving key details: {chunk}"""
     )
 
-    llm_chain = LLMChain(prompt=prompt_template, llm=turbo_llm)
-    return llm_chain.run(
-        {
-            "prev_chunk": chunk.metadata["prev_chunk"],
-            "curr_chunk": chunk.page_content,
-        }
-    )
-
-    # for i, chunk in enumerate(chunks):
-    #     print(
-    #         llm_chain.run(
-    #             {
-    #                 "prev_chunk": chunk.metadata["prev_chunk"],
-    #                 "curr_chunk": chunk.page_content,
-    #             }
-    #         )
+    llm_chain = LLMChain(prompt=prompt_template, llm=hf_llm)
+    # return llm_chain.run(
+    #     {
+    #         "prev_chunk": chunk.metadata["prev_chunk"],
+    #         "curr_chunk": chunk.page_content,
+    #     }
+    # )
+    # return llm_chain.run(
+    #         {
+    #             "chunk": chunk.page_content,
+    #         }
     #     )
+    print(llm_chain.run(
+            {
+                "chunk": chunk.page_content,
+            }
+        ))

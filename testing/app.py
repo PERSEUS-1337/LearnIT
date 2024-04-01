@@ -24,7 +24,7 @@ def gui_options():
             st.number_input("Enter Chunk Overlap", step=50, min_value=100)
         )
 
-    loader_options = ["PyPDFLoader", "PyPDFium2Loader", "TextLoader"]
+    loader_options = ["PyPDFLoader", "PyPDFium2Loader", "PyMuPDFLoader", "TextLoader"]
     loader_choice = st.selectbox(
         "Pick a loader to use (pdf or text, for prototyping)",
         options=loader_options,
@@ -187,50 +187,3 @@ def process_llm_response(llm_response, type):
 
 if __name__ == "__main__":
     main_gui()
-
-# For Chat Based Implementation
-# Discontinued because of complexity
-
-# openai.api_key = st.secrets["OPENAI_API_KEY"]
-#
-# if "openai_model" not in st.session_state:
-#     st.session_state["openai_model"] = "gpt-3.5-turbo"
-#
-# # Initilize Chat History
-# if "messages" not in st.session_state:
-#     st.session_state.messages = []
-#
-# # Display Chat Messages from History on App Rerun
-# for message in st.session_state.messages:
-#     with st.chat_message(message["role"]):
-#         st.markdown(message["content"])
-#
-# # React to User Input
-# if prompt := st.chat_input("What is up?"):
-#     # Display user message in chat message container
-#     with st.chat_message("user"):
-#         st.markdown(prompt)
-#
-#     # Add user message to chat history
-#     st.session_state.messages.append({"role": "user", "content": prompt})
-#
-#     # Display assistant response in chat message container
-#     with st.chat_message("assistant", avatar="😈"):
-#         message_placeholder = st.empty()
-#         full_response = ""
-#
-#         for response in openai.ChatCompletion.create(
-#             model=st.session_state["openai_model"],
-#             messages=[
-#                 {"role": m["role"], "content": m["content"]}
-#                 for m in st.session_state.messages
-#             ],
-#             stream=True,
-#         ):
-#             full_response += response.choices[0].delta.get("content", "")
-#             message_placeholder.markdown(full_response + "| ")
-#         message_placeholder.markdown(full_response)
-#
-#     # Add assistant response to chat history
-#     st.session_state.messages.append(({"role": "assistant", "content": full_response}))
-#     print(st.session_state.messages)
