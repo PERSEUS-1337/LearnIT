@@ -23,7 +23,8 @@ os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv("HUGGINGFACEHUB_API_TOKEN")
 
 
 def process_document(file, size, overlap, loader_choice):
-    # Append the file string to "./documents"
+
+    # Append the file string to "./datasets/downloaded_documents"
     file_path = os.path.join("./datasets/downloaded_documents", file)
 
     # Initialize PyPDFLoader with the file path
