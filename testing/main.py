@@ -1,8 +1,9 @@
 import os
 from dotenv import load_dotenv
+import json
 
 from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import (
     PyPDFLoader,
@@ -23,7 +24,7 @@ os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv("HUGGINGFACEHUB_API_TOKEN")
 
 def process_document(file, size, overlap, loader_choice):
     # Append the file string to "./documents"
-    file_path = os.path.join("./datasets/documents", file)
+    file_path = os.path.join("./datasets/downloaded_documents", file)
 
     # Initialize PyPDFLoader with the file path
     if loader_choice == "PyPDFLoader":
@@ -44,7 +45,7 @@ def process_document(file, size, overlap, loader_choice):
     )
     text_chunks = text_splitter.split_documents(document)
 
-    print(text_chunks)
+    print(json.dumps(str(text_chunks)))
 
     # print(len(text_chunks))
     prev_chunk = ""
@@ -89,13 +90,13 @@ def setup_chain(db, chosen_model):
     # Set up the turbo LLM
     HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
     repo_id = "microsoft/phi-1_5"
-    hf_llm = HuggingFaceEndpoint(
-        repo_id=repo_id, max_length=128, temperature=0.5, token=HUGGINGFACEHUB_API_TOKEN
-    )
+    # hf_llm = HuggingFaceEndpoint(
+    #     repo_id=repo_id, max_length=128, temperature=0.5, token=HUGGINGFACEHUB_API_TOKEN
+    # )
     turbo_llm = ChatOpenAI(temperature=0, model_name=chosen_model)
     retriever = db.as_retriever(search_kwargs={"k": 10})
     chain = RetrievalQA.from_chain_type(
-        llm=hf_llm,
+        llm=turbo_llm,
         chain_type="stuff",
         retriever=retriever,
         return_source_documents=True,
@@ -121,64 +122,42 @@ def llm_process(chunk, chosen_model):
 
     HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
     repo_id = "microsoft/phi-1_5"
-    hf_llm = HuggingFaceEndpoint(
-        repo_id=repo_id, max_length=128, temperature=0.5, token=HUGGINGFACEHUB_API_TOKEN
-    )
+    # hf_llm = HuggingFaceEndpoint(
+    #     repo_id=repo_id, max_length=128, temperature=0.5, token=HUGGINGFACEHUB_API_TOKEN
+    # )
     # Create a proper prompt template
-    # prompt_template = PromptTemplate.from_template(
-    #     """
-    #     You are a very good summarizer, which aims to reduce the length of the text, without sacrificing much information.
-    #
-    #     You are given a chunk of text that you will be summarizing and condensing, to help the user read better and faster.
-    #
-    #     To help you have a better understanding on how to condense the text that will be given, you are provided a context of the previous words before the current text that you will be condensing, and it is the following: {prev_chunk}.
-    #
-    #     Using the context from the previous chunk that you already have, and the title of the paper, you will now use it to aid your condensing of the following text, and this is the only thing that you will reply back, once you have condensed it: {curr_chunk}. Make sure to, again, retain as much information as possible, while trying to reduce the word count even further, only retaining the most important information in the chunk.
-    #     """
-    # )
-    # prompt_template = PromptTemplate.from_template(
-    #     """
-    #     You are a very good summarizer. You will not be adding things to the text such as "the article discusses" or "the text says".
-    #     Stay true to the text.
-    #
-    #     Condense the following text while retaining as much crucial detail as you can: {curr_chunk}
-    #
-    #     Use the following previous chunk as context on how to condense the current chunk: {prev_chunk}
-    #     """
-    # )
 
     # prompt_template = PromptTemplate.from_template(
     #     """
     #     You excel at summarization without adding unnecessary details. Avoid phrases like "the article discusses" or "the text says". Stay true to the text.
     #
-    #     Condense the following passage while preserving key details: {curr_chunk}
-    #
-    #     If {curr_chunk} appears to have irrelevant information, such as referrences, links, footnotes, and overall incoherent text that may represent other artifacts in the PDF, do not return anything and do not process anything, just return this message: "This contains irrelevant text".
-    #
-    #     Else, Use the preceding context to guide your summary. Reference the previous chunk ({prev_chunk}) to ensure coherence and maintain context.
-    #     """
+    #     Condense the following passage while preserving key details: {curr_chunk}"""
     # )
     prompt_template = PromptTemplate.from_template(
         """
         You excel at summarization without adding unnecessary details. Avoid phrases like "the article discusses" or "the text says". Stay true to the text.
-
-        Condense the following passage while preserving key details: {chunk}"""
+        Condense the following passage while preserving key details: {curr_chunk}
+        If {curr_chunk} appears to have irrelevant information, such as referrences, links, footnotes, and overall incoherent text that may represent other artifacts in the PDF, do not return anything and do not process anything, just return this message: "This contains irrelevant text".
+        Else, Use the preceding context to guide your summary. Reference the previous chunk ({prev_chunk}) to ensure coherence and maintain context.
+        """
     )
 
-    llm_chain = LLMChain(prompt=prompt_template, llm=hf_llm)
-    # return llm_chain.run(
-    #     {
-    #         "prev_chunk": chunk.metadata["prev_chunk"],
-    #         "curr_chunk": chunk.page_content,
-    #     }
-    # )
-    # return llm_chain.run(
+
+
+    llm_chain = LLMChain(prompt=prompt_template, llm=turbo_llm)
+    return llm_chain.run(
+        {
+            "prev_chunk": chunk.metadata["prev_chunk"],
+            "curr_chunk": chunk.page_content,
+        }
+    )
+    # return llm_chain.invoke(
+    #         {
+    #             "curr_chunk": chunk.page_content,
+    #         }
+    #     )
+    # print(llm_chain.run(
     #         {
     #             "chunk": chunk.page_content,
     #         }
-    #     )
-    print(llm_chain.run(
-            {
-                "chunk": chunk.page_content,
-            }
-        ))
+    #     ))
