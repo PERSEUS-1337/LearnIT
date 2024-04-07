@@ -8,3 +8,5 @@ LONG_SUM_PUBMED_PATH = "./datasets/SCI_longsum_pubmed"
 
 REFERENCES_PATH = "./extracted_data/references"
 SUMMARIES_PATH = "./extracted_data/summaries"
+
+ERROR_LOGS_PATH = "./extracted_data"

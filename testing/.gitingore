@@ -3,3 +3,5 @@ dataset_code
 db_directory
 extracted_data
 .env
+.vscode
+__pycache__

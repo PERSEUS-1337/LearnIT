@@ -1,5 +1,6 @@
 .idea/
-/testing/dataset_code
-/testing/db_directory
-/testing/__pycache__
-/testing/extracted_data
+dataset_code
+db_directory
+__pycache__
+extracted_data
+.vscode/
