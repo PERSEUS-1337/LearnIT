@@ -23,7 +23,6 @@ os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv("HUGGINGFACEHUB_API_TOKEN")
 
 
 def process_document(file, size, overlap, loader_choice):
-
     # Append the file string to "./datasets/downloaded_documents"
     file_path = os.path.join("./datasets/downloaded_documents", file)
 
@@ -142,8 +141,6 @@ def llm_process(chunk, chosen_model):
         Else, Use the preceding context to guide your summary. Reference the previous chunk ({prev_chunk}) to ensure coherence and maintain context.
         """
     )
-
-
 
     llm_chain = LLMChain(prompt=prompt_template, llm=turbo_llm)
     return llm_chain.run(
