@@ -23,16 +23,15 @@ class ExtractedEncoder(json.JSONEncoder):
 
 
 class Document:
-    def __init__(self, id: str, title: str, reference: str, summary: str):
+    def __init__(self, id: str, title: str, reference: str = "", summary: str = ""):
         self.id = id
-        self.title = (
-            title if title else ""
-        )  # Set title to empty string if None or empty
-        self.reference = Extracted(title, reference)
-        self.summary = Extracted(title, summary)
+        self.title = title if title else ""
+        self.reference = Extracted(title, reference) if reference else Extracted("", "")
+        self.summary = Extracted(title, summary) if summary else Extracted("", "")
 
     def __str__(self):
         return f"ID: {self.id}\nTitle: {self.title}\nReference: {self.reference}\nSummary: {self.summary}"
+
 
 
 # Example usage:

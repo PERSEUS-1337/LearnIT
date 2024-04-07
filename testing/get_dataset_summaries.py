@@ -15,20 +15,19 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 
 ##### GOV REPORT FUNCTIONS
-def extract_summary(json_data):
-    """Simply gets the summaries, and if there are multiple, combines them into a single string
+def extract_list(data, label):
+    """Simply gets the list of text,and ombines them into a single string
 
     Args:
-        json_data (dict): contains the text to be extracted
+        data (dict): contains the text to be extracted
+        label (str): determines where to extract from the dict
 
     Returns:
-        str: all of the summaries combined into a single string
+        str: all of the entries combined into a single string
     """
-
-    # Extract all summaries and combine them into a single sting
-    summaries = json_data["summary"]
-    combined_summary = " ".join(summaries)
-    return combined_summary
+    entries = data[label]
+    combined_str = " ".join(entries)
+    return combined_str
 
 
 def extract_paragraphs(subsections):
@@ -66,12 +65,12 @@ def extract_reference_paragraphs(json_data):
 
 
 ##### UNIVERSAL FUNCTIONS
-def process_json(file_path, type) -> Document:
+def process_json(file_path, type, flag=False) -> Document:
     """Process the json and return relevant Document object format
 
     Args:
         file_path (str): either contains actual file path, or json (dict)
-        type (str): choose between BILL, GOVR, BOOK, or SCI
+        type (str): choose between BILL, GOVR, or SCI
 
     Returns:
         Document: A document object containing the extracted text, along with its relevant properties
@@ -82,12 +81,26 @@ def process_json(file_path, type) -> Document:
         reference = json_data["text"]
         return Document(json_data["bill_id"], json_data["title"], reference, summary)
 
-    elif type == "GOVR":
+    if type == "SCI_ref":
+        json_data = json.loads(file_path)
+        reference = extract_list(json_data, "source")
+        if flag:
+            return Document(json_data["paper_id"], json_data["paper_id"], reference)
+        return Document(json_data["paper_id"], json_data["title"], reference)
+    
+
+    if type == "SCI_sum":
+        json_data = json.loads(file_path)
+        summary = extract_list(json_data, "source")
+        return Document(json_data["paper_id"], json_data["title"], summary)
+    
+    if type == "GOVR":
         with open(file_path, "r", encoding="utf-8") as file:
             json_data = json.load(file)
-            summary = extract_summary(json_data)
+            summary = extract_list(json_data, "summary")
             reference = extract_reference_paragraphs(json_data)
             return Document(json_data["id"], json_data["title"], reference, summary)
+    
 
 
 def write_to_file(ref_data, sum_data, type, id):
@@ -95,16 +108,22 @@ def write_to_file(ref_data, sum_data, type, id):
     Write data to a JSON file.
 
     Args:
-        data (Extracted): Data to write to the file.
-        output_file (str): Path to the output file.
+        ref_data (Extracted or str): Reference data to write to the file.
+        sum_data (Extracted or str): Summary data to write to the file.
+        type (str): Type identifier for the file name prefix.
+        id (str): Identifier for the file name.
+
     """
     ref_out_path = os.path.join(paths.REFERENCES_PATH, f"{type}{id}.json")
-    with open(ref_out_path, "w") as file:
-        json.dump(ref_data, file, cls=ExtractedEncoder, indent=4)
+    if ref_data:  # Check if ref_data is not empty
+        with open(ref_out_path, "w") as file:
+            json.dump(ref_data, file, cls=ExtractedEncoder, indent=4)
 
     sum_out_path = os.path.join(paths.SUMMARIES_PATH, f"{type}{id}.json")
-    with open(sum_out_path, "w") as file:
-        json.dump(sum_data, file, cls=ExtractedEncoder, indent=4)
+    if sum_data:  # Check if sum_data is not empty
+        with open(sum_out_path, "w") as file:
+            json.dump(sum_data, file, cls=ExtractedEncoder, indent=4)
+
 
 
 def extract_gov_report_dataset():
@@ -172,20 +191,79 @@ def extract_bill_sum_dataset():
     print("Extraction complete.")
 
 
+def extract_sci_tldr_dataset():
+    """Function for extracting from the SciTLDR dataset"""
+
+    error_log_file = os.path.join(paths.ERROR_LOGS_PATH, "error_logs.txt")
+
+    refs_to_process = os.listdir(paths.SCI_TLDR_REF_PATH)
+    sums_to_process = os.listdir(paths.SCI_TLDR_SUM_PATH)
+    
+    # Read reference files first
+    for file_name in refs_to_process:
+        print(f"Processing {file_name}")
+
+        with open(os.path.join(paths.SCI_TLDR_REF_PATH, file_name), "r") as infile:
+            for line in infile:
+                try:
+                    if file_name == "train.jsonl":
+                        data = process_json(line, "SCI_ref", True)
+                    else:
+                        data = process_json(line, "SCI_ref", False)
+                    reference_data = data.reference
+
+                    write_to_file(reference_data, None, "SCI_", data.id)
+
+                    print(f"- Done - {data.title}")
+
+                except Exception as e:
+                    # Log the error to the error log file
+                    with open(error_log_file, "a") as log_file:
+                        log_file.write(f"Error processing {file_name}: {str(e)}\n")
+    
+    for file_name in sums_to_process:
+        print(f"Processing {file_name}")
+
+        with open(os.path.join(paths.SCI_TLDR_SUM_PATH, file_name), "r") as infile:
+            for line in infile:
+                try:
+                    data = process_json(line, "SCI_sum")
+
+                    summary_data = data.summary
+
+                    write_to_file(None, summary_data, "SCI_", data.id)
+
+                    print(f"- Done - {data.title}")
+
+                except Exception as e:
+                    # Log the error to the error log file
+                    with open(error_log_file, "a") as log_file:
+                        log_file.write(f"Error processing {file_name}: {str(e)}\n")
+
+    print("Extraction complete.")
+    
+
+
 def main():
     """Main Menu for testing purposes"""
-    print("Choose an option:")
-    print("1. Extract data from the bill summary dataset")
-    print("2. Extract data from the government report dataset")
-    choice = input("Enter your choice (1/2): ")
-    if choice == "1":
-        extract_bill_sum_dataset()
-        # extract_dataset("BILL")
-    elif choice == "2":
-        extract_gov_report_dataset()
-        # extract_dataset("GOVR")
-    else:
-        print("Invalid choice")
+    while True:
+        print("Get Dataset Summaries\n===========")
+        print("1. Extract data from the BillSum dataset")
+        print("2. Extract data from the GovReport dataset")
+        print("3. Extract data from the SciTLDR dataset")
+        choice = input("Enter your choice: ")
+        if choice == "0":
+            break
+        elif choice == "1":
+            extract_bill_sum_dataset()
+            # extract_dataset("BILL")
+        elif choice == "2":
+            extract_gov_report_dataset()
+            # extract_dataset("GOVR")
+        elif choice == "3":
+            extract_sci_tldr_dataset()
+        else:
+            print("Invalid choice")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,7 @@
 DATASETS_PATH = "./datasets"
 SCI_TLDR_PATH = "./datasets/SCI_scitldr"
+SCI_TLDR_REF_PATH = "./datasets/SCI_scitldr/SciTLDR-FullText"
+SCI_TLDR_SUM_PATH = "./datasets/SCI_scitldr/SciTLDR-AIC"
 BILL_SUM_PATH = "./datasets/LGL_bill_sum"
 GOV_REPORT_PATH = "./datasets/LGL_gov_report/gov-report/crs"
 BOOK_SUM_PATH = "./datasets/SCI_book_sum"
