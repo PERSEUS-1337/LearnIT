@@ -90,8 +90,26 @@ def process_json(file_path, type) -> Document:
             return Document(json_data["id"], json_data["title"], reference, summary)
 
 
+def write_to_file(ref_data, sum_data, type, id):
+    """
+    Write data to a JSON file.
+
+    Args:
+        data (Extracted): Data to write to the file.
+        output_file (str): Path to the output file.
+    """
+    ref_out_path = os.path.join(paths.REFERENCES_PATH, f"{type}{id}.json")
+    with open(ref_out_path, "w") as file:
+        json.dump(ref_data, file, cls=ExtractedEncoder, indent=4)
+
+    sum_out_path = os.path.join(paths.SUMMARIES_PATH, f"{type}{id}.json")
+    with open(sum_out_path, "w") as file:
+        json.dump(sum_data, file, cls=ExtractedEncoder, indent=4)
+
+
 def extract_gov_report_dataset():
     """Function for extracting from the GovReport dataset"""
+
     error_log_file = os.path.join(paths.ERROR_LOGS_PATH, "error_logs.txt")
     files_to_process = os.listdir(paths.GOV_REPORT_PATH)
 
@@ -102,25 +120,11 @@ def extract_gov_report_dataset():
 
             data = process_json(file_path, "GOVR")
 
-            # Write data to reference JSON file
             reference_data = data.reference
-            # Write data to summary JSON file
+
             summary_data = data.summary
 
-            reference_output_file = os.path.join(
-                paths.REFERENCES_PATH, f"GOVR_{data.id}.json"
-            )
-            summary_output_file = os.path.join(
-                paths.SUMMARIES_PATH, f"GOVR_{data.id}.json"
-            )
-
-            # Write reference text to references folder
-            with open(reference_output_file, "w") as ref_file:
-                json.dump(reference_data, ref_file, cls=ExtractedEncoder, indent=4)
-
-            # Write summary to summaries folder
-            with open(summary_output_file, "w") as summary_file:
-                json.dump(summary_data, summary_file, cls=ExtractedEncoder, indent=4)
+            write_to_file(reference_data, summary_data, "GOVR_", data.id)
 
             print(f"- Done - {data.title}")
 
@@ -152,29 +156,11 @@ def extract_bill_sum_dataset():
                 try:
                     data = process_json(line, "BILL")
 
-                    # Write data to reference JSON file
                     reference_data = data.reference
-                    # Write data to summary JSON file
+
                     summary_data = data.summary
 
-                    reference_output_file = os.path.join(
-                        paths.REFERENCES_PATH, f"BILL_{data.id}.json"
-                    )
-                    summary_output_file = os.path.join(
-                        paths.SUMMARIES_PATH, f"BILL_{data.id}.json"
-                    )
-
-                    # Write reference text to references folder
-                    with open(reference_output_file, "w") as ref_file:
-                        json.dump(
-                            reference_data, ref_file, cls=ExtractedEncoder, indent=4
-                        )
-
-                    # Write summary to summaries folder
-                    with open(summary_output_file, "w") as summary_file:
-                        json.dump(
-                            summary_data, summary_file, cls=ExtractedEncoder, indent=4
-                        )
+                    write_to_file(reference_data, summary_data, "BILL_", data.id)
 
                     print(f"- Done - {data.title}")
 
@@ -194,8 +180,10 @@ def main():
     choice = input("Enter your choice (1/2): ")
     if choice == "1":
         extract_bill_sum_dataset()
+        # extract_dataset("BILL")
     elif choice == "2":
         extract_gov_report_dataset()
+        # extract_dataset("GOVR")
     else:
         print("Invalid choice")
 
