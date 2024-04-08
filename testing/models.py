@@ -31,14 +31,12 @@ class Document:
 
     def __str__(self):
         return f"ID: {self.id}\nTitle: {self.title}\nReference: {self.reference}\nSummary: {self.summary}"
-
-
-
-# Example usage:
-document = Document(
-    "93-792",
-    "",
-    "Section 202 of the Social Security Act states that benefits are paid through the month before the month in which a beneficiary dies.",
-    "Social Security benefits are not paid for the month in which a beneficiary dies. In most cases, the check that an individual receives in a given month represents payment for the preceding month.",
-)
-print(document)
+    
+    
+class TextChunk:
+    def __init__(self, curr: str, prev: str = ""):
+        self.curr = curr
+        self.prev = prev
+    
+    def __str__(self):
+        return f"Curr: {self.curr}\nPrev: {self.prev}"

@@ -87,20 +87,18 @@ def process_json(file_path, type, flag=False) -> Document:
         if flag:
             return Document(json_data["paper_id"], json_data["paper_id"], reference)
         return Document(json_data["paper_id"], json_data["title"], reference)
-    
 
     if type == "SCI_sum":
         json_data = json.loads(file_path)
         summary = extract_list(json_data, "source")
         return Document(json_data["paper_id"], json_data["title"], summary)
-    
+
     if type == "GOVR":
         with open(file_path, "r", encoding="utf-8") as file:
             json_data = json.load(file)
             summary = extract_list(json_data, "summary")
             reference = extract_reference_paragraphs(json_data)
             return Document(json_data["id"], json_data["title"], reference, summary)
-    
 
 
 def write_to_file(ref_data, sum_data, type, id):
@@ -123,7 +121,6 @@ def write_to_file(ref_data, sum_data, type, id):
     if sum_data:  # Check if sum_data is not empty
         with open(sum_out_path, "w") as file:
             json.dump(sum_data, file, cls=ExtractedEncoder, indent=4)
-
 
 
 def extract_gov_report_dataset():
@@ -198,7 +195,7 @@ def extract_sci_tldr_dataset():
 
     refs_to_process = os.listdir(paths.SCI_TLDR_REF_PATH)
     sums_to_process = os.listdir(paths.SCI_TLDR_SUM_PATH)
-    
+
     # Read reference files first
     for file_name in refs_to_process:
         print(f"Processing {file_name}")
@@ -206,6 +203,7 @@ def extract_sci_tldr_dataset():
         with open(os.path.join(paths.SCI_TLDR_REF_PATH, file_name), "r") as infile:
             for line in infile:
                 try:
+                    # Because of a bug in the train.jsonl file in the Reference set, the title is not included with the data, only its paper-id
                     if file_name == "train.jsonl":
                         data = process_json(line, "SCI_ref", True)
                     else:
@@ -220,7 +218,7 @@ def extract_sci_tldr_dataset():
                     # Log the error to the error log file
                     with open(error_log_file, "a") as log_file:
                         log_file.write(f"Error processing {file_name}: {str(e)}\n")
-    
+
     for file_name in sums_to_process:
         print(f"Processing {file_name}")
 
@@ -241,7 +239,6 @@ def extract_sci_tldr_dataset():
                         log_file.write(f"Error processing {file_name}: {str(e)}\n")
 
     print("Extraction complete.")
-    
 
 
 def main():

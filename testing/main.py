@@ -1,6 +1,7 @@
 import os
-from dotenv import load_dotenv
 import json
+import params
+from dotenv import load_dotenv
 
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
@@ -12,7 +13,7 @@ from langchain_community.document_loaders import (
     PyMuPDFLoader,
 )
 from langchain.prompts import PromptTemplate
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, OpenAI
 from langchain.chains import LLMChain, RetrievalQA
 from langchain_community.llms import HuggingFaceEndpoint
 
@@ -118,44 +119,16 @@ def llm_qa_response(chain, query):
 
 def llm_process(chunk, chosen_model):
     # Set up the turbo LLM
+    # turbo_llm = OpenAI(temperature=0, model_name=chosen_model)
     turbo_llm = ChatOpenAI(temperature=0, model_name=chosen_model)
 
-    HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
-    repo_id = "microsoft/phi-1_5"
-    # hf_llm = HuggingFaceEndpoint(
-    #     repo_id=repo_id, max_length=128, temperature=0.5, token=HUGGINGFACEHUB_API_TOKEN
-    # )
-    # Create a proper prompt template
+    # Create a PromptTemplate instance
+    prompt = PromptTemplate.from_template(template=params.PROMPT_TEMPLATE)
 
-    # prompt_template = PromptTemplate.from_template(
-    #     """
-    #     You excel at summarization without adding unnecessary details. Avoid phrases like "the article discusses" or "the text says". Stay true to the text.
-    #
-    #     Condense the following passage while preserving key details: {curr_chunk}"""
-    # )
-    prompt_template = PromptTemplate.from_template(
-        """
-        You excel at summarization without adding unnecessary details. Avoid phrases like "the article discusses" or "the text says". Stay true to the text.
-        Condense the following passage while preserving key details: {curr_chunk}
-        If {curr_chunk} appears to have irrelevant information, such as referrences, links, footnotes, and overall incoherent text that may represent other artifacts in the PDF, do not return anything and do not process anything, just return this message: "This contains irrelevant text".
-        Else, Use the preceding context to guide your summary. Reference the previous chunk ({prev_chunk}) to ensure coherence and maintain context.
-        """
-    )
-
-    llm_chain = LLMChain(prompt=prompt_template, llm=turbo_llm)
+    llm_chain = LLMChain(prompt=prompt, llm=turbo_llm)
     return llm_chain.run(
         {
             "prev_chunk": chunk.metadata["prev_chunk"],
             "curr_chunk": chunk.page_content,
         }
     )
-    # return llm_chain.invoke(
-    #         {
-    #             "curr_chunk": chunk.page_content,
-    #         }
-    #     )
-    # print(llm_chain.run(
-    #         {
-    #             "chunk": chunk.page_content,
-    #         }
-    #     ))
