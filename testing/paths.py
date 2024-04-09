@@ -12,4 +12,4 @@ REFERENCES_PATH = "./extracted_data/references"
 SUMMARIES_PATH = "./extracted_data/summaries"
 OUTPUT_PATH = "./output_data"
 
-ERROR_LOGS_PATH = "./extracted_data"
+LOGS_PATH = "./extracted_data"

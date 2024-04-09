@@ -37,9 +37,9 @@ def write_to_file(chunk_data, file_name):
     """
 
     output_path = os.path.join(paths.OUTPUT_PATH, file_name)
-    if chunk_data:  # Check if sum_data is not empty
-        with open(output_path, "w") as file:
-            json.dump(chunk_data, file, cls=ExtractedEncoder, indent=4)
+    # if chunk_data:  # Check if sum_data is not empty
+    with open(output_path, "w") as file:
+        json.dump(chunk_data, file, cls=ExtractedEncoder, indent=4)
 
 
 def add_context_to_chunk(text_chunks: list):
@@ -66,23 +66,22 @@ def process_document():
         )
         text_list = text_splitter.split_text(json_data['content'])
 
-        text_chunks = [TextChunk(chunk) for chunk in text_list]
-        add_context_to_chunk(text_chunks)
+        # text_chunks = [TextChunk(chunk) for chunk in text_list]
+        # add_context_to_chunk(text_chunks)
         
         processed_chunks = []
-        for i, chunk in enumerate(text_chunks):
-            result = llm_process(chunk.curr, chunk.prev, "gpt-3.5-turbo")
+        prev_chunk = ""
+        for i, curr_chunk in enumerate(text_list):
+            result = llm_process(curr_chunk, prev_chunk, "gpt-3.5-turbo")
             print(f"{result}\n\n")
+            prev_chunk = result
             processed_chunks.append(result)
-            # print(llm_process(chunk.curr, chunk.prev, "gpt-3.5-turbo"))
-        combined_str = " ".join(text_list)
+        combined_str = " ".join(processed_chunks)
         extracted = Extracted(json_data['title'], combined_str)
         
         # print(processed_chunks)
         write_to_file(extracted, file_name)
         # print("ok")
-
-
 
 
 
@@ -98,21 +97,7 @@ def llm_process(curr_chunk, prev_chunk, chosen_model):
         condensed_chunk (str): condensed text to be returned
     """
 
-    # prompt_template = """
-    #     Follow the steps to provide a condensed text chunk:
-        
-    #     Step 1: Extractively Summarize the curr_chunk, try to preserve key details, and condense the text by removing irrelevant words
-        
-    #     {curr_chunk}
-
-    #     Step 2: After processing the curr_chunk, use the prev_chunk to adjust your output accordingly, and to ensure there is proper information flow for user reading
-        
-    #     {prev_chunk}
-
-    #     Step 3: Output the condensed chunk itself
-    # """
-
-    turbo_llm = ChatOpenAI(temperature=0, model_name=chosen_model)
+    turbo_llm = ChatOpenAI(temperature=0.7, model_name=chosen_model)
 
     # Create a PromptTemplate instance
     prompt = PromptTemplate.from_template(template=params.PROMPT_TEMPLATE)
@@ -124,25 +109,6 @@ def llm_process(curr_chunk, prev_chunk, chosen_model):
             "prev_chunk": prev_chunk
         }
     )
-
-    # # Create a PromptTemplate instance
-    # prompt = PromptTemplate.from_template(template=prompt_template)
-
-    # prompt_formatted_str = prompt.format(curr_chunk=curr_chunk, prev_chunk=prev_chunk)
-
-    # # Instantiate the OpenAI instance
-    # llm = ChatOpenAI(model=chosen_model)
-    # llm_chain = LLMChain(prompt=prompt, llm=llm)
-
-    # # Run the LLM chain with your input chunks
-    # response = llm_chain.run({"curr_chunk": curr_chunk, "prev_chunk": prev_chunk})
-
-    # Process the response
-    output_parser = StrOutputParser()
-    parsed_response = output_parser.parse(response)
-
-    # Print the parsed response
-    print(parsed_response)
 
 
 def main():

@@ -126,7 +126,7 @@ def write_to_file(ref_data, sum_data, type, id):
 def extract_gov_report_dataset():
     """Function for extracting from the GovReport dataset"""
 
-    error_log_file = os.path.join(paths.ERROR_LOGS_PATH, "error_logs.txt")
+    error_log_file = os.path.join(paths.LOGS_PATH, "error_logs.txt")
     files_to_process = os.listdir(paths.GOV_REPORT_PATH)
 
     # Iterate over JSON files in the folder
@@ -161,7 +161,7 @@ def extract_bill_sum_dataset():
         "us_train_data_final_OFFICIAL.jsonl",
     ]
 
-    error_log_file = os.path.join(paths.ERROR_LOGS_PATH, "error_logs.txt")
+    error_log_file = os.path.join(paths.LOGS_PATH, "error_logs.txt")
 
     # Read the JSONL files line by line
     for input_file in input_files:
@@ -191,7 +191,7 @@ def extract_bill_sum_dataset():
 def extract_sci_tldr_dataset():
     """Function for extracting from the SciTLDR dataset"""
 
-    error_log_file = os.path.join(paths.ERROR_LOGS_PATH, "error_logs.txt")
+    error_log_file = os.path.join(paths.LOGS_PATH, "error_logs.txt")
 
     refs_to_process = os.listdir(paths.SCI_TLDR_REF_PATH)
     sums_to_process = os.listdir(paths.SCI_TLDR_SUM_PATH)
