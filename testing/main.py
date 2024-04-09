@@ -120,7 +120,7 @@ def llm_qa_response(chain, query):
 def llm_process(chunk, chosen_model):
     # Set up the turbo LLM
     # turbo_llm = OpenAI(temperature=0, model_name=chosen_model)
-    turbo_llm = ChatOpenAI(temperature=0, model_name=chosen_model)
+    turbo_llm = ChatOpenAI(temperature=0.7, model_name=chosen_model)
 
     # Create a PromptTemplate instance
     prompt = PromptTemplate.from_template(template=params.PROMPT_TEMPLATE)

@@ -72,7 +72,7 @@ def gui_summary(chunks, model):
         with col_details:
             # Display the original and new character counts
             st.metric(label="Original Character Count", value=f"{original_count} chars")
-            st.metric(label="Original Character Count", value=f"{new_count} chars")
+            st.metric(label="Reduced Character Count", value=f"{new_count} chars")
 
             # Display the percentage
             st.metric(

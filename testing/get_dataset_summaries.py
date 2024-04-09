@@ -142,7 +142,7 @@ def extract_gov_report_dataset():
 
             write_to_file(reference_data, summary_data, "GOVR_", data.id)
 
-            print(f"- Done - {data.title}")
+            print(f"- Done - {file_name}")
 
         except Exception as e:
             # Log the error to the error log file
