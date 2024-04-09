@@ -61,8 +61,8 @@ def process_document():
         json_data = json.load(file)
         
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=250
+            chunk_size=params.CHUNK_SIZE,
+            chunk_overlap=params.CHUNK_OVERLAP
         )
         text_list = text_splitter.split_text(json_data['content'])
 
@@ -73,7 +73,7 @@ def process_document():
         prev_chunk = ""
         for i, curr_chunk in enumerate(text_list):
             result = llm_process(curr_chunk, prev_chunk, "gpt-3.5-turbo")
-            print(f"{result}\n\n")
+            print(f"\n{result}\n")
             prev_chunk = result
             processed_chunks.append(result)
         combined_str = " ".join(processed_chunks)
@@ -100,12 +100,21 @@ def llm_process(curr_chunk, prev_chunk, chosen_model):
     turbo_llm = ChatOpenAI(temperature=0.7, model_name=chosen_model)
 
     # Create a PromptTemplate instance
-    prompt = PromptTemplate.from_template(template=params.PROMPT_TEMPLATE)
+    prompt = PromptTemplate.from_template(template=params.PROMPT_TEMPLATE_1)
 
     llm_chain = LLMChain(prompt=prompt, llm=turbo_llm)
+    response = llm_chain.run(
+        {
+            "curr_chunk": curr_chunk
+        }
+    )
+    
+    # Create a PromptTemplate instance
+    prompt = PromptTemplate.from_template(template=params.PROMPT_TEMPLATE_2)
+    
     return llm_chain.run(
         {
-            "curr_chunk": curr_chunk,
+            "curr_chunk": response,
             "prev_chunk": prev_chunk
         }
     )
@@ -121,8 +130,6 @@ def main():
             break
         elif choice == "1":
             process_document()
-        elif choice == "2":
-            process_json()
         else:
             print("Invalid choice")
 
