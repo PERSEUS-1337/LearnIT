@@ -84,14 +84,15 @@ def process_json(file_path, type, flag=False) -> Document:
     if type == "SCI_ref":
         json_data = json.loads(file_path)
         reference = extract_list(json_data, "source")
+        
         if flag:
             return Document(json_data["paper_id"], json_data["paper_id"], reference)
-        return Document(json_data["paper_id"], json_data["title"], reference)
+        return Document(json_data["paper_id"], json_data["paper_id"], reference, None)
 
     if type == "SCI_sum":
         json_data = json.loads(file_path)
         summary = extract_list(json_data, "source")
-        return Document(json_data["paper_id"], json_data["title"], summary)
+        return Document(json_data["paper_id"], json_data["title"], None, summary)
 
     if type == "GOVR":
         with open(file_path, "r", encoding="utf-8") as file:
@@ -204,10 +205,11 @@ def extract_sci_tldr_dataset():
             for line in infile:
                 try:
                     # Because of a bug in the train.jsonl file in the Reference set, the title is not included with the data, only its paper-id
-                    if file_name == "train.jsonl":
-                        data = process_json(line, "SCI_ref", True)
-                    else:
+                    if file_name != "train.jsonl":
                         data = process_json(line, "SCI_ref", False)
+                    else:
+                        data = process_json(line, "SCI_ref", True)
+                    # data = process_json(line, "SCI_ref")
                     reference_data = data.reference
 
                     write_to_file(reference_data, None, "SCI_", data.id)
@@ -220,7 +222,7 @@ def extract_sci_tldr_dataset():
                         log_file.write(f"Error processing {file_name}: {str(e)}\n")
 
     for file_name in sums_to_process:
-        print(f"Processing {file_name}")
+        # print(f"Processing {file_name}")
 
         with open(os.path.join(paths.SCI_TLDR_SUM_PATH, file_name), "r") as infile:
             for line in infile:
@@ -231,13 +233,13 @@ def extract_sci_tldr_dataset():
 
                     write_to_file(None, summary_data, "SCI_", data.id)
 
-                    print(f"- Done - {data.title}")
+                    print(f"- Done - {data.id}")
 
                 except Exception as e:
                     # Log the error to the error log file
                     with open(error_log_file, "a") as log_file:
                         log_file.write(f"Error processing {file_name}: {str(e)}\n")
-
+        print(f"Processing {file_name}")
     print("Extraction complete.")
 
 
