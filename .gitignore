@@ -4,3 +4,5 @@ db_directory
 __pycache__
 extracted_data
 .vscode/
+/testing/output_data
+/testing/output_data
