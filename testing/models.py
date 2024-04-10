@@ -31,12 +31,12 @@ class Document:
 
     def __str__(self):
         return f"ID: {self.id}\nTitle: {self.title}\nReference: {self.reference}\nSummary: {self.summary}"
-    
-    
+
+
 class TextChunk:
     def __init__(self, curr: str, prev: str = ""):
         self.curr = curr
         self.prev = prev
-    
+
     def __str__(self):
         return f"Curr: {self.curr}\nPrev: {self.prev}"

@@ -1,5 +1,5 @@
 CHUNK_SIZE = 1000
-CHUNK_OVERLAP = 300
+CHUNK_OVERLAP = 100
 BROKEN_CHARS = {"\u2212": "-"}
 LLM = {"dev": "gpt-3.5-turbo", "prod": "gpt-4-turbo-preview"}
 PROMPT_MAIN = """
@@ -11,7 +11,7 @@ PROMPT_MAIN = """
     {curr_chunk}
     "
     
-    Step 2 - To assist you with the task, here is the context of the text before it, to give you an idea on the information flow, and it is contained here in this prev_chunk:
+    Step 2 - To assist you with the task, here is the context of the paragraphs before it, to give you an idea on the information flow, and it is contained here in this prev_chunk:
     
     "
     {prev_chunk}
@@ -22,21 +22,27 @@ PROMPT_MAIN = """
     Step 4: Output the summarized chunk
 """
 PROMPT_2_1 = """
-    Extractively Summarize the curr_chunk, try to preserve key details, and condense the text by removing irrelevant words:
+    Extractively Summarize the following text, by preserving key details, and condensing the text by removing irrelevant words:
     
     "
     {curr_chunk}
+    "
+    
     Step 2: Output the summarized chunk
 """
 PROMPT_2_2 = """
-    Step 1: Analyze this following previous chunk:
+    Step 1: Analyze the following chunk labeled as "curr_chunk" that you will be adjusting:
+    
+    "
+    {curr_chunk}
+    "
+    
+    Step 2: Analyze the following text chunk, which is labeled as "prev_chunk" to reduce any redundant context that is included with the "curr_chunk" that you just have analyzed:
+    
     "
     {prev_chunk}
     "
     
-    Step 2: Adjust the following current chunk to fit with proper information flow:
-    "
-    {curr_chunk}
     Step 3: Output the summarized chunk
-    "
+    
 """

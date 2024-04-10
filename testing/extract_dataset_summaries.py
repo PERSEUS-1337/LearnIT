@@ -5,6 +5,7 @@ import sys
 from models import Document, Extracted, ExtractedEncoder
 import paths
 import params
+from utils import log_error, write_to_file
 
 # Create output directories if they don't exist
 os.makedirs(paths.REFERENCES_PATH, exist_ok=True)
@@ -84,7 +85,7 @@ def process_json(file_path, type, flag=False) -> Document:
     if type == "SCI_ref":
         json_data = json.loads(file_path)
         reference = extract_list(json_data, "source")
-        
+
         if flag:
             return Document(json_data["paper_id"], json_data["paper_id"], reference)
         return Document(json_data["paper_id"], json_data["paper_id"], reference, None)
@@ -102,28 +103,6 @@ def process_json(file_path, type, flag=False) -> Document:
             return Document(json_data["id"], json_data["title"], reference, summary)
 
 
-def write_to_file(ref_data, sum_data, type, id):
-    """
-    Write data to a JSON file.
-
-    Args:
-        ref_data (Extracted or str): Reference data to write to the file.
-        sum_data (Extracted or str): Summary data to write to the file.
-        type (str): Type identifier for the file name prefix.
-        id (str): Identifier for the file name.
-
-    """
-    ref_out_path = os.path.join(paths.REFERENCES_PATH, f"{type}{id}.json")
-    if ref_data:  # Check if ref_data is not empty
-        with open(ref_out_path, "w") as file:
-            json.dump(ref_data, file, cls=ExtractedEncoder, indent=4)
-
-    sum_out_path = os.path.join(paths.SUMMARIES_PATH, f"{type}{id}.json")
-    if sum_data:  # Check if sum_data is not empty
-        with open(sum_out_path, "w") as file:
-            json.dump(sum_data, file, cls=ExtractedEncoder, indent=4)
-
-
 def extract_gov_report_dataset():
     """Function for extracting from the GovReport dataset"""
 
@@ -137,32 +116,27 @@ def extract_gov_report_dataset():
 
             data = process_json(file_path, "GOVR")
 
-            reference_data = data.reference
-
-            summary_data = data.summary
-
-            write_to_file(reference_data, summary_data, "GOVR_", data.id)
+            write_to_file(data.reference, f"GOVR_{data.id}.json", paths.REFERENCES_PATH)
+            write_to_file(data.summary, f"GOVR_{data.id}.json", paths.SUMMARIES_PATH)
 
             print(f"- Done - {file_name}")
 
         except Exception as e:
             # Log the error to the error log file
-            with open(error_log_file, "a") as log_file:
-                log_file.write(f"Error processing {file_name}: {str(e)}\n")
+            log_error(file_name, str(e), error_log_file)
 
     print("Extraction complete.")
 
 
 def extract_bill_sum_dataset():
     """Function for extracting from the BillSum dataset"""
+    error_log_file = os.path.join(paths.LOGS_PATH, "error_logs.txt")
 
     input_files = [
         "ca_test_data_final_OFFICIAL.jsonl",
         "us_test_data_final_OFFICIAL.jsonl",
         "us_train_data_final_OFFICIAL.jsonl",
     ]
-
-    error_log_file = os.path.join(paths.LOGS_PATH, "error_logs.txt")
 
     # Read the JSONL files line by line
     for input_file in input_files:
@@ -173,18 +147,14 @@ def extract_bill_sum_dataset():
                 try:
                     data = process_json(line, "BILL")
 
-                    reference_data = data.reference
-
-                    summary_data = data.summary
-
-                    write_to_file(reference_data, summary_data, "BILL_", data.id)
+                    write_to_file(data.reference, f"BILL_{data.id}.json", paths.REFERENCES_PATH)
+                    write_to_file(data.summary, f"BILL_{data.id}.json", paths.SUMMARIES_PATH)
 
                     print(f"- Done - {data.title}")
 
                 except Exception as e:
                     # Log the error to the error log file
-                    with open(error_log_file, "a") as log_file:
-                        log_file.write(f"Error processing {input_file}: {str(e)}\n")
+                    log_error(file_name, str(e), error_log_file)
 
     print("Extraction complete.")
 
@@ -209,44 +179,39 @@ def extract_sci_tldr_dataset():
                         data = process_json(line, "SCI_ref", False)
                     else:
                         data = process_json(line, "SCI_ref", True)
-                    # data = process_json(line, "SCI_ref")
-                    reference_data = data.reference
 
-                    write_to_file(reference_data, None, "SCI_", data.id)
+                    write_to_file(data.reference, f"SCI_{data.id}.json", paths.REFERENCES_PATH)
+                    
 
                     print(f"- Done - {data.title}")
 
                 except Exception as e:
                     # Log the error to the error log file
-                    with open(error_log_file, "a") as log_file:
-                        log_file.write(f"Error processing {file_name}: {str(e)}\n")
+                    log_error(file_name, str(e), error_log_file)
 
     for file_name in sums_to_process:
-        # print(f"Processing {file_name}")
-
+        print(f"Processing {file_name}")
         with open(os.path.join(paths.SCI_TLDR_SUM_PATH, file_name), "r") as infile:
             for line in infile:
+                
                 try:
                     data = process_json(line, "SCI_sum")
 
-                    summary_data = data.summary
-
-                    write_to_file(None, summary_data, "SCI_", data.id)
+                    write_to_file(data.summary, f"BILL_{data.id}.json", paths.SUMMARIES_PATH)
 
                     print(f"- Done - {data.id}")
 
                 except Exception as e:
                     # Log the error to the error log file
-                    with open(error_log_file, "a") as log_file:
-                        log_file.write(f"Error processing {file_name}: {str(e)}\n")
-        print(f"Processing {file_name}")
+                    log_error(file_name, str(e), error_log_file)
+                    
     print("Extraction complete.")
 
 
 def main():
     """Main Menu for testing purposes"""
     while True:
-        print("Get Dataset Summaries\n===========")
+        print("Extract Dataset Summaries\n===========")
         print("1. Extract data from the BillSum dataset")
         print("2. Extract data from the GovReport dataset")
         print("3. Extract data from the SciTLDR dataset")
