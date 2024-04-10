@@ -147,8 +147,12 @@ def extract_bill_sum_dataset():
                 try:
                     data = process_json(line, "BILL")
 
-                    write_to_file(data.reference, f"BILL_{data.id}.json", paths.REFERENCES_PATH)
-                    write_to_file(data.summary, f"BILL_{data.id}.json", paths.SUMMARIES_PATH)
+                    write_to_file(
+                        data.reference, f"BILL_{data.id}.json", paths.REFERENCES_PATH
+                    )
+                    write_to_file(
+                        data.summary, f"BILL_{data.id}.json", paths.SUMMARIES_PATH
+                    )
 
                     print(f"- Done - {data.title}")
 
@@ -180,8 +184,9 @@ def extract_sci_tldr_dataset():
                     else:
                         data = process_json(line, "SCI_ref", True)
 
-                    write_to_file(data.reference, f"SCI_{data.id}.json", paths.REFERENCES_PATH)
-                    
+                    write_to_file(
+                        data.reference, f"SCI_{data.id}.json", paths.REFERENCES_PATH
+                    )
 
                     print(f"- Done - {data.title}")
 
@@ -193,18 +198,19 @@ def extract_sci_tldr_dataset():
         print(f"Processing {file_name}")
         with open(os.path.join(paths.SCI_TLDR_SUM_PATH, file_name), "r") as infile:
             for line in infile:
-                
                 try:
                     data = process_json(line, "SCI_sum")
 
-                    write_to_file(data.summary, f"BILL_{data.id}.json", paths.SUMMARIES_PATH)
+                    write_to_file(
+                        data.summary, f"BILL_{data.id}.json", paths.SUMMARIES_PATH
+                    )
 
                     print(f"- Done - {data.id}")
 
                 except Exception as e:
                     # Log the error to the error log file
                     log_error(file_name, str(e), error_log_file)
-                    
+
     print("Extraction complete.")
 
 

@@ -1,7 +1,9 @@
-CHUNK_SIZE = 1000
-CHUNK_OVERLAP = 100
-BROKEN_CHARS = {"\u2212": "-"}
-LLM = {"dev": "gpt-3.5-turbo", "prod": "gpt-4-turbo-preview"}
+DEFAULT_CHUNK_SIZE = 1000
+CHUNK_SIZE_LIST = [1000]
+DEFAULT_CHUNK_OVERLAP = 200
+CHUNK_OVERLAP_LIST = [100]
+LLM_TEMP = 0
+LLMS = {"dev": "gpt-3.5-turbo", "prod": "gpt-4-turbo-preview"}
 PROMPT_MAIN = """
     Follow the steps to provide a condensed text chunk:
     
