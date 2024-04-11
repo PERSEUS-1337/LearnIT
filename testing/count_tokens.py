@@ -40,9 +40,7 @@ def count_tokens_in_folder(folder_path):
     # Save token counts to a text file
     output_file = f"{paths.LOGS_PATH}/{folder_name}_token_count.txt"
     with open(output_file, "w", encoding="utf-8") as outfile:
-        outfile.write(
-            f"Total Token Count for {folder_name}: {sum(token_count.values())}\n"
-        )
+        outfile.write(f"Total Token Count for {folder_name}: {total_token_count}\n")
         outfile.write(f"File Count: {file_count}\n\n")
         outfile.write("Bag of Words:\n=====\n")
         for token, count in sorted(

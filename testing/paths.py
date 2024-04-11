@@ -22,3 +22,5 @@ OUTPUT_PATH_1 = "./output_data/0"
 OUTPUT_PATH_3 = "./output_data/1"
 OUTPUT_PATH_2 = "./output_data/2"
 
+ERROR_LOGS = "error_logs.txt"
+ID_LOGS = "ids.txt"

@@ -5,6 +5,24 @@ import paths
 from models import ExtractedEncoder
 
 
+import os
+
+def create_empty_file(file_path):
+    """Creates an empty file if it doesn't already exist.
+
+    Args:
+        file_path (str): The path of the file to be created.
+    """
+    if not os.path.exists(file_path):
+        # Open the file in write mode to create it
+        with open(file_path, "w"):
+            pass  # This will create an empty file
+        print(f"> Created Empty File - [{file_path}]")
+    else:
+        print(f"> File already exists - [{file_path}]")
+
+
+
 def write_to_file(data, file_name, file_path=paths.OUTPUT_PATH):
     """Writes the data into a json formatted file for later processing by TSCC and other functions
 
@@ -17,14 +35,29 @@ def write_to_file(data, file_name, file_path=paths.OUTPUT_PATH):
     output_path = os.path.join(file_path, file_name)
     with open(output_path, "w") as file:
         json.dump(data, file, cls=ExtractedEncoder, indent=4)
-    print(f"File saved - {file_name}")
+    print(f"> File saved - {file_name}")
 
 
 def append_to_json(output_file, data):
     # Append the extracted content to the JSONL file
     with open(output_file, "a", encoding="utf-8") as outfile:
-        json.dump(data, outfile)
+        json.dump(data, outfile, cls=ExtractedEncoder)
         outfile.write("\n")  # Add newline between JSON objects
+    print(f"> File updated - {output_file}")
+
+
+def append_to_file(output_file, data):
+    """Append the extracted content to the file
+
+    Args:
+        output_file (str): File to write on
+        data (str): Text to be written
+    """
+
+    with open(output_file, "a", encoding="utf-8") as outfile:
+        outfile.write(f"{data}\n")  # Add newline
+    print(f"> File updated - {output_file}")
+
 
 def log_error(file_name, error_msg, error_log_file):
     """Log errors to a file
@@ -62,29 +95,29 @@ def generate_id_list(folder_path, n):
     """
     random_output_file = os.path.join(paths.LOGS_PATH, "params_test.txt")
     final_output_file = os.path.join(paths.LOGS_PATH, "final_test.txt")
-    
+
     # Get the list of files in the folder
     files = os.listdir(folder_path)
-    
+
     # Check if n is greater than the total number of files
     n = min(n, len(files))
-    
+
     # Randomly select n files
     random_files = random.sample(files, n)
-    
+
     # Write the selected file names to the random output text file
     with open(random_output_file, "w") as f_random:
         for file_name in random_files:
             f_random.write(file_name + "\n")
-    
+
     # Write the remaining file names to the final output text file
     with open(final_output_file, "w") as f_final:
         for file_name in files:
             if file_name not in random_files:
                 f_final.write(file_name + "\n")
-    
-    print("Done Generating List of Files")
-    
+
+    print("> Done Generating List of Files for testing")
+
 
 def read_file_to_list(file_path):
     """
@@ -104,6 +137,7 @@ def read_file_to_list(file_path):
         # Split the content by newline characters to get a list of lines
         file_list = file.read().strip().split("\n")
 
+    print(f"> [{file_path}] Done reading and creating a list of files")
     return file_list
 
 
@@ -113,14 +147,13 @@ if __name__ == "__main__":
         print("===========\nUtils\n===========")
         print("[1] get_files_to_process()")
         print("[2] generate_id_list()")
-        choice = input("\nEnter your choice: ")
+        choice = input("\n> Enter your choice: ")
         if choice == "0":
-                break
+            break
         elif choice == "1":
             get_files_to_process(paths.REFERENCES_PATH)
         elif choice == "2":
-            n = int(input("Enter sample size: "))
+            n = int(input("> Enter sample size: "))
             generate_id_list(paths.REFERENCES_PATH, n)
         else:
-            print("Invalid choice")
-    
+            print(">Invalid choice")

@@ -13,9 +13,8 @@ from langchain_community.document_loaders import (
     PyMuPDFLoader,
 )
 from langchain.prompts import PromptTemplate
-from langchain_openai import ChatOpenAI, OpenAI
+from langchain_openai import ChatOpenAI
 from langchain.chains import LLMChain, RetrievalQA
-from langchain_community.llms import HuggingFaceEndpoint
 
 
 load_dotenv()

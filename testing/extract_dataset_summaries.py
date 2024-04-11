@@ -80,7 +80,7 @@ def process_json(file_path, type, flag=False) -> Document:
         json_data = json.loads(file_path)
         summary = json_data["summary"]
         reference = json_data["text"]
-        return Document(json_data["bill_id"], json_data["title"], reference, summary)
+        return Document(json_data["bill_id"], json_data["bill_id"], reference, summary)
 
     if type == "SCI_ref":
         json_data = json.loads(file_path)
@@ -93,14 +93,14 @@ def process_json(file_path, type, flag=False) -> Document:
     if type == "SCI_sum":
         json_data = json.loads(file_path)
         summary = extract_list(json_data, "source")
-        return Document(json_data["paper_id"], json_data["title"], None, summary)
+        return Document(json_data["paper_id"], json_data["paper_id"], None, summary)
 
     if type == "GOVR":
         with open(file_path, "r", encoding="utf-8") as file:
             json_data = json.load(file)
             summary = extract_list(json_data, "summary")
             reference = extract_reference_paragraphs(json_data)
-            return Document(json_data["id"], json_data["title"], reference, summary)
+            return Document(json_data["id"], json_data["id"], reference, summary)
 
 
 def extract_gov_report_dataset():
@@ -158,7 +158,7 @@ def extract_bill_sum_dataset():
 
                 except Exception as e:
                     # Log the error to the error log file
-                    log_error(file_name, str(e), error_log_file)
+                    log_error(input_file, str(e), error_log_file)
 
     print("Extraction complete.")
 
@@ -202,7 +202,7 @@ def extract_sci_tldr_dataset():
                     data = process_json(line, "SCI_sum")
 
                     write_to_file(
-                        data.summary, f"BILL_{data.id}.json", paths.SUMMARIES_PATH
+                        data.summary, f"SCI_{data.id}.json", paths.SUMMARIES_PATH
                     )
 
                     print(f"- Done - {data.id}")
@@ -217,10 +217,11 @@ def extract_sci_tldr_dataset():
 def main():
     """Main Menu for testing purposes"""
     while True:
-        print("Extract Dataset Summaries\n===========")
-        print("1. Extract data from the BillSum dataset")
-        print("2. Extract data from the GovReport dataset")
-        print("3. Extract data from the SciTLDR dataset")
+        print("===========\nExtract Dataset Summaries\n===========")
+        print("[1] Extract data from the BillSum dataset")
+        print("[2] Extract data from the GovReport dataset")
+        print("[3] Extract data from the SciTLDR dataset")
+        print("[4] Extract data from all datasets")
         choice = input("Enter your choice: ")
         if choice == "0":
             break
@@ -231,6 +232,10 @@ def main():
             extract_gov_report_dataset()
             # extract_dataset("GOVR")
         elif choice == "3":
+            extract_sci_tldr_dataset()
+        elif choice == "4":
+            extract_bill_sum_dataset()
+            extract_gov_report_dataset()
             extract_sci_tldr_dataset()
         else:
             print("Invalid choice")
