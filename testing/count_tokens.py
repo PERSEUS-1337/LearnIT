@@ -4,6 +4,7 @@ from collections import Counter
 from nltk.tokenize import word_tokenize
 import paths
 
+
 def calculate_token_reduction(ref_tokens, gen_tokens):
     """Calculates the reduction in percentage of tokens.
 

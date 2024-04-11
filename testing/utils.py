@@ -8,6 +8,7 @@ from models import ExtractedEncoder
 
 import os
 
+
 def create_empty_file(file_path):
     """Creates an empty file if it doesn't already exist.
 
@@ -21,7 +22,6 @@ def create_empty_file(file_path):
         print(f"> Created Empty File - [{file_path}]")
     else:
         print(f"> File already exists - [{file_path}]")
-
 
 
 def write_to_file(data, file_name, file_path=paths.OUTPUT_PATH):
@@ -70,7 +70,7 @@ def log_error(file_name, error_msg, error_log_file):
     """
     # Get the current timestamp
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
+
     # Append the error message with the timestamp to the log file
     with open(error_log_file, "a") as log_file:
         log_file.write(f"[{timestamp}] Error processing {file_name}: {error_msg}\n")
@@ -147,7 +147,9 @@ def read_file_to_list(file_path):
     return file_list
 
 
-def append_statistics_to_json(file_path, title, rouge_scores, ref_tokens, gen_tokens, reduction_percentage):
+def append_statistics_to_json(
+    file_path, title, rouge_scores, ref_tokens, gen_tokens, reduction_percentage
+):
     """Append statistics to a JSON file.
 
     Args:
@@ -164,7 +166,7 @@ def append_statistics_to_json(file_path, title, rouge_scores, ref_tokens, gen_to
         "rouge_scores": rouge_scores,
         "ref_tokens": ref_tokens,
         "gen_tokens": gen_tokens,
-        "reduction_percentage": reduction_percentage
+        "reduction_percentage": reduction_percentage,
     }
 
     # Append statistics to JSON file
