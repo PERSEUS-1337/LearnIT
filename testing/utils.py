@@ -2,6 +2,7 @@ import json
 import os
 import random
 import paths
+import datetime
 from models import ExtractedEncoder
 
 
@@ -35,7 +36,7 @@ def write_to_file(data, file_name, file_path=paths.OUTPUT_PATH):
     output_path = os.path.join(file_path, file_name)
     with open(output_path, "w") as file:
         json.dump(data, file, cls=ExtractedEncoder, indent=4)
-    print(f"> File saved - {file_name}")
+    print(f"> [SAVE] {file_name}")
 
 
 def append_to_json(output_file, data):
@@ -43,7 +44,7 @@ def append_to_json(output_file, data):
     with open(output_file, "a", encoding="utf-8") as outfile:
         json.dump(data, outfile, cls=ExtractedEncoder)
         outfile.write("\n")  # Add newline between JSON objects
-    print(f"> File updated - {output_file}")
+    print(f"> [UPDATE] {output_file}")
 
 
 def append_to_file(output_file, data):
@@ -56,19 +57,24 @@ def append_to_file(output_file, data):
 
     with open(output_file, "a", encoding="utf-8") as outfile:
         outfile.write(f"{data}\n")  # Add newline
-    print(f"> File updated - {output_file}")
+    print(f"> [UPDATE] {output_file}")
 
 
 def log_error(file_name, error_msg, error_log_file):
-    """Log errors to a file
+    """Log errors to a file with timestamp
 
     Args:
         - file_name (str): The file that caused the error
-        - error_msg (str): The error that the file spit out
-        - error_log_file (str): The file of which to append the error to
+        - error_msg (str): The error message
+        - error_log_file (str): The file to append the error message to
     """
+    # Get the current timestamp
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    # Append the error message with the timestamp to the log file
     with open(error_log_file, "a") as log_file:
-        log_file.write(f"Error processing {file_name}: {error_msg}\n")
+        log_file.write(f"[{timestamp}] Error processing {file_name}: {error_msg}\n")
+    print(f"> [ERROR][{timestamp}] {file_name} - logged to {error_log_file}")
 
 
 def get_files_to_process(folder_path) -> list:
