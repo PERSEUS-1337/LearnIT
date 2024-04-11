@@ -147,6 +147,32 @@ def read_file_to_list(file_path):
     return file_list
 
 
+def append_statistics_to_json(file_path, title, rouge_scores, ref_tokens, gen_tokens, reduction_percentage):
+    """Append statistics to a JSON file.
+
+    Args:
+        file_path (str): The file path of the JSON file.
+        title (str): The title of the data.
+        rouge_scores (dict): Dictionary containing ROUGE scores.
+        ref_tokens (int): Total number of tokens in the reference data.
+        gen_tokens (int): Total number of tokens in the generated data.
+        reduction_percentage (float): Reduction in percentage of tokens.
+    """
+    # Create dictionary with statistics
+    statistics = {
+        "title": title,
+        "rouge_scores": rouge_scores,
+        "ref_tokens": ref_tokens,
+        "gen_tokens": gen_tokens,
+        "reduction_percentage": reduction_percentage
+    }
+
+    # Append statistics to JSON file
+    with open(file_path, "a") as json_file:
+        json.dump(statistics, json_file)
+        json_file.write("\n")
+
+
 if __name__ == "__main__":
     """Main Menu for testing purposes"""
     while True:
