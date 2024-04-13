@@ -1,0 +1,4 @@
+{
+    "title": "rkldVXKU8H",
+    "content": "Foveation is an important part of human vision, and a number of deep networks have also used foveation. However, there have been few systematic comparisons between foveating and non-foveating deep networks, and between different variable-resolution downsampling methods. Here we define several such methods, and compare their performance on ImageNet recognition with a Densenet-121 network. The best variable-resolution method slightly outperforms uniform downsampling. Thus in our experiments, foveation does not substantially help or hinder object recognition in deep networks."
+}

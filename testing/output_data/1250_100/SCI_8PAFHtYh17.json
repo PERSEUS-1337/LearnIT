@@ -1,0 +1,4 @@
+{
+    "title": "8PAFHtYh17",
+    "content": "We introduce a new procedural dynamic system called spiroplots, which generate various shapes resembling curves through plots of points. This system is simple yet visually diverse, with some plots having finite cycles while others produce points infinitely. The paper includes fundamental properties, analysis of instances, and a JavaScript app for generating spiroplots."
+}

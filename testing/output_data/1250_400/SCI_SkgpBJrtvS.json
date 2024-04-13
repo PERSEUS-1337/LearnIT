@@ -1,0 +1,4 @@
+{
+    "title": "SkgpBJrtvS",
+    "content": "Knowledge distillation is a common method for transferring knowledge between neural networks, but it overlooks important structural information of the teacher network. A new approach called contrastive learning aims to train a student network to capture more information from the teacher's representation of the data. Experiments show that this new method outperforms knowledge distillation in various knowledge transfer tasks, including model compression, ensemble distillation, and cross-modal transfer. When combined with knowledge distillation, the new method even surpasses the performance of the teacher network in some cases."
+}

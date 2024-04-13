@@ -1,0 +1,4 @@
+{
+    "title": "rygwBRgYs7",
+    "content": "Typical recent neural network designs are primarily convolutional layers, but the tricks enabling structured efficient linear layers (SELLs) have not yet been adapted to the convolutional setting. We present a method to express the weight tensor in a convolutional layer using diagonal matrices, discrete cosine transforms (DCTs) and permutations that can be optimised using standard stochastic gradient methods. A network composed of such structured efficient convolutional layers (SECL) outperforms existing low-rank networks and demonstrates competitive computational efficiency."
+}

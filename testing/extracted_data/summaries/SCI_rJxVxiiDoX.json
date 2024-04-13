@@ -1,0 +1,4 @@
+{
+    "title": "rJxVxiiDoX",
+    "content": "We investigate low-bit quantization to reduce computational cost of deep neural network (DNN) based keyword spotting (KWS). We propose approaches to further reduce quantization bits via integrating quantization into keyword spotting model training, which we refer to as quantization-aware training. Our experimental results on large dataset indicate that quantization-aware training can recover performance models quantized to lower bits representations. By combining quantization-aware training and weight matrix factorization, we are able to significantly reduce model size and computation for small-footprint keyword spotting, while maintaining performance."
+}
