@@ -36,7 +36,7 @@ def write_to_file(data, file_name, file_path=paths.OUTPUT_PATH):
     output_path = os.path.join(file_path, file_name)
     with open(output_path, "w") as file:
         json.dump(data, file, cls=ExtractedEncoder, indent=4)
-    print(f"> [SAVE] {file_name}")
+    print(f"> [SAVE]\t{output_path}")
 
 
 def append_to_json(output_file, data):
@@ -44,7 +44,7 @@ def append_to_json(output_file, data):
     with open(output_file, "a", encoding="utf-8") as outfile:
         json.dump(data, outfile, cls=ExtractedEncoder)
         outfile.write("\n")  # Add newline between JSON objects
-    print(f"> [UPDATE] {output_file}")
+    print(f"> [UPDATE]\t{output_file}")
 
 
 def append_to_file(output_file, data):
@@ -57,8 +57,11 @@ def append_to_file(output_file, data):
 
     with open(output_file, "a", encoding="utf-8") as outfile:
         outfile.write(f"{data}\n")  # Add newline
-    print(f"> [UPDATE] {output_file}")
+    print(f"> [UPDATE]\t{output_file}")
 
+
+import datetime
+import json
 
 def log_error(file_name, error_msg, error_log_file):
     """Log errors to a file with timestamp
@@ -71,10 +74,20 @@ def log_error(file_name, error_msg, error_log_file):
     # Get the current timestamp
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+    # Create error message as a JSON object
+    error_data = {
+        "timestamp": timestamp,
+        "file_name": file_name,
+        "error_message": error_msg
+    }
+
     # Append the error message with the timestamp to the log file
     with open(error_log_file, "a") as log_file:
-        log_file.write(f"[{timestamp}] Error processing {file_name}: {error_msg}\n")
+        json.dump(error_data, log_file)
+        log_file.write("\n")  # Add newline between JSON objects
+
     print(f"> [ERROR][{timestamp}] {file_name} - logged to {error_log_file}")
+
 
 
 def get_files_to_process(folder_path) -> list:

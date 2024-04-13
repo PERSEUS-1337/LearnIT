@@ -30,7 +30,7 @@ def calculate_rouge_scores(reference_data, generated_data):
     return scores
 
 
-def process_files(reference_folder, generated_folder, file_list):
+def process_files(reference_folder, generated_folder, file_list, output_file):
     """Processes files from the reference and generated folders."""
     for file_name in file_list:
         reference_file_path = os.path.join(reference_folder, file_name)
@@ -60,9 +60,9 @@ def process_files(reference_folder, generated_folder, file_list):
             )
 
             # Append statistics to JSON file
-            output_json_file = "./rouge/750_100.json"
+            # output_json_file = "./rouge/1000_100.json"
             append_statistics_to_json(
-                output_json_file,
+                output_file,
                 file_name,
                 rouge_scores,
                 ref_tokens,
@@ -77,14 +77,17 @@ def process_files(reference_folder, generated_folder, file_list):
 def main():
     # Define paths
     reference_folder = "./extracted_data/references/"
-    generated_folder = "./output_data/750_100"
     file_list_path = "./extracted_data/params_test.txt"
+    chunk_size = int(input("Enter chunk size: "))
+    chunk_overlap = int(input("Enter chunk overlap: "))
+    generated_folder = f"./output_data/{chunk_size}_{chunk_overlap}"
+    output_json_file = f"./rouge/{chunk_size}_{chunk_overlap}.json"
 
     # Read file list
     file_list = load_file_list(file_list_path)
 
     # Process files
-    process_files(reference_folder, generated_folder, file_list)
+    process_files(reference_folder, generated_folder, file_list, output_json_file)
 
 
 if __name__ == "__main__":

@@ -51,11 +51,11 @@ def params_summarize_documents(chunk_size, chunk_overlap):
 
     for i, file_name in enumerate(files_to_process):
         if file_name in files_processed:
-            print(f"> [{i}] Processing {file_name} - Already Processed!")
+            print(f"> [{i}]\t{file_name} - Already Processed!")
             continue
 
         print(
-            f"> [{i}] Processing {file_name} | CS: {chunk_size} | CO: {chunk_overlap}"
+            f"\n> [{i}]\t{file_name} | CS: {chunk_size} | CO: {chunk_overlap}"
         )
         file_path = os.path.join(paths.REFERENCES_PATH, file_name)
 
