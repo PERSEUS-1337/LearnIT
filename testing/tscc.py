@@ -44,6 +44,7 @@ def add_context_to_chunk(text_chunks: list):
 
 import time
 
+
 def tscc_process(
     json_data,
     size=params.DEFAULT_CHUNK_SIZE,
@@ -88,10 +89,11 @@ def tscc_process(
     end_time = time.time()  # Record end time
     elapsed_time = end_time - start_time
     print(f"> [INFO]\tElapsed time: {elapsed_time:.2f}s")
-    print(f"> [INFO]\tTime completed: {time.strftime('%m-%d %H:%M:%S', time.localtime())}")
+    print(
+        f"> [INFO]\tTime completed: {time.strftime('%m-%d %H:%M:%S', time.localtime())}"
+    )
 
     return combined_str
-
 
 
 def llm_process(curr_chunk, prev_chunk, chosen_model, tscc_type=0) -> str:

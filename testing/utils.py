@@ -63,6 +63,7 @@ def append_to_file(output_file, data):
 import datetime
 import json
 
+
 def log_error(file_name, error_msg, error_log_file):
     """Log errors to a file with timestamp
 
@@ -78,7 +79,7 @@ def log_error(file_name, error_msg, error_log_file):
     error_data = {
         "timestamp": timestamp,
         "file_name": file_name,
-        "error_message": error_msg
+        "error_message": error_msg,
     }
 
     # Append the error message with the timestamp to the log file
@@ -87,7 +88,6 @@ def log_error(file_name, error_msg, error_log_file):
         log_file.write("\n")  # Add newline between JSON objects
 
     print(f"> [ERROR][{timestamp}] {file_name} - logged to {error_log_file}")
-
 
 
 def get_files_to_process(folder_path) -> list:

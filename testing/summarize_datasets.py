@@ -54,9 +54,7 @@ def params_summarize_documents(chunk_size, chunk_overlap):
             print(f"> [{i}]\t{file_name} - Already Processed!")
             continue
 
-        print(
-            f"\n> [{i}]\t{file_name} | CS: {chunk_size} | CO: {chunk_overlap}"
-        )
+        print(f"\n> [{i}]\t{file_name} | CS: {chunk_size} | CO: {chunk_overlap}")
         file_path = os.path.join(paths.REFERENCES_PATH, file_name)
 
         with open(file_path, "r", encoding="utf-8") as file:
