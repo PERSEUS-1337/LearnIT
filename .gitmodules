@@ -1,0 +1,7 @@
+[submodule "testing/datasets/SciTLDR"]
+	path = testing/datasets/SciTLDR
+	url = https://github.com/allenai/scitldr.git
+	
+[submodule "testing/datasets/Arxiv"]
+	path = testing/datasets/Arxiv
+	url = https://huggingface.co/datasets/ccdv/arxiv-summarization
