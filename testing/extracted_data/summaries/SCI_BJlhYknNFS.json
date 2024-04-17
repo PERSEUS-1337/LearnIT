@@ -1,0 +1,4 @@
+{
+    "title": "BJlhYknNFS",
+    "content": "We introduce a more efficient neural architecture for amortized inference, which combines continuous and conditional normalizing flows using a principled choice of structure. Our gradient flow derives its sparsity pattern from the minimally faithful inverse of its underlying graphical model. We find that this factorization reduces the necessary numbers both of parameters in the neural network and of adaptive integration steps in the ODE solver. Consequently, the throughput at training time and inference time is increased, without decreasing performance in comparison to unconstrained flows. By expressing the structural inversion and the flow construction as compilation passes of a probabilistic programming language, we demonstrate their applicability to the stochastic inversion of realistic models such as convolutional neural networks (CNN)."
+}

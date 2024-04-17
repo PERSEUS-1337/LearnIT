@@ -1,0 +1,4 @@
+{
+    "title": "H1fZLbSti7",
+    "content": "We propose a software framework based on ideas of the Learning-Compression algorithm , that allows one to compress any neural network by different compression mechanisms (pruning, quantization, low-rank, etc.). By design, the learning of the neural net (handled by SGD) is decoupled from the compression of its parameters (handled by a signal compression function), so that the framework can be easily extended to handle different combinations of neural net and compression type. In addition, it has other advantages, such as easy integration with deep learning frameworks, efficient training time, competitive practical performance in the loss-compression tradeoff, and reasonable convergence guarantees. Our toolkit is written in Python and Pytorch and we plan to make it available by the workshop time, and eventually open it for contributions from the community."
+}

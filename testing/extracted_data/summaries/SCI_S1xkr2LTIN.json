@@ -1,0 +1,4 @@
+{
+    "title": "S1xkr2LTIN",
+    "content": "Conducting reinforcement-learning experiments can be a complex and timely process. A full experimental pipeline will typically consist of a simulation of an environment, an implementation of one or many learning algorithms, a variety of additional components designed to facilitate the agent-environment interplay, and any requisite analysis, plotting, and logging thereof. In light of this complexity, this paper introduces simple rl, a new open source library for carrying out reinforcement learning experiments in Python 2 and 3 with a focus on simplicity. The goal of simple_rl is to support seamless, reproducible methods for running reinforcement learning experiments. This paper gives an overview  of the core design philosophy of the package, how it differs from existing libraries, and showcases its central features."
+}

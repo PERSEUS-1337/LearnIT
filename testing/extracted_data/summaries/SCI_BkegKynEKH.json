@@ -1,0 +1,4 @@
+{
+    "title": "BkegKynEKH",
+    "content": "  We present a probabilistic framework for session based recommendation.   A latent variable for the user state is updated as the user views more items and we learn more about their interests.   We provide computational solutions using both the re-parameterization trick and  using the Bouchard bound for the softmax function, we further explore employing a variational auto-encoder and a variational Expectation-Maximization algorithm for tightening the variational bound.   Finally we show that the Bouchard bound causes the denominator of the softmax to decompose into a sum enabling fast noisy gradients of the bound giving a fully probabilistic algorithm reminiscent of word2vec and a fast online EM algorithm.\n"
+}
