@@ -2,7 +2,7 @@ import os
 import json
 from rouge_score import rouge_scorer
 from count_tokens import count_tokens_in_data, calculate_token_reduction
-from utils import append_statistics_to_json
+from utils import append_statistics_to_json, create_empty_file
 
 
 def load_file_list(file_path):
@@ -81,7 +81,9 @@ def main():
     chunk_size = int(input("Enter chunk size: "))
     chunk_overlap = int(input("Enter chunk overlap: "))
     generated_folder = f"./output_data/{chunk_size}_{chunk_overlap}"
-    output_json_file = f"./rouge/{chunk_size}_{chunk_overlap}.json"
+    output_json_file = f"./rouge/{chunk_size}_{chunk_overlap}.jsonl"
+    os.makedirs("./rouge", exist_ok=True)
+    create_empty_file(output_json_file);
 
     # Read file list
     file_list = load_file_list(file_list_path)
