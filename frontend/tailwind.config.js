@@ -20,9 +20,9 @@ export default {
 					error: '#f87272'
 				},
 				learnit_theme: {
-					primary: '#0E8388',
+					primary: '#CBE4DE',
 					secondary: '#2E4F4F',
-					accent: '#CBE4DE',
+					accent: '#0E8388',
 					neutral: '#2C3333',
 					'base-100': '#efefef',
 					info: '#7ED4FC',
