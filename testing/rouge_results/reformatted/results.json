@@ -1,0 +1,134 @@
+[
+    {
+        "File": "1000_100.jsonl",
+        "Avg Tokens Per Reference": 3596.914,
+        "Avg Rouge Scores": {
+            "rouge1": 0.5337477592982902,
+            "rouge2": 0.3200055066582497,
+            "rougeL": 0.38729231605889897,
+            "rougeLSum": 0.468703543679605
+        },
+        "Avg Token Reduction Percent": 60.92472353254266
+    },
+    {
+        "File": "1000_200.jsonl",
+        "Avg Tokens Per Reference": 3596.914,
+        "Avg Rouge Scores": {
+            "rouge1": 0.5620365284650514,
+            "rouge2": 0.3338720945149786,
+            "rougeL": 0.3968705035248239,
+            "rougeLSum": 0.48682141680422525
+        },
+        "Avg Token Reduction Percent": 57.18032671184334
+    },
+    {
+        "File": "1000_300.jsonl",
+        "Avg Tokens Per Reference": 3596.914,
+        "Avg Rouge Scores": {
+            "rouge1": 0.591048562432591,
+            "rouge2": 0.3452905038367052,
+            "rougeL": 0.40177676917751937,
+            "rougeLSum": 0.503955142643198
+        },
+        "Avg Token Reduction Percent": 52.59817224642077
+    },
+    {
+        "File": "1000_400.jsonl",
+        "Avg Tokens Per Reference": 3596.914,
+        "Avg Rouge Scores": {
+            "rouge1": 0.6203650731832624,
+            "rouge2": 0.35586996709028884,
+            "rougeL": 0.4056319997148817,
+            "rougeLSum": 0.5195828852778248
+        },
+        "Avg Token Reduction Percent": 46.942035170625736
+    },
+    {
+        "File": "1250_100.jsonl",
+        "Avg Tokens Per Reference": 3596.914,
+        "Avg Rouge Scores": {
+            "rouge1": 0.4867229596934749,
+            "rouge2": 0.2903028069877893,
+            "rougeL": 0.3558763825932484,
+            "rougeLSum": 0.42866594998728885
+        },
+        "Avg Token Reduction Percent": 65.92021054042533
+    },
+    {
+        "File": "1250_200.jsonl",
+        "Avg Tokens Per Reference": 3596.914,
+        "Avg Rouge Scores": {
+            "rouge1": 0.5066139140496984,
+            "rouge2": 0.29938063799875003,
+            "rougeL": 0.36228184508376843,
+            "rougeLSum": 0.44145067419892225
+        },
+        "Avg Token Reduction Percent": 63.62433144091006
+    },
+    {
+        "File": "1250_300.jsonl",
+        "Avg Tokens Per Reference": 3596.914,
+        "Avg Rouge Scores": {
+            "rouge1": 0.526976456406018,
+            "rouge2": 0.3080145070595387,
+            "rougeL": 0.36706237565252176,
+            "rougeLSum": 0.4534637525773648
+        },
+        "Avg Token Reduction Percent": 60.93111933918888
+    },
+    {
+        "File": "1250_400.jsonl",
+        "Avg Tokens Per Reference": 3596.914,
+        "Avg Rouge Scores": {
+            "rouge1": 0.5483555248528017,
+            "rouge2": 0.3158306686164469,
+            "rougeL": 0.370382113759994,
+            "rougeLSum": 0.4658178438431833
+        },
+        "Avg Token Reduction Percent": 57.624998357110215
+    },
+    {
+        "File": "750_100.jsonl",
+        "Avg Tokens Per Reference": 3596.914,
+        "Avg Rouge Scores": {
+            "rouge1": 0.6001421379089663,
+            "rouge2": 0.36340082575706345,
+            "rougeL": 0.4297678965341265,
+            "rougeLSum": 0.5243047544081592
+        },
+        "Avg Token Reduction Percent": 52.767156271027595
+    },
+    {
+        "File": "750_200.jsonl",
+        "Avg Tokens Per Reference": 3596.914,
+        "Avg Rouge Scores": {
+            "rouge1": 0.6359983040460916,
+            "rouge2": 0.37943809088313957,
+            "rougeL": 0.43885498102070064,
+            "rougeLSum": 0.5455339175203108
+        },
+        "Avg Token Reduction Percent": 46.48591516206177
+    },
+    {
+        "File": "750_300.jsonl",
+        "Avg Tokens Per Reference": 3596.914,
+        "Avg Rouge Scores": {
+            "rouge1": 0.6724896427650958,
+            "rouge2": 0.39411460195071835,
+            "rougeL": 0.44443111705784005,
+            "rougeLSum": 0.5663002480934285
+        },
+        "Avg Token Reduction Percent": 37.03336825320717
+    },
+    {
+        "File": "750_400.jsonl",
+        "Avg Tokens Per Reference": 3596.914,
+        "Avg Rouge Scores": {
+            "rouge1": 0.6948826886078776,
+            "rouge2": 0.40106454964310323,
+            "rougeL": 0.44072306579589154,
+            "rougeLSum": 0.5785997945723501
+        },
+        "Avg Token Reduction Percent": 23.122261124156207
+    }
+]
