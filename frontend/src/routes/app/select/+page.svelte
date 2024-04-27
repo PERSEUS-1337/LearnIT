@@ -9,6 +9,33 @@
     let documentList = [
         {"title":"Lorem Ipsum", "date":"Lorem Ipsum"}, {"title":"Lorem Ipsum 2", "date":"Lorem Ipsum 2"}, 
     ]
+
+    async function handleSubmit(event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        const formData = new FormData(event.target); // Collect form data
+        const response = await fetch('/docu/upload/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        })
+        .then(response => response.json())
+        .then(data => console.log(data))
+        .catch(error => console.error(error));
+
+
+        // if (response.ok) {
+        //     // Handle successful upload, e.g., show a success message
+        //     console.log('File uploaded successfully');
+        // } else {
+        //     // Handle errors, e.g., show an error message
+        //     console.error('File upload failed');
+        // }
+
+        // Optionally, refresh the page or update the UI here
+    }
 </script>
 
 <div class="flex flex-col w-full justify-between gap-4 items-center">
@@ -41,4 +68,9 @@
         <button class="btn btn-lg join-item hover:btn-primary">PDF Upload</button>
         <button class="btn btn-lg join-item hover:btn-primary">Text Input</button>
     </div>
+
+    <form on:submit|preventDefault={handleSubmit} enctype="multipart/form-data">
+        <input type="file" name="file" id="file" accept="application/pdf" />
+        <button type="submit">Submit</button>
+    </form>
 </div>
