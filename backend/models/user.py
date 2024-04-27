@@ -17,22 +17,21 @@ class UserBase(BaseModel):
             }
         }
 
-
+# Model used for accepting passwords
 class UserReg(UserBase):
     password: str
 
     class Config(UserBase.Config):
         pass
 
-
+# Model used for registering a UserBase to the DB with a hashed password
 class UserInDB(UserBase):
     hashed_password: str
-    uploaded_documents: List = []
 
     class Config(UserBase.Config):
         pass
 
-
+# Model used for retrieving username and hash_pwd for verification purposes
 class UserCreds(BaseModel):
     username: str
     hashed_password: str
@@ -40,7 +39,7 @@ class UserCreds(BaseModel):
     class Config(UserBase.Config):
         pass
 
-
+# Model used for updating user details
 class UserUpdate(BaseModel):
     username: Optional[str] = None
     full_name: Optional[str] = None
@@ -55,7 +54,7 @@ class UserUpdate(BaseModel):
             }
         }
 
-
+# Model used for generating JWT during login
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -68,7 +67,7 @@ class Token(BaseModel):
             }
         }
 
-
+# Model used for retrieving username embedded in token for user detail retrieval
 class TokenData(BaseModel):
     username: str | None = None
 
