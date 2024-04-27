@@ -118,7 +118,6 @@ async def get_user(req: Request, user: UserBase) -> UserBase:
 async def update_user(req: Request, user: UserBase, user_update: UserUpdate) -> Optional[UserBase]:
     # Find the user in the database by username
     user_exists = req.app.database["users"].find_one({"username": user.username})
-    print("ok")
 
     if user_exists:
         # If user is found, update the user's information
@@ -135,7 +134,32 @@ async def update_user(req: Request, user: UserBase, user_update: UserUpdate) -> 
         updated_user_data = req.app.database["users"].find_one({"username": user.username})
 
         # Create a UserBase object using the updated data and return it
-        return UserBase(**updated_user_data)
+        # return UserBase(**updated_user_data)
+        return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content={"message": APIMessages.USER_UPDATED, "data": UserBase(**updated_user_data)}
+            )
     else:
         # If user is not found, return None or handle as needed
-        return None
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"message": APIMessages.USER_NOT_FOUND}
+        )
+    
+async def delete_user(req: Request, user: UserBase):
+    # Find the user in the database by username
+    user_data = req.app.database["users"].find_one({"username": user.username})
+
+    if user_data:
+        # If user is found, delete the user from the database
+        req.app.database["users"].delete_one({"username": user.username})
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"message": APIMessages.USER_DELETED}
+        )
+    else:
+        # If user is not found, return None or handle as needed
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"message": APIMessages.USER_NOT_FOUND}
+        )
