@@ -14,27 +14,13 @@
         event.preventDefault(); // Prevent the default form submission
 
         const formData = new FormData(event.target); // Collect form data
-        const response = await fetch('/docu/upload/', {
+        const response = await fetch('http://localhost:8000/docu/upload/', {
             method: 'POST',
-            body: formData,
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
+            body: formData, // No need to set 'Content-Type' here
         })
         .then(response => response.json())
         .then(data => console.log(data))
         .catch(error => console.error(error));
-
-
-        // if (response.ok) {
-        //     // Handle successful upload, e.g., show a success message
-        //     console.log('File uploaded successfully');
-        // } else {
-        //     // Handle errors, e.g., show an error message
-        //     console.error('File upload failed');
-        // }
-
-        // Optionally, refresh the page or update the UI here
     }
 </script>
 
