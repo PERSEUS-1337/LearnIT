@@ -15,34 +15,37 @@
 // export const actions = {
 // 	default: async ({ cookies, request }) => {
 // 		const formData = await request.formData();
-// 		const email = formData.get('email');
-// 		const password = formData.get('password');
-// 		console.log(email, password);
+// 		// const username = formData.get('username');
+// 		// const password = formData.get('password');
+//         try {
+//             console.log(formData);
+//             const response = await axios.post('http://localhost:8000/auth/login/', formData);
+//             console.log(response);
+//         } catch (error) {
+//             console.error(error);
+//         }
 
 // 		// Delete the cookies first
-// 		cookies.delete(COOKIES_TOKEN_NAME);
-// 		cookies.delete(COOKIES_USER_ID);
+// 		// cookies.delete(COOKIES_TOKEN_NAME, { path: '/' });
+// 		// cookies.delete(COOKIES_USER_ID, { path: '/' });
 
 // 		// Where our authentication takes place
-// 		let accessToken;
-// 		let userId;
-// 		try {
-// 			const response = await axios.post(API_LOGIN, {
-// 				email: email,
-// 				password: password
-// 			});
-// 			accessToken = response.data.access_token;
-// 			userId = response.data.user_id;
+// 		// let accessToken;
+// 		// let userId;
+// 		// try {
 
-// 			cookies.set(COOKIES_TOKEN_NAME, accessToken);
-// 			cookies.set(COOKIES_USER_ID, userId);
-// 			cookies.set(COOKIES_EMAIL, email);
+// 		// 	// accessToken = response.data.access_token;
+// 		// 	// userId = response.data.user_id;
 
-// 			console.info(LOGIN_SUCCESS);
-// 		} catch (err) {
-// 			console.log(err.response);
-// 			return fail(err.response.status, { email, error: true, message: err.response.data.message });
-// 		}
+// 		// 	// cookies.set(COOKIES_TOKEN_NAME, accessToken);
+// 		// 	// cookies.set(COOKIES_USER_ID, userId);
+// 		// 	// cookies.set(COOKIES_EMAIL, email);
+
+// 		// 	console.info(response);
+// 		// } catch (err) {
+// 		// 	// console.log(err);
+// 		// 	// return fail(err.response.status, { email, error: true, message: err.response.data.message });
+// 		// }
 
 // 		throw redirect(302, '/app');
 // 	}

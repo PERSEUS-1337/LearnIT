@@ -1,10 +1,29 @@
-<script>
-	/** @type {import('./$types').ActionData} */ export let form;
-</script>
-
 <svelte:head>
 	<title>Login Page</title>
 </svelte:head>
+
+<script>
+	import axios from 'axios';
+
+	async function handleSubmit(event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        const formData = new FormData(event.target); // Collect form data
+        try {
+			console.log(formData);
+            // Include withCredentials: true in the Axios request configuration
+            const response = await axios.post('http://localhost:8000/auth/login/', formData);
+            console.log(response.data);
+
+			// Set the access_token in localStorage instead of a cookie
+            localStorage.setItem('access_token', response.data.access_token);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+</script>
+
+
 
 <div class="hero min-h-screen">
 	<div class="hero-content flex-col">
@@ -15,16 +34,16 @@
 		<div
 			class="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-100 card-compact card-bordered"
 		>
-			<form method="POST">
+			<form on:submit|preventDefault={handleSubmit}>
 				<div class="card-body">
 					<div class="form-control">
 						<label for="email" class="label">
 							<span class="label-text">Email</span>
 						</label>
 						<input
-							type="email"
-							name="email"
-							value={form?.email ?? ''}
+							type="text"
+							name="username"
+							value=''
 							placeholder="example@mail.com"
 							class="input input-bordered required:border-red-500 invalid:border-red-500 autofill:bg-yellow-200"
 						/>
@@ -36,7 +55,7 @@
 						<input
 							type="password"
 							name="password"
-							value={form?.password ?? ''}
+							value=''
 							placeholder="Password123"
 							class="input input-bordered"
 						/>
@@ -44,7 +63,7 @@
 					<div class="form-control mt-6">
 						<button class="btn btn-secondary">Login</button>
 					</div>
-					{#if form?.error}
+					<!-- {#if form?.error}
 						<div class="alert alert-error">
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
@@ -60,7 +79,7 @@
 							>
 							<span class="error">{form?.message}</span>
 						</div>
-					{/if}
+					{/if} -->
 				</div>
 			</form>
 		</div>

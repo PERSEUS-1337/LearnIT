@@ -6,6 +6,8 @@
     import FaRegFilePdf from 'svelte-icons/fa/FaRegFilePdf.svelte'
     import FaRegKeyboard from 'svelte-icons/fa/FaRegKeyboard.svelte'
     import IoIosArrowForward from 'svelte-icons/io/IoIosArrowForward.svelte'
+    import axios from 'axios';
+
     let documentList = [
         {"title":"Lorem Ipsum", "date":"Lorem Ipsum"}, {"title":"Lorem Ipsum 2", "date":"Lorem Ipsum 2"}, 
     ]
@@ -14,14 +16,33 @@
         event.preventDefault(); // Prevent the default form submission
 
         const formData = new FormData(event.target); // Collect form data
-        const response = await fetch('http://localhost:8000/docu/upload/', {
-            method: 'POST',
-            body: formData, // No need to set 'Content-Type' here
-        })
-        .then(response => response.json())
-        .then(data => console.log(data))
-        .catch(error => console.error(error));
+        try {
+            const response = await axios.post('http://localhost:8000/docu/upload/', formData);
+            console.log(response);
+        } catch (error) {
+            console.error(error);
+        }
     }
+
+
+
+    // async function handleSubmit(event) {
+    //     event.preventDefault(); // Prevent the default form submission
+
+    //     const formData = new FormData(event.target); // Collect form data
+    //     const response = await axios.post('http://localhost:8000/docu/upload/', {
+    //         method: 'POST',
+    //         body: formData, // No need to set 'Content-Type' here
+    //         headers: {
+    //             "Content-Type": "multipart/form-data",
+    //         }
+    //     })
+
+    //     console.log(response)
+    //     // .then(response => response.json())
+    //     // .then(data => console.log(data))
+    //     // .catch(error => console.error(error));
+    // }
 </script>
 
 <div class="flex flex-col w-full justify-between gap-4 items-center">
