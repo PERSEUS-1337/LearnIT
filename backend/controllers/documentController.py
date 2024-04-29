@@ -39,3 +39,23 @@ async def upload_file(req: Request, file: UploadFile):
             status_code=200,
             content={"result": 'success'}
         )
+    
+
+async def get_uploaded_files(req: Request):
+    # Define the directory where uploaded files are stored
+    directory = "uploaded_files"
+    
+    # Check if the directory exists
+    if not os.path.exists(directory):
+        # If directory does not exist, return an empty list
+        return []
+    
+    try:
+        # Get a list of all files in the directory
+        files = os.listdir(directory)
+        # Filter out directories (if any)
+        files = [file for file in files if os.path.isfile(os.path.join(directory, file))]
+        return files
+    except Exception as e:
+        # Handle any errors and return an empty list
+        return []

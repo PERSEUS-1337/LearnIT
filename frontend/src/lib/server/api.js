@@ -8,7 +8,7 @@
 export const BASE_URL = "127.0.0.1:8000"
 
 export const API_LOGIN = BASE_URL + '/auth/login';
-export const API_GET_DATA = BASE_URL + '/get-data';
+export const API_GET_DATA = BASE_URL + '/user/me';
 export const API_UPDATE_USER_DATA = BASE_URL + '/update-user-data';
 
 // TOKENS
