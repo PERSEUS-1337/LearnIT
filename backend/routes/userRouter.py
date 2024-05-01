@@ -2,25 +2,43 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Request, Depends
 
-from controllers.userController import delete_user, get_all_users, get_user, update_user
+from controllers.userController import (
+    delete_user,
+    get_all_users,
+    update_user,
+)
 from middleware.requireAuth import auth_curr_user
 from models.user import UserBase, UserUpdate
 
 router = APIRouter()
 
 
-@router.get("/all", response_description="Get all users")
-async def get_all_users_route(req: Request, current_user: Annotated[UserBase, Depends(auth_curr_user)]):
+@router.get("/list", response_description="Get all users")
+async def get_all_users_route(
+    req: Request, null: Annotated[UserBase, Depends(auth_curr_user)]
+): 
     return await get_all_users(req)
 
-@router.get("/me", response_description="Get current logged in user details")
-async def get_curr_user_route(req: Request, current_user: Annotated[UserBase, Depends(auth_curr_user)]):
-    return await get_user(req, current_user)
 
-@router.patch("/me", response_description="Edit user details")
-async def edit_user_route(req: Request, current_user: Annotated[UserBase, Depends(auth_curr_user)], updated_details: UserUpdate = Body(...)):
+@router.get("/", response_description="Get current logged in user details")
+async def get_curr_user_route(
+    req: Request, current_user: Annotated[UserBase, Depends(auth_curr_user)]
+):
+    return current_user
+
+
+
+@router.patch("/", response_description="Edit user details")
+async def edit_user_route(
+    req: Request,
+    current_user: Annotated[UserBase, Depends(auth_curr_user)],
+    updated_details: UserUpdate = Body(...),
+):
     return await update_user(req, current_user, updated_details)
 
-@router.delete("/me", response_description="Edit user details")
-async def edit_user_route(req: Request, current_user: Annotated[UserBase, Depends(auth_curr_user)]):
+
+@router.delete("/", response_description="Delete user")
+async def edit_user_route(
+    req: Request, current_user: Annotated[UserBase, Depends(auth_curr_user)]
+):
     return await delete_user(req, current_user)

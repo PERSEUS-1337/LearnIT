@@ -1,10 +1,11 @@
 from datetime import datetime, timezone, timedelta
+from typing import Collection
 
 from dotenv import dotenv_values
 from jose import jwt
 from passlib.context import CryptContext
 
-from models.user import UserCreds
+from models.user import UserBase, UserCreds
 
 config = dotenv_values(".env")
 
@@ -26,14 +27,23 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, config['SECRET_KEY'], algorithm=config['ALGO'])
+    encoded_jwt = jwt.encode(to_encode, config["SECRET_KEY"], algorithm=config["ALGO"])
     return encoded_jwt
 
 
-def get_user_creds(db, username: str) -> UserCreds:
+def get_user_creds(db: Collection, username: str) -> UserCreds:
     user_data = db.find_one({"username": username})
 
     if user_data:
         return UserCreds(**user_data)
     else:
         return None
+    
+def get_user_data(db: Collection, username: str) -> UserBase:
+    user_data = db.find_one({"username": username})
+
+    if user_data:
+        return UserBase(**user_data)
+    else:
+        return None
+

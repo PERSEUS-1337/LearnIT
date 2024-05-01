@@ -1,5 +1,6 @@
 # api_messages.py
 
+
 class APIMessages:
     # Success Messages
     SUCCESS = "Operation successful."
@@ -14,7 +15,9 @@ class APIMessages:
     UNAUTHORIZED = "Authentication failed or missing credentials."
     FORBIDDEN = "Access to the requested resource is forbidden."
     NOT_FOUND = "The requested resource was not found."
-    METHOD_NOT_ALLOWED = "The HTTP method used is not allowed for the requested resource."
+    METHOD_NOT_ALLOWED = (
+        "The HTTP method used is not allowed for the requested resource."
+    )
     CONFLICT = "Conflict with the current state of the server."
     PRECONDITION_FAILED = "A precondition for the request failed."
 
@@ -63,11 +66,15 @@ class APIMessages:
     LOGOUT_SUCCESSFUL = "Logout successful."
 
     # Password Reset
-    PASSWORD_RESET_REQUESTED = "Password reset requested. Check your email for instructions."
+    PASSWORD_RESET_REQUESTED = (
+        "Password reset requested. Check your email for instructions."
+    )
     PASSWORD_RESET_SUCCESSFUL = "Password successfully reset."
 
     # Account Activation
-    ACCOUNT_ACTIVATION_REQUIRED = "Account activation is required. Check your email for instructions."
+    ACCOUNT_ACTIVATION_REQUIRED = (
+        "Account activation is required. Check your email for instructions."
+    )
     ACCOUNT_ACTIVATION_SUCCESSFUL = "Account successfully activated."
 
     # Session Management

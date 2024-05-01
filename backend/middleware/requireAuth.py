@@ -5,15 +5,17 @@ from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 
-from models.user import TokenData
-from utils.authUtils import get_user_creds
+from middleware.apiMsg import APIMessages
+from utils.consts import USER_DB
+from models.user import TokenData, UserBase
+from utils.authUtils import get_user_creds, get_user_data
 
 config = dotenv_values(".env")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 
-async def auth_curr_user(req: Request, token: Annotated[str, Depends(oauth2_scheme)]):
+async def auth_curr_user(req: Request, token: Annotated[str, Depends(oauth2_scheme)]) -> UserBase:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -28,9 +30,12 @@ async def auth_curr_user(req: Request, token: Annotated[str, Depends(oauth2_sche
     except JWTError:
         raise credentials_exception
 
-    user = get_user_creds(req.app.database["users"], username=token_data.username)
+    user = get_user_data(req.app.database[USER_DB], username=token_data.username)
 
     if user is None:
-        raise credentials_exception
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=APIMessages.USER_NOT_FOUND
+        )
     return user
 

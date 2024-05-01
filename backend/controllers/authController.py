@@ -8,12 +8,19 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from middleware.apiMsg import APIMessages
 from models.user import Token, UserInDB, UserReg
-from utils.authUtils import verify_password, get_password_hash, get_user_creds, create_access_token
+from utils.authUtils import (
+    verify_password,
+    get_password_hash,
+    get_user_creds,
+    create_access_token,
+)
 
 config = dotenv_values(".env")
 
 
-async def login_user(req: Request, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
+async def login_user(
+    req: Request, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
+) -> Token:
     try:
         user = get_user_creds(req.app.database["users"], form_data.username)
         if not user:
@@ -31,7 +38,9 @@ async def login_user(req: Request, form_data: Annotated[OAuth2PasswordRequestFor
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        access_token_expires = timedelta(minutes=int(config['ACCESS_TOKEN_EXPIRE_MINUTES']))
+        access_token_expires = timedelta(
+            minutes=int(config["ACCESS_TOKEN_EXPIRE_MINUTES"])
+        )
         access_token = create_access_token(
             data={"sub": user.username}, expires_delta=access_token_expires
         )
@@ -48,7 +57,7 @@ async def login_user(req: Request, form_data: Annotated[OAuth2PasswordRequestFor
         # Handle exceptions here and return a proper status code and detail message
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An unexpected error occurred: {str(e)}"
+            detail=f"An unexpected error occurred: {str(e)}",
         )
 
 
@@ -65,15 +74,19 @@ async def register_user(req: Request, user: UserReg = Body(...)):
         hashed_pass = get_password_hash(user.password)
         # time_now = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
 
-        new_user_data = UserInDB(username=user.username, email=user.email,
-                                 full_name=user.full_name, hashed_password=hashed_pass)
+        new_user_data = UserInDB(
+            username=user.username,
+            email=user.email,
+            full_name=user.full_name,
+            hashed_password=hashed_pass,
+        )
 
         new_user_data = new_user_data.dict()
         insert_result = req.app.database["users"].insert_one(new_user_data)
 
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
-            content={"message": APIMessages.USER_CREATED}
+            content={"message": APIMessages.USER_CREATED},
         )
 
     except HTTPException as he:
@@ -87,5 +100,5 @@ async def register_user(req: Request, user: UserReg = Body(...)):
         # Handle exceptions here and return a proper status code and detail message
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An unexpected error occurred: {str(e)}"
+            detail=f"An unexpected error occurred: {str(e)}",
         )
