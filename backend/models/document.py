@@ -12,5 +12,11 @@ class Document(BaseModel):
 
 
 class UploadDoc(BaseModel):
-    filename: str
+    name: str
+    uid: str
     date_uploaded: datetime  # Reference to the user who uploaded the file
+    
+    class Config:
+        json_encoders = {
+            datetime: lambda dt: dt.isoformat()
+        }

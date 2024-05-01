@@ -1,11 +1,11 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Request, Depends, FastAPI, UploadFile, File, status
+from fastapi import APIRouter, Body, Form, Request, Depends, FastAPI, UploadFile, File, status
 from fastapi.responses import JSONResponse
 from middleware.requireAuth import auth_curr_user
 from models.user import UserBase
 from middleware.apiMsg import APIMessages
-from controllers.documentController import get_uploaded_files, upload_file
+from controllers.documentController import delete_file, get_uploaded_files, upload_file
 
 router = APIRouter()
 
@@ -24,7 +24,7 @@ def hello():
 
 @router.get("/list", response_description="Get a list of uploaded files")
 async def get_uploaded_files_route(req: Request):
-    return await get_uploaded_files(req)
+    return await get_uploaded_files()
 
 
 @router.post("/upload")
@@ -35,5 +35,11 @@ async def upload_file_route(
 ):
     return await upload_file(req, file, current_user)
 
+@router.delete("/")
+async def delete_file_route(
+    req: Request,
+    filename: str,
+    user: UserBase = Depends(auth_curr_user)
+):
+    return await delete_file(req, user, filename)
 
-# @router.get('')

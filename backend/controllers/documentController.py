@@ -1,13 +1,12 @@
 from datetime import datetime
 import os
 import aiofiles
-import uuid
 from dotenv import dotenv_values
 
 from fastapi import status, Request, UploadFile, status
 from fastapi.responses import JSONResponse
 
-from utils.dbUtils import get_user_data
+from utils.fileUtils import gen_uid
 from utils.consts import UPLOAD_PATH, USER_DB
 from middleware.apiMsg import APIMessages
 from models.user import UserBase
@@ -17,7 +16,7 @@ from models.document import UploadDoc
 config = dotenv_values(".env")
 
 
-async def get_uploaded_files(req: Request):
+async def get_uploaded_files():
     # Define the directory where uploaded files are stored
     directory = UPLOAD_PATH
 
@@ -48,19 +47,18 @@ async def get_uploaded_files(req: Request):
 
 async def upload_file(req: Request, file: UploadFile, user: UserBase):
     db = req.app.database[USER_DB]
-    user_data = get_user_data(db, user.username)
+    
+    # Generate a unique file name using user's username
+    uid = gen_uid(user.username, file.filename)
 
-    # Generate a unique identifier for the file
-    unique_identifier = str(uuid.uuid4())
+    # Construct the file path
+    file_path = os.path.join(UPLOAD_PATH, uid)
 
     # Check if the directory exists, if not, create it
     if not os.path.exists(UPLOAD_PATH):
         os.makedirs(UPLOAD_PATH)
 
     try:
-        # Construct the file path
-        file_path = os.path.join(UPLOAD_PATH, unique_identifier + "_" + file.filename)
-
         # Check if the file already exists
         if os.path.exists(file_path):
             raise FileExistsError(f"File '{file.filename}' already exists")
@@ -71,16 +69,20 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
             await out_file.write(content)  # async write
 
         # Add the uploaded file information to the user's uploaded_files list
+        date_uploaded=datetime.now()
         uploaded_file_info = UploadDoc(
-            filename=file.filename, date_uploaded=datetime.now()
+            name=file.filename,
+            uid=uid,
+            date_uploaded=date_uploaded
         )
-        uploaded_file_info = uploaded_file_info.model_dump
-        user_data.uploaded_files.append(uploaded_file_info)
-
+        uploaded_file_info = uploaded_file_info.model_dump()
+    
+        user.uploaded_files.append(uploaded_file_info)
+        
         # Update the user in MongoDB with the new uploaded file information
         update_result = db.update_one(
-            {"username": user_data.username},
-            {"$set": {"uploaded_files": user_data.uploaded_files}},
+            {"username": user.username},
+            {"$set": {"uploaded_files": user.uploaded_files}},
         )
 
         return JSONResponse(
@@ -90,10 +92,59 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
 
     except FileExistsError as e:
         return JSONResponse(
-            status_code=409, content={"message": str(e)}  # Conflict status code
+            status_code=status.HTTP_409_CONFLICT, content={"message": str(e)}  # Conflict status code
         )
     except Exception as e:
-        return JSONResponse(status_code=400, content={"message": str(e)})
+        # If an error occurs during upload, delete the partially uploaded file
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST, content={"message": str(e)}
+        )
+    finally:
+        # Make sure to clean up any resources here if needed
+        pass
+
+async def delete_file(req: Request, user: UserBase, filename: str):
+    db = req.app.database[USER_DB]
+
+    # Generate the unique identifier for the file using the user's username and filename
+    uid = gen_uid(user.username, filename)
+
+    # Construct the file path
+    file_path = os.path.join(UPLOAD_PATH, uid)
+
+    try:
+        # Check if the file exists
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"File '{filename}' does not exist")
+
+        # Remove the file from the filesystem
+        os.remove(file_path)
+
+        # Remove the file information from the user's uploaded_files list
+        user_files = db.find_one({"username": user.username}, {"uploaded_files": 1})
+        if user_files:
+            uploaded_files = user_files.get("uploaded_files", [])
+            updated_files = [file for file in uploaded_files if file["uid"] != uid]
+            db.update_one(
+                {"username": user.username},
+                {"$set": {"uploaded_files": updated_files}},
+            )
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"message": f"File '{filename}' deleted successfully"},
+        )
+    except FileNotFoundError as e:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND, content={"message": str(e)}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"message": str(e)},
+        )
 
 
 async def tokenize_file(req: Request):
