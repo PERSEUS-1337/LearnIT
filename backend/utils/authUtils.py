@@ -38,7 +38,8 @@ def get_user_creds(db: Collection, username: str) -> UserCreds:
         return UserCreds(**user_data)
     else:
         return None
-    
+
+
 def get_user_data(db: Collection, username: str) -> UserBase:
     user_data = db.find_one({"username": username})
 
@@ -46,4 +47,3 @@ def get_user_data(db: Collection, username: str) -> UserBase:
         return UserBase(**user_data)
     else:
         return None
-

@@ -125,7 +125,7 @@ async def update_user(
     req: Request, user: UserBase, user_update: UserUpdate
 ) -> Optional[UserBase]:
     db = req.app.database[USER_DB]
-    
+
     # Create a dictionary to hold the updated data
     updated_data = {}
 
@@ -150,11 +150,7 @@ async def update_user(
     # Create a UserBase object using the updated data and return it
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content={
-            "message": APIMessages.USER_UPDATED,
-            "data": updated_user_data
-            
-        },
+        content={"message": APIMessages.USER_UPDATED, "data": updated_user_data},
     )
 
 

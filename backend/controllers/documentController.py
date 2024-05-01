@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 import os
 import aiofiles
 from dotenv import dotenv_values
@@ -6,11 +7,12 @@ from dotenv import dotenv_values
 from fastapi import status, Request, UploadFile, status
 from fastapi.responses import JSONResponse
 
+from services.nlp_chain import process_document
 from utils.fileUtils import gen_uid
 from utils.consts import UPLOAD_PATH, USER_DB
 from middleware.apiMsg import APIMessages
 from models.user import UserBase
-from models.document import UploadDoc
+from models.document import TSCC, UploadDoc
 
 
 config = dotenv_values(".env")
@@ -47,7 +49,7 @@ async def get_uploaded_files():
 
 async def upload_file(req: Request, file: UploadFile, user: UserBase):
     db = req.app.database[USER_DB]
-    
+
     # Generate a unique file name using user's username
     uid = gen_uid(user.username, file.filename)
 
@@ -69,16 +71,13 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
             await out_file.write(content)  # async write
 
         # Add the uploaded file information to the user's uploaded_files list
-        date_uploaded=datetime.now()
         uploaded_file_info = UploadDoc(
-            name=file.filename,
-            uid=uid,
-            date_uploaded=date_uploaded
+            name=file.filename, uid=uid, uploaded_at=datetime.now()
         )
         uploaded_file_info = uploaded_file_info.model_dump()
-    
+
         user.uploaded_files.append(uploaded_file_info)
-        
+
         # Update the user in MongoDB with the new uploaded file information
         update_result = db.update_one(
             {"username": user.username},
@@ -92,7 +91,8 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
 
     except FileExistsError as e:
         return JSONResponse(
-            status_code=status.HTTP_409_CONFLICT, content={"message": str(e)}  # Conflict status code
+            status_code=status.HTTP_409_CONFLICT,
+            content={"message": str(e)},  # Conflict status code
         )
     except Exception as e:
         # If an error occurs during upload, delete the partially uploaded file
@@ -104,6 +104,7 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
     finally:
         # Make sure to clean up any resources here if needed
         pass
+
 
 async def delete_file(req: Request, user: UserBase, filename: str):
     db = req.app.database[USER_DB]
@@ -147,5 +148,43 @@ async def delete_file(req: Request, user: UserBase, filename: str):
         )
 
 
-async def tokenize_file(req: Request):
-    pass
+async def process_file(req: Request, user: UserBase, filename: str):
+    db = req.app.database[USER_DB]
+
+    # Generate the unique identifier for the file using the user's username and filename
+    uid = gen_uid(user.username, filename)
+
+    # Construct the file path
+    file_path = os.path.join(UPLOAD_PATH, uid)
+    try:
+        # print(user.uploaded_files)
+        
+        # Check if the file exists
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"File '{filename}' does not exist in the server")
+        
+        for doc in user.uploaded_files:
+            if doc.name == filename:
+                chunks = process_document(uid)
+                list_of_strings = [str(item) for item in chunks]
+                
+
+                return JSONResponse(
+                    status_code=status.HTTP_200_OK,
+                    content={"message": list_of_strings},
+                )
+                
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"message": f"ok"},
+        )
+    except FileNotFoundError as e:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND, content={"message": str(e)}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"message": str(e)},
+        )
