@@ -27,7 +27,7 @@ def analyze_data(json_file):
     return avg_tokens_per_reference, avg_rouge_scores, avg_token_reduction_percent
 
 def main():
-    json_files = [file for file in os.listdir('.') if file.endswith('.jsonl')]
+    json_files = [file for file in os.listdir('./reformatted') if file.endswith('.jsonl')]
     highest_avg_rouge_scores = {"rouge1": -1, "rouge2": -1, "rougeL": -1, "rougeLSum": -1}
     highest_avg_token_reduction_percent = -1
     files_with_highest_rouge = {"rouge1": None, "rouge2": None, "rougeL": None, "rougeLSum": None}
