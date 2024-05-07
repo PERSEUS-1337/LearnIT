@@ -1,0 +1,4 @@
+{
+    "title": "SklqvxSFDB",
+    "content": "This paper explores enhancing classical visual odometry pipelines with deep learning methods to improve accuracy and generate uncertainty models for estimations. By incorporating a learning architecture with a probabilistic loss function, biases in visual odometry can be learned and compensated for, allowing for the estimation of a full covariance matrix of residual errors. Experiments on autonomous driving and micro aerial vehicles demonstrate the potential to enhance visual odometry while estimating associated errors."
+}

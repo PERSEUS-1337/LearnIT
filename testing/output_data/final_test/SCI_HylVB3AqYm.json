@@ -1,0 +1,4 @@
+{
+    "title": "HylVB3AqYm",
+    "content": "Neural architecture search (NAS) automates the design of neural network architectures, but conventional NAS algorithms are computationally intensive. Differentiable NAS reduces GPU hours by representing network architecture continuously but faces high GPU memory consumption. ProxylessNAS directly learns architectures for large-scale tasks and hardware platforms, addressing memory consumption issues. ProxylessNAS addresses the high memory consumption issue of differentiable NAS by reducing computational costs to the same level as regular training. Experimental results on CIFAR-10 and ImageNet show improved performance compared to previous state-of-the-art architectures, achieving better accuracy with fewer parameters. Additionally, ProxylessNAS specializes neural architectures for hardware with direct hardware metrics, providing insights for efficient CNN architecture design."
+}

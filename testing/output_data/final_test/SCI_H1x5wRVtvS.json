@@ -1,0 +1,4 @@
+{
+    "title": "H1x5wRVtvS",
+    "content": "For bidirectional joint image-text modeling, a variational hetero-encoder (VHE) randomized generative adversarial network (GAN) integrates a probabilistic text decoder, image encoder, and GAN into a multi-modality learning framework. VHE-GAN encodes images to decode associated text and uses variational posterior as randomness for image generation. Off-the-shelf modules like a deep topic model and StackGAN++ are plugged into VHE-GAN for competitive performance. The development of VHE-raster-scan-GAN aims to generate photo-realistic images in a multi-scale and hierarchical-semantic fashion through end-to-end training. VHE-raster-scan-GAN achieves top performance in image-text multi-modality learning and generation tasks by linking semantic and visual concepts through end-to-end training."
+}

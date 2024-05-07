@@ -1,0 +1,4 @@
+{
+    "title": "SJllFpVYwS",
+    "content": "We propose a method for joint image and per-pixel annotation synthesis with GAN, demonstrating its ability to create training datasets for semantic segmentation networks. The method outperforms supervised training with limited samples and generalizes well on real data, working across various scenes and classes. The source code will be made publicly available."
+}

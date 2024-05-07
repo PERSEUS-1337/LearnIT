@@ -1,0 +1,4 @@
+{
+    "title": "BJl4pA4Kwr",
+    "content": "One promising approach to study cognitive function is using artificial neural networks (ANN) to model neural circuits. A Biologically-plausible Actor-Critic with Episodic Memory (B-ACEM) framework is proposed to model a prefrontal cortex-basal ganglia-hippocampus (PFC-BG) circuit, capturing behavioral findings. The B-ACEM framework links neural computation to behaviors in a PFC-BG circuit, exploring the role of episodic memory in decision-making. Experiments show that different patterns of episodic memories can enhance learning, with salient events prioritized to guide decisions. This framework provides insights for designing more biologically-plausible artificial neural networks."
+}

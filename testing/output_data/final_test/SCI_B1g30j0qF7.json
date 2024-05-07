@@ -1,0 +1,4 @@
+{
+    "title": "B1g30j0qF7",
+    "content": "In this work, an equivalence is derived for multi-layer convolutional neural networks (CNNs) with and without pooling layers, achieving state-of-the-art results on CIFAR10 for Gaussian processes (GPs) without trainable kernels. A Monte Carlo method is introduced to estimate the GP corresponding to a given neural network architecture, even in cases where the analytic form is computationally infeasible. In the absence of pooling layers, CNNs with and without weight sharing have identical Gaussian processes (GPs). Translation equivariance, crucial in finite channel CNNs trained with SGD, does not affect the Bayesian treatment of the infinite channel limit. Experimental results show that while SGD-trained finite CNNs can approach GP performance as channel count increases, careful tuning can make SGD-trained CNNs outperform GPs, indicating advantages of SGD training over fully Bayesian parameter estimation."
+}

@@ -1,0 +1,4 @@
+{
+    "title": "SkgBfaNKPr",
+    "content": "The study investigates how the topology of a data set changes as it goes through the layers of a well-trained neural network. The goal is to understand why nonsmooth activation functions like ReLU outperform smooth ones like hyperbolic tangent, and why deep networks with many layers are successful. Experiments on persistent homology of point cloud data sets consistently show that neural networks transform complex topologies into simpler ones as they pass through the layers. Neural networks simplify data topology by reducing Betti numbers to their lowest values. ReLU activation leads to faster reduction compared to hyperbolic tangent. Shallow networks change topology mainly in final layers, while deep networks spread changes evenly across all layers."
+}

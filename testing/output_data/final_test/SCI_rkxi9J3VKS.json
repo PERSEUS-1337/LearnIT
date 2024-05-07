@@ -1,0 +1,4 @@
+{
+    "title": "rkxi9J3VKS",
+    "content": "Neural Tangents is a library for researching infinite-width neural networks, offering a high-level API for complex architectures. It allows training and evaluation at finite or infinite width, with options for analytical training using Bayesian inference or gradient descent. The library also enables studying training dynamics of wide networks in function or weight space. It runs on CPU, GPU, or TPU, with automatic distribution over multiple accelerators. Available at https://www.github.com/google/neural-tangents. Neural Tangents is available at https://www.github.com/google/neural-tangents. An interactive Colab notebook is also provided at https://colab.sandbox.google.com/github/google/neural-tangents/blob/master/notebooks/neural_tangents_cookbook.ipynb."
+}

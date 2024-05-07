@@ -1,0 +1,4 @@
+{
+    "title": "rkx35lHKwB",
+    "content": "In this work, a framework is proposed to enable generalization in machine intelligence by understanding and using actions to solve tasks through reinforcement learning. The approach involves interpreting an action's behavior using unsupervised representation learning and employing a reinforcement learning architecture over these action representations. Regularization metrics are proposed to enable generalization in a policy, showcasing the generalizability of the representation learning method. The representation learning method and policy enable zero-shot generalization to new actions in challenging decision-making environments. Results and videos can be found at sites.google.com/view/action-generalization/"
+}

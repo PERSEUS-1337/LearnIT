@@ -1,0 +1,4 @@
+{
+    "title": "rJeyeVHPjX",
+    "content": "The paper introduces a freely available dataset for domain adaptation in sound event detection. It includes 5400 sound files with various acoustic scenes and SNRs, totaling 30,564 minutes. The dataset, code for recreation, and a baseline method for adaptation performance are provided."
+}

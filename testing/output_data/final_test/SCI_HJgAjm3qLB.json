@@ -1,0 +1,4 @@
+{
+    "title": "HJgAjm3qLB",
+    "content": "We develop end-to-end learned reconstructions for lensless mask-based cameras, exploring various reconstruction methods from classic iterative approaches to deep learned methods. Our unrolled ADMM approach combines the physical imaging model with learned parameters, producing better reconstruction quality 20X faster than classic methods."
+}

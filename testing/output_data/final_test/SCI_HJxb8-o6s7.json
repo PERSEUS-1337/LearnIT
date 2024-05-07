@@ -1,0 +1,4 @@
+{
+    "title": "HJxb8-o6s7",
+    "content": "Interpreting GAN training as divergence minimization has led to extensions like f-GANs and Wasserstein GANs. There are original and \"non-saturating\" variants of training, with the latter often performing better in practice. The alternative generator update is seen as a simple modification to address optimization issues, but it minimizes different divergences compared to the original variant. The alternative variants of KL-GAN and conventional GAN training minimize different divergences, shedding light on theoretical discussions surrounding GAN training."
+}

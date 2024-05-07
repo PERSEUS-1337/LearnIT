@@ -1,0 +1,4 @@
+{
+    "title": "ryKRRsm0Z",
+    "content": "Binarized Neural networks (BNNs) improve network efficiency during inference by binarizing model parameters and activations. However, they do not offer significant efficiency gains during training as gradients are still propagated with high precision. Training BNNs using Binarized BackPropagation (BBP) involves binarizing gradients and increasing filter maps in convolution layers to maintain test accuracy. BBP on dedicated hardware can enhance execution efficiency and speed up training, making it suitable for distributed learning with reduced communication costs. This method shows minimal loss in classification accuracy across various datasets and network topologies."
+}

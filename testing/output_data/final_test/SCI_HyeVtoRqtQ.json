@@ -1,0 +1,4 @@
+{
+    "title": "HyeVtoRqtQ",
+    "content": "Trellis networks are a new architecture for sequence modeling, combining temporal convolutional networks with special structure and weight tying. They outperform current state-of-the-art methods in various language modeling tasks and stress tests for long-term memory retention. The code for Trellis networks, a new architecture for sequence modeling, can be found at https://github.com/locuslab/trellisnet."
+}

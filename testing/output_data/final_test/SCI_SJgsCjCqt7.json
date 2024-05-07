@@ -1,0 +1,4 @@
+{
+    "title": "SJgsCjCqt7",
+    "content": "We propose a method for learning the dependency structure between latent variables in deep latent variable models by combining deep generative models and probabilistic graphical models. The latent variable space of a variational autoencoder is expressed as a Bayesian network with a learned dependency structure. Network parameters, variational parameters, and latent topology are optimized simultaneously. Inference is done through a sampling procedure that incorporates top-down and bottom-up reasoning. Extensive experiments on MNIST, Omniglot, and CIFAR-10 show improvements in model expressiveness compared to state-of-the-art structured variational autoencoder baselines."
+}
