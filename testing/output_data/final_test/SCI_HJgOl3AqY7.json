@@ -1,0 +1,4 @@
+{
+    "title": "HJgOl3AqY7",
+    "content": "Generative models have been used for image style transfer and domain translation, but there is a gap in quality for musical audio tasks. The Modulated Variational auto-Encoders (MoVE) are introduced for musical timbre transfer, using Feature-wise Linear Modulation (FiLM) to improve domain translation techniques. The model replaces the adversarial translation criterion with a Maximum Mean Discrepancy (MMD) objective for faster and more stable training. The MoVE model introduces a pair of discriminative networks for faster and more stable training, with a controllable latent space encoder. By conditioning the system on different instruments, it can perform multi-domain transfers and translate timbre successfully. The architecture incorporates generative controls in multi-domain transfer, remaining light, fast to train, and effective on small datasets."
+}

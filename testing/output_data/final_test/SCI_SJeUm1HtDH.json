@@ -1,0 +1,4 @@
+{
+    "title": "SJeUm1HtDH",
+    "content": "Truly intelligent agents need to capture the interplay of all their senses to build a rich physical understanding of their world. In robotics, progress has been made in visual and tactile perception, but sound has often been overlooked due to lack of data. A large-scale study was conducted on the interactions between sound and robotic action, creating a dataset with 15,000 interactions on 60 objects using the Tilt-Bot platform. The data revealed that sound can differentiate between fine-grained object classes, such as distinguishing between a metal screwdriver and a metal wrench. Sound can differentiate objects and provide information about causal effects of actions. Object representations from audio embeddings can predict forward models better than visual embeddings."
+}

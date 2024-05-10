@@ -1,0 +1,4 @@
+{
+    "title": "S1lF8xHYwS",
+    "content": "This paper focuses on unsupervised domain adaptation, aiming to align representations of source and target domains by learning auxiliary self-supervised tasks simultaneously. Training this jointly with the main task classifier on the source domain leads to successful generalization to the unlabeled target domain. The approach is easy to implement and optimize, achieving state-of-the-art results on four benchmarks and competitive results on segmentation adaptation. Our method achieves state-of-the-art results on segmentation adaptation and integrates well with another popular pixel-level adaptation method."
+}

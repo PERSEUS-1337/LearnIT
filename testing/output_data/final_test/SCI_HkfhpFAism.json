@@ -1,0 +1,4 @@
+{
+    "title": "HkfhpFAism",
+    "content": "Existing neural question answering models often struggle with reasoning over long contexts in large-scale datasets. However, recent research suggests that a sentence selector module can improve performance by selecting a shorter, more relevant context for the QA model. This approach has shown comparable results to models trained on full context, while also being more interpretable. Additionally, it has been observed that QA models can be easily misled by adversarially generated sentences appended to the context, highlighting the need for filtering out extraneous information to improve model focus and reasoning abilities. The sentence selector module can enhance QA model performance by focusing on relevant context and filtering out extraneous information. It has been shown to improve robustness against adversarial attacks, supporting a modular approach for more interpretable question answering."
+}

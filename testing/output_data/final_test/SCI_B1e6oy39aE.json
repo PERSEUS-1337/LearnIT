@@ -1,0 +1,4 @@
+{
+    "title": "B1e6oy39aE",
+    "content": "This work demonstrates that invariance-inducing regularizers can enhance predictive accuracy for worst-case spatial transformations. Regularization on top of standard or adversarial training reduces relative error by 20% for CIFAR10 without increasing computational cost, outperforming handcrafted networks. Robust training also improves standard accuracy on the test set for SVHN, known for its variance in orientation."
+}

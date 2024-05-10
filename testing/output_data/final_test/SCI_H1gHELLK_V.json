@@ -1,0 +1,4 @@
+{
+    "title": "H1gHELLK_V",
+    "content": "Adversarial training is a method for training robust neural networks by solving a minmax optimization problem. A new approach is proposed based on a learning-to-learn framework, where an optimizer is learned to generate adversarial samples. This method aims to defend against adversarial attacks by learning a robust classifier. It can be seen as learning a deep generative model for generating adversarial samples. Our proposed method for adversarial training aims to learn a deep generative model for generating adversarial samples, which improves robust classification performance on CIFAR-10 and CIFAR-100 datasets."
+}
