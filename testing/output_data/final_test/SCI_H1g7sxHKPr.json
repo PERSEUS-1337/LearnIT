@@ -1,0 +1,4 @@
+{
+    "title": "H1g7sxHKPr",
+    "content": "In this work, a meta-learning algorithm called GECCO is proposed to improve gradient-based meta-learning. GECCO generates a corrective low-rank matrix to enhance gradient updates, reducing the number of steps needed to adapt to new tasks. This approach addresses the noise in gradient updates, leading to improved performance with fewer updates required. GECCO is an off-the-shelf generator-like unit that accelerates learning, corrects noisy gradients, and outperforms existing gradient-based meta-learning algorithms."
+}

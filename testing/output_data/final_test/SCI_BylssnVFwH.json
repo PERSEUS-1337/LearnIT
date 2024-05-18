@@ -1,0 +1,4 @@
+{
+    "title": "BylssnVFwH",
+    "content": "Deep neural networks (DNNs) have achieved significant success in the past decade due to their automatic feature learning capabilities. However, their interpretability remains a challenge due to their complex nature. This paper introduces an interpretability evaluation framework for DNNs, addressing issues such as the lack of interpretability measures, stability theory, and solving nonconvex DNN problems with interpretability constraints. The framework defines four properties of interpretability and explores the stability theory of DNNs, proving their general stability. The paper introduces an interpretability evaluation framework for DNNs, addressing the lack of interpretability measures and stability theory. An extended version of dlADMM is proposed to solve DNN problems with interpretability constraints efficiently. Extensive experiments validate the framework on benchmark datasets."
+}

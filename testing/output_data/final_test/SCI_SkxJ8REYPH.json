@@ -1,0 +1,4 @@
+{
+    "title": "SkxJ8REYPH",
+    "content": "Distributed optimization methods aim to reduce communication overhead in training large models on large datasets. The SloMo framework, inspired by the BMUF method, involves periodic synchronization and momentum updates to improve optimization and generalization performance. Experiments show consistent improvements in image classification and machine translation tasks compared to traditional methods. The SloMo framework, inspired by the BMUF method, improves optimization and generalization performance with periodic synchronization and momentum updates. Theoretical guarantees show convergence to stationary points for smooth non-convex losses, including BMUF as a specific case."
+}

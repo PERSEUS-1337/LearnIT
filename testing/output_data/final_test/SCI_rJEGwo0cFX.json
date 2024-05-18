@@ -1,0 +1,4 @@
+{
+    "title": "rJEGwo0cFX",
+    "content": "Exploiting structured knowledge in machine learning models for sequential data is challenging. Spatio-temporal graphs are useful for abstracting interaction graphs, but learning meaningful relations automatically is difficult. Models must discover hidden relations between problem factors in an unsupervised way while ensuring interpretability. The paper introduces an attention module for projecting graph sub-structures into fixed-size embeddings, capturing neighbor influences on vertices. Through evaluations on real-world and toy tasks, the model shows competitiveness against strong baselines."
+}

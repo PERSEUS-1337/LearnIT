@@ -1,0 +1,4 @@
+{
+    "title": "H1xFWgrFPS",
+    "content": "As machine learning methods are increasingly used in high stakes applications like medical image diagnosis, the need for model interpretability has become crucial. A new method is proposed to explain the outcome of a classification black-box by gradually exaggerating the semantic effect of a given class. This method generates a progressive set of plausible variations of a query input, changing the posterior probability from its original class to its negation. Our method allows users to traverse a data manifold while crossing the decision boundary, regardless of the classification decision. It is model agnostic and only requires the predictor's output value and gradient with respect to its input."
+}

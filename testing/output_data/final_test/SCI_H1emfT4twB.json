@@ -1,0 +1,4 @@
+{
+    "title": "H1emfT4twB",
+    "content": "In this paper, the authors explore meta-learning for few-shot text classification. Their model leverages distributional signatures of words in addition to lexical features to improve performance. Through a meta-learning framework, the model maps these signatures into attention scores to weight lexical representations, outperforming prototypical networks in both few-shot text classification and relation classification across six benchmark datasets."
+}

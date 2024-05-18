@@ -1,0 +1,4 @@
+{
+    "title": "S1JHhv6TW",
+    "content": "The driving force behind deep networks is their ability to compactly represent rich classes of functions. Expressive efficiency analyses have shown that deep networks are superior to shallow ones due to their architectural features. This paper focuses on the expressive efficiency brought by connectivity in dilated convolutional networks, proving that interconnecting these networks can lead to improved performance. Convolutional networks show expressive efficiency with even a single connection between intermediate layers, leading to significant gains in accuracy. This connectivity, along with depth, plays a crucial role in developing new tools for deep network design."
+}

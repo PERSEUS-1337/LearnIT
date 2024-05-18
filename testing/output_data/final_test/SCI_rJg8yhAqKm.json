@@ -1,0 +1,4 @@
+{
+    "title": "rJg8yhAqKm",
+    "content": "A central challenge in reinforcement learning is discovering effective policies for tasks with sparse rewards. An exploration strategy should focus on identifying decision states in the state space. By training a goal-conditioned model with an information bottleneck, decision states can be effectively identified even in partially observed settings. This model learns sensory cues that correlate with potential subgoals, guiding the agent through a sequence of decision states for further exploration. The curr_chunk focuses on guiding the agent through decision states and new regions of the state space for further exploration."
+}
