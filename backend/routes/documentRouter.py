@@ -15,7 +15,12 @@ from fastapi.responses import JSONResponse
 from middleware.requireAuth import auth_curr_user
 from models.user import UserBase
 from middleware.apiMsg import APIMessages
-from controllers.documentController import delete_file, get_uploaded_files, process_file, upload_file
+from controllers.documentController import (
+    delete_file,
+    get_uploaded_files,
+    process_file,
+    upload_file,
+)
 
 router = APIRouter()
 
@@ -52,5 +57,7 @@ async def delete_file_route(
 
 
 @router.post("/process")
-async def process_file_route(req: Request, filename: str, user: UserBase = Depends(auth_curr_user)):
+async def process_file_route(
+    req: Request, filename: str, user: UserBase = Depends(auth_curr_user)
+):
     return await process_file(req, user, filename)

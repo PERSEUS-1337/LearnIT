@@ -3,7 +3,15 @@ import json
 import time
 
 from dotenv import load_dotenv
-from utils.config import DEFAULT_CHUNK_OVERLAP, DEFAULT_CHUNK_SIZE, LLM_TEMP, LLMS, PROMPT_2_1, PROMPT_2_2, PROMPT_MAIN
+from utils.config import (
+    DEFAULT_CHUNK_OVERLAP,
+    DEFAULT_CHUNK_SIZE,
+    LLM_TEMP,
+    LLMS,
+    PROMPT_2_1,
+    PROMPT_2_2,
+    PROMPT_MAIN,
+)
 from models import Extracted
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter

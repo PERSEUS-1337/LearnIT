@@ -4,10 +4,9 @@ from typing import Annotated, Collection, List, Optional
 from fastapi import Depends, HTTPException, status, Request, Body
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm
 
 from middleware.apiMsg import APIMessages
-from utils.consts import USER_DB
 from utils.authUtils import (
     verify_password,
     get_password_hash,
@@ -24,7 +23,7 @@ async def login_user(
     req: Request, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ) -> Token:
     try:
-        db = req.app.database[USER_DB]
+        db = req.app.database[config["USER_DB"]]
         user = get_user_creds(db, form_data.username)
         if not user:
             raise HTTPException(
@@ -66,7 +65,7 @@ async def login_user(
 
 async def register_user(req: Request, user: UserReg = Body(...)):
     try:
-        db = req.app.database[USER_DB]
+        db = req.app.database[config["USER_DB"]]
         user_exists = get_user_creds(db, user.username)
         if user_exists:
             raise HTTPException(
@@ -109,7 +108,7 @@ async def register_user(req: Request, user: UserReg = Body(...)):
 
 
 async def get_all_users(req: Request):
-    db = req.app.database[USER_DB]
+    db = req.app.database[config["USER_DB"]]
     user_list = list(db.find({}, {"_id": 0, "hashed_password": 0}))
 
     if not list:
@@ -124,7 +123,7 @@ async def get_all_users(req: Request):
 async def update_user(
     req: Request, user: UserBase, user_update: UserUpdate
 ) -> Optional[UserBase]:
-    db = req.app.database[USER_DB]
+    db = req.app.database[config["USER_DB"]]
 
     # Create a dictionary to hold the updated data
     updated_data = {}
@@ -156,7 +155,7 @@ async def update_user(
 
 async def delete_user(req: Request, user: UserBase):
     # Find the user in the database by username
-    db = req.app.database[USER_DB]
+    db = req.app.database[config["USER_DB"]]
 
     # If user is found, delete the user from the database
     db.delete_one({"username": user.username})

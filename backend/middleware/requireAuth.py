@@ -6,9 +6,8 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 
 from middleware.apiMsg import APIMessages
-from utils.consts import USER_DB
 from models.user import TokenData, UserBase
-from utils.authUtils import get_user_creds, get_user_data
+from utils.authUtils import get_user_data
 
 config = dotenv_values(".env")
 
@@ -32,7 +31,9 @@ async def auth_curr_user(
     except JWTError:
         raise credentials_exception
 
-    user = get_user_data(req.app.database[USER_DB], username=token_data.username)
+    user = get_user_data(
+        req.app.database[config["USER_DB"]], username=token_data.username
+    )
 
     if user is None:
         raise HTTPException(

@@ -4,7 +4,7 @@ from typing import Annotated
 from dotenv import dotenv_values
 from fastapi import Depends, HTTPException, status, Request, Body
 from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm
 
 from middleware.apiMsg import APIMessages
 from models.user import Token, UserInDB, UserReg

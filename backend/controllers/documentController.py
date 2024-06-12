@@ -1,15 +1,14 @@
 from datetime import datetime
-import json
 import os
 import aiofiles
+from bson import ObjectId
 from dotenv import dotenv_values
 
 from fastapi import status, Request, UploadFile, status
 from fastapi.responses import JSONResponse
 
-from services.nlp_chain import process_document
+from services.nlp_chain import extract_tokens
 from utils.fileUtils import gen_uid
-from utils.consts import UPLOAD_PATH, USER_DB
 from middleware.apiMsg import APIMessages
 from models.user import UserBase
 from models.document import TSCC, UploadDoc
@@ -20,7 +19,7 @@ config = dotenv_values(".env")
 
 async def get_uploaded_files():
     # Define the directory where uploaded files are stored
-    directory = UPLOAD_PATH
+    directory = config["UPLOAD_PATH"]
 
     # Check if the directory exists
     if not os.path.exists(directory):
@@ -48,17 +47,17 @@ async def get_uploaded_files():
 
 
 async def upload_file(req: Request, file: UploadFile, user: UserBase):
-    db = req.app.database[USER_DB]
+    db = req.app.database[config["USER_DB"]]
 
     # Generate a unique file name using user's username
     uid = gen_uid(user.username, file.filename)
 
     # Construct the file path
-    file_path = os.path.join(UPLOAD_PATH, uid)
+    file_path = os.path.join(config["UPLOAD_PATH"], uid)
 
     # Check if the directory exists, if not, create it
-    if not os.path.exists(UPLOAD_PATH):
-        os.makedirs(UPLOAD_PATH)
+    if not os.path.exists(config["UPLOAD_PATH"]):
+        os.makedirs(config["UPLOAD_PATH"])
 
     try:
         # Check if the file already exists
@@ -107,13 +106,14 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
 
 
 async def delete_file(req: Request, user: UserBase, filename: str):
-    db = req.app.database[USER_DB]
+    db = req.app.database[config["USER_DB"]]
 
     # Generate the unique identifier for the file using the user's username and filename
     uid = gen_uid(user.username, filename)
 
     # Construct the file path
-    file_path = os.path.join(UPLOAD_PATH, uid)
+    file_path = os.path.join(config["UPLOAD_PATH"], uid)
+    print(file_path)
 
     try:
         # Check if the file exists
@@ -149,35 +149,47 @@ async def delete_file(req: Request, user: UserBase, filename: str):
 
 
 async def process_file(req: Request, user: UserBase, filename: str):
-    db = req.app.database[USER_DB]
+    db = req.app.database
+    user_db = db[config["USER_DB"]]
+    docs_db = db[config["DOCS_DB"]]
 
     # Generate the unique identifier for the file using the user's username and filename
     uid = gen_uid(user.username, filename)
 
     # Construct the file path
-    file_path = os.path.join(UPLOAD_PATH, uid)
+    file_path = os.path.join(config["UPLOAD_PATH"], uid)
     try:
-        # print(user.uploaded_files)
-        
         # Check if the file exists
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"File '{filename}' does not exist in the server")
-        
+
         for doc in user.uploaded_files:
             if doc.name == filename:
-                chunks = process_document(uid)
-                list_of_strings = [str(item) for item in chunks]
-                
+                # Extract tokens and create TSCC object
+                tscc = extract_tokens(uid)
+                tscc.uid = str(ObjectId())  # Set unique identifier for TSCC
+
+                # Store the TSCC document in the docs collection
+                tscc_id = docs_db.insert_one(tscc.dict()).inserted_id
+
+                # Update the UploadDoc object with the tscc_uid
+                doc.tscc_uid = str(tscc_id)
+                doc.processed = True
+
+                # Update the user document with the modified UploadDoc object
+                user_db.update_one(
+                    {"username": user.username, "uploaded_files.name": filename},
+                    {"$set": {"uploaded_files.$": doc.dict()}},
+                )
 
                 return JSONResponse(
                     status_code=status.HTTP_200_OK,
-                    content={"message": list_of_strings},
+                    content={"message": tscc.dict()},
                 )
-                
 
         return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={"message": f"ok"},
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"message": f"File '{filename}' not found in user uploaded files"},
         )
     except FileNotFoundError as e:
         return JSONResponse(

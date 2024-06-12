@@ -36,8 +36,6 @@ def startup_db_client():
         print(f"Connected to the {config['DB_NAME']} database!")
     except Exception as e:
         print(f"Failed to connect to the database: {e}")
-        # Optionally, you can raise an exception or handle the error in another way
-        # raise e
 
 
 @app.on_event("shutdown")
@@ -49,6 +47,3 @@ app.include_router(auth_router, tags=["auth"], prefix="/auth")
 app.include_router(user_router, tags=["user"], prefix="/user")
 app.include_router(book_router, tags=["book"], prefix="/book")
 app.include_router(docu_router, tags=["docu"], prefix="/docu")
-
-# if __name__ == "__main__":
-#     uvicorn.run(app, host="127.0.0.1", port=8000) # Specify the port here

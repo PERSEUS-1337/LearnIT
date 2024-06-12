@@ -1,5 +1,4 @@
-UPLOAD_PATH = "uploaded_files"
+# UPLOAD_PATH = "uploaded_files"
 
-# DB Configs
-USER_DB = "users"
-
+# # DB Configs
+# USER_DB = "users"

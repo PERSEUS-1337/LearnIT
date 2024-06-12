@@ -1,7 +1,7 @@
+from datetime import datetime
 import os
-import os
-import json
-from dotenv import load_dotenv
+import re
+from dotenv import dotenv_values
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import (
     PyPDFLoader,
@@ -10,24 +10,43 @@ from langchain_community.document_loaders import (
     PyMuPDFLoader,
 )
 
-from utils.consts import UPLOAD_PATH
 from models.document import TSCC
-from utils.config import DEFAULT_CHUNK_OVERLAP, DEFAULT_CHUNK_SIZE, LLM_TEMP, LLMS, PROMPT_2_1, PROMPT_2_2, PROMPT_MAIN
+from utils.config import (
+    DEFAULT_CHUNK_OVERLAP,
+    DEFAULT_CHUNK_SIZE,
+    LLM_TEMP,
+    LLMS,
+    PROMPT_2_1,
+    PROMPT_2_2,
+    PROMPT_MAIN,
+)
 
-def tokenize(document):
+config = dotenv_values(".env")
+
+
+def extract_page_content(chunk: str) -> str:
+    """Extract page content from a chunk string."""
+    match = re.search(r"page_content='(.*?)' metadata=", chunk, re.DOTALL)
+    if match:
+        return match.group(1)
+    return ""
+
+
+def tokenizer(document):
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=DEFAULT_CHUNK_SIZE,
         chunk_overlap=DEFAULT_CHUNK_OVERLAP,
     )
     text_chunks = text_splitter.split_documents(document)
-    
+
+    # page_contents = extract_page_content(documents)
+
     return text_chunks
-    
-    
-def process_document(filename, loader_choice="PyMuPDFLoader") -> TSCC:
-    # Append the file string to "./datasets/downloaded_documents"
-    file_path = os.path.join(UPLOAD_PATH, filename)
-    
+
+
+def extract_tokens(filename, loader_choice="PyPDFium2Loader") -> TSCC:
+    file_path = os.path.join(config["UPLOAD_PATH"], filename)
+
     # Initialize PyPDFLoader with the file path
     if loader_choice == "PyPDFLoader":
         loader = PyPDFLoader(file_path)
@@ -41,17 +60,24 @@ def process_document(filename, loader_choice="PyMuPDFLoader") -> TSCC:
     document = loader.load()
 
     # Split texts into chunks
-    text_chunks = tokenize(document)
+    text_chunks = tokenizer(document)
 
-    # print(json.dumps(str(text_chunks)))
+    print(f"DEV:\t{len(text_chunks)} Chunk Count")
 
-    # # print(len(text_chunks))
-    # prev_chunk = ""
-    # for i, chunk in enumerate(text_chunks):
-    #     chunk.metadata["index"] = i
-    #     chunk.metadata["prev_chunk"] = prev_chunk
-    #     # print(f"{i}: {chunk.page_content}\n")
-    #     prev_chunk = chunk.page_content
-    #     # chunk.metadata["global"] = document
+    # Extract page_content from each chunk
+    text_chunks = [extract_page_content(str(chunk)) for chunk in text_chunks]
 
-    return text_chunks      
+    # Construct the TSCC object
+    tscc = TSCC(
+        uid=filename,  # Assuming filename is used as the UID
+        processed=datetime.now(),
+        chunks=text_chunks,
+        model_used="model-v1",  # Replace with actual model name if applicable
+        doc_loader_used=loader_choice,
+        chunk_size=DEFAULT_CHUNK_SIZE,
+        chunk_overlap=DEFAULT_CHUNK_OVERLAP,
+        token_count=sum(len(chunk.split()) for chunk in text_chunks),
+        chunks_generated=len(text_chunks),
+    )
+
+    return tscc
