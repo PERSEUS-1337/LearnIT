@@ -148,7 +148,7 @@ async def delete_file(req: Request, user: UserBase, filename: str):
         )
 
 
-async def process_file(req: Request, user: UserBase, filename: str):
+async def process_tscc(req: Request, user: UserBase, filename: str):
     db = req.app.database
     user_db = db[config["USER_DB"]]
     docs_db = db[config["DOCS_DB"]]
@@ -185,6 +185,68 @@ async def process_file(req: Request, user: UserBase, filename: str):
                 return JSONResponse(
                     status_code=status.HTTP_200_OK,
                     content={"message": tscc.dict()},
+                )
+
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"message": f"File '{filename}' not found in user uploaded files"},
+        )
+    except FileNotFoundError as e:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND, content={"message": str(e)}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"message": str(e)},
+        )
+
+
+async def delete_tscc(req: Request, user: UserBase, filename: str):
+    db = req.app.database
+    user_db = db[config["USER_DB"]]
+    docs_db = db[config["DOCS_DB"]]
+
+    # Generate the unique identifier for the file using the user's username and filename
+    uid = gen_uid(user.username, filename)
+
+    # Construct the file path
+    file_path = os.path.join(config["UPLOAD_PATH"], uid)
+    try:
+        # Check if the file exists
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"File '{filename}' does not exist on the server")
+
+        for doc in user.uploaded_files:
+            if doc.name == filename:
+                # Log the document details
+                print(f"Deleting document with tscc_uid: {doc.tscc_uid}")
+                
+                # Convert tscc_uid to ObjectId if necessary
+                tscc_uid = ObjectId(doc.tscc_uid) if ObjectId.is_valid(doc.tscc_uid) else doc.tscc_uid
+                
+                # Delete the document in the docs collection
+                delete_result = docs_db.delete_one({"_id": tscc_uid})
+
+                if delete_result.deleted_count == 0:
+                    raise Exception("Failed to delete document from docs database")
+
+                # Modify the UploadedDoc object inside the user
+                doc.tscc_uid = None
+                doc.processed = False
+
+                # Update the user document with the modified UploadDoc object
+                update_result = user_db.update_one(
+                    {"username": user.username, "uploaded_files.name": filename},
+                    {"$set": {"uploaded_files.$": doc.dict()}},
+                )
+
+                if update_result.modified_count == 0:
+                    raise Exception("Failed to update user document")
+
+                return JSONResponse(
+                    status_code=status.HTTP_200_OK,
+                    content={"message": f"Updated User {user.username}'s files and deleted {doc.name}'s tscc from the database"},
                 )
 
         return JSONResponse(

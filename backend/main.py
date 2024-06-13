@@ -1,7 +1,9 @@
+import time
 from dotenv import dotenv_values
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pymongo import MongoClient
+from starlette.responses import Response
 
 from routes.authRouter import router as auth_router
 from routes.bookRouter import router as book_router
@@ -11,6 +13,16 @@ from routes.documentRouter import router as docu_router
 config = dotenv_values(".env")
 
 app = FastAPI()
+
+
+@app.middleware("http")
+async def measure_request_time(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = f"{process_time} ms"
+    return response
+
 
 # Add CORS middleware
 app.add_middleware(

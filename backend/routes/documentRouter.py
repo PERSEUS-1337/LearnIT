@@ -17,8 +17,9 @@ from models.user import UserBase
 from middleware.apiMsg import APIMessages
 from controllers.documentController import (
     delete_file,
+    delete_tscc,
     get_uploaded_files,
-    process_file,
+    process_tscc,
     upload_file,
 )
 
@@ -56,8 +57,15 @@ async def delete_file_route(
     return await delete_file(req, user, filename)
 
 
-@router.post("/process")
-async def process_file_route(
+@router.post("/process-tscc")
+async def process_tscc_route(
     req: Request, filename: str, user: UserBase = Depends(auth_curr_user)
 ):
-    return await process_file(req, user, filename)
+    return await process_tscc(req, user, filename)
+
+
+@router.delete("/delete-tscc")
+async def delete_tscc_route(
+    req: Request, filename: str, user: UserBase = Depends(auth_curr_user)
+):
+    return await delete_tscc(req, user, filename)
