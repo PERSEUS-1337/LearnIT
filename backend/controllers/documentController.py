@@ -165,6 +165,12 @@ async def process_tscc(req: Request, user: UserBase, filename: str):
 
         for doc in user.uploaded_files:
             if doc.name == filename:
+                if doc.processed:
+                    return JSONResponse(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        content={"message": f"File '{filename}' has already been processed"},
+                    )
+                
                 # Extract tokens and create TSCC object
                 tscc = summarize_tokens(uid)
                 tscc.uid = str(ObjectId())  # Set unique identifier for TSCC

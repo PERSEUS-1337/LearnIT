@@ -25,7 +25,8 @@ class TSCC(BaseModel):
     chunk_overlap: int
     token_count: int
     chunks_generated: int
-    chunks: List[Dict[str, str]]
+    chunks: List[str]
+    # chunks: List[Dict[str, str]]
 
     class Config:
         json_encoders = {datetime: lambda dt: dt.isoformat()}

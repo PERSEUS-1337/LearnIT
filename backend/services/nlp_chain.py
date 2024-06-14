@@ -1,8 +1,12 @@
 from datetime import datetime
 import os
 import re
+import time
 from typing import Dict, List
-from dotenv import dotenv_values
+from dotenv import dotenv_values, load_dotenv
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import PromptTemplate
+from langchain.chains import LLMChain
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import (
     PyPDFLoader,
@@ -24,6 +28,9 @@ from utils.config import (
 
 
 config = dotenv_values(".env")
+
+load_dotenv()
+os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 
 
 def extract_page_content(chunk: str) -> str:
@@ -54,6 +61,28 @@ def tokenizer(document) -> List[Dict[str, str]]:
     return chunk_dicts
 
 
+def llm_process(curr_chunk, prev_chunk, chosen_model=LLMS["dev"]) -> str:
+    """_summary_
+
+    Args:
+        curr_chunk (str): The text that is to be condensed by TSCC
+        prev_chunk (str): The text that provides context to aid the TSCC
+        chosen_model (str, optional): Can choose between 3.5-turbo or 4-turbo-preview
+
+    Returns:
+        str: The chunk of text that has been condensed by the TSCC
+    """
+
+    turbo_llm = ChatOpenAI(temperature=LLM_TEMP, model_name=chosen_model)
+
+    prompt = PromptTemplate.from_template(template=PROMPT_MAIN)
+    llm_chain = LLMChain(prompt=prompt, llm=turbo_llm)
+    response = llm_chain.invoke(
+        {"curr_chunk": curr_chunk, "prev_chunk": prev_chunk}
+    )
+    return response["text"]
+
+
 def summarize_tokens(filename, loader_choice="PyPDFium2Loader") -> TSCC:
     file_path = os.path.join(config["UPLOAD_PATH"], filename)
 
@@ -66,14 +95,23 @@ def summarize_tokens(filename, loader_choice="PyPDFium2Loader") -> TSCC:
         loader = PyMuPDFLoader(file_path)
     elif loader_choice == "TextLoader":
         loader = TextLoader(file_path)
+        
+    start_time = time.time()  # Record start time
+    print(f"> [PROCESS]\t{filename} - TSCC():\n", end="", flush=True)
+
 
     document = loader.load()
 
     # Split texts into chunks
     chunk_dicts = tokenizer(document)
 
-    # print(f"DEV:\t{len(text_chunks)} Chunk Count")
-
+    processed_chunks = []
+    for chunk in chunk_dicts:
+        # print(f"Curr Chunk: {chunk['curr']}\nPrev Chunk: {chunk['prev']}")
+        result = llm_process(chunk["curr"], chunk["prev"])
+        processed_chunks.append(result)
+    print(processed_chunks)
+    
     # Extract the 'curr' contents for TSCC object construction
     text_chunks = [chunk_dict["curr"] for chunk_dict in chunk_dicts]
 
@@ -87,7 +125,16 @@ def summarize_tokens(filename, loader_choice="PyPDFium2Loader") -> TSCC:
         chunk_overlap=DEFAULT_CHUNK_OVERLAP,
         token_count=sum(len(chunk.split()) for chunk in text_chunks),
         chunks_generated=len(chunk_dicts),
-        chunks=chunk_dicts,
+        chunks=processed_chunks,
+    )
+    
+    print("> DONE!\t")
+
+    end_time = time.time()  # Record end time
+    elapsed_time = end_time - start_time
+    print(f"> [INFO]\tElapsed time: {elapsed_time:.2f}s")
+    print(
+        f"> [INFO]\tTime completed: {time.strftime('%m-%d %H:%M:%S', time.localtime())}"
     )
 
     return tscc
