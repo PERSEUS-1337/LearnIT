@@ -7,7 +7,7 @@ from dotenv import dotenv_values
 from fastapi import status, Request, UploadFile, status
 from fastapi.responses import JSONResponse
 
-from services.nlp_chain import extract_tokens
+from services.nlp_chain import summarize_tokens
 from utils.fileUtils import gen_uid
 from middleware.apiMsg import APIMessages
 from models.user import UserBase
@@ -166,7 +166,7 @@ async def process_tscc(req: Request, user: UserBase, filename: str):
         for doc in user.uploaded_files:
             if doc.name == filename:
                 # Extract tokens and create TSCC object
-                tscc = extract_tokens(uid)
+                tscc = summarize_tokens(uid)
                 tscc.uid = str(ObjectId())  # Set unique identifier for TSCC
 
                 # Store the TSCC document in the docs collection
@@ -221,10 +221,14 @@ async def delete_tscc(req: Request, user: UserBase, filename: str):
             if doc.name == filename:
                 # Log the document details
                 print(f"Deleting document with tscc_uid: {doc.tscc_uid}")
-                
+
                 # Convert tscc_uid to ObjectId if necessary
-                tscc_uid = ObjectId(doc.tscc_uid) if ObjectId.is_valid(doc.tscc_uid) else doc.tscc_uid
-                
+                tscc_uid = (
+                    ObjectId(doc.tscc_uid)
+                    if ObjectId.is_valid(doc.tscc_uid)
+                    else doc.tscc_uid
+                )
+
                 # Delete the document in the docs collection
                 delete_result = docs_db.delete_one({"_id": tscc_uid})
 
@@ -246,7 +250,9 @@ async def delete_tscc(req: Request, user: UserBase, filename: str):
 
                 return JSONResponse(
                     status_code=status.HTTP_200_OK,
-                    content={"message": f"Updated User {user.username}'s files and deleted {doc.name}'s tscc from the database"},
+                    content={
+                        "message": f"Updated User {user.username}'s files and deleted {doc.name}'s tscc from the database"
+                    },
                 )
 
         return JSONResponse(

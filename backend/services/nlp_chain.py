@@ -1,6 +1,7 @@
 from datetime import datetime
 import os
 import re
+from typing import Dict, List
 from dotenv import dotenv_values
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import (
@@ -21,6 +22,7 @@ from utils.config import (
     PROMPT_MAIN,
 )
 
+
 config = dotenv_values(".env")
 
 
@@ -32,19 +34,27 @@ def extract_page_content(chunk: str) -> str:
     return ""
 
 
-def tokenizer(document):
+def tokenizer(document) -> List[Dict[str, str]]:
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=DEFAULT_CHUNK_SIZE,
         chunk_overlap=DEFAULT_CHUNK_OVERLAP,
     )
     text_chunks = text_splitter.split_documents(document)
 
-    # page_contents = extract_page_content(documents)
+    # Extract page_content from each chunk
+    text_chunks = [extract_page_content(str(chunk)) for chunk in text_chunks]
 
-    return text_chunks
+    # Create a list of dicts with 'prev' and 'curr'
+    chunk_dicts = []
+    for i in range(len(text_chunks)):
+        chunk_dicts.append(
+            {"prev": text_chunks[i - 1] if i > 0 else "", "curr": text_chunks[i]}
+        )
+
+    return chunk_dicts
 
 
-def extract_tokens(filename, loader_choice="PyPDFium2Loader") -> TSCC:
+def summarize_tokens(filename, loader_choice="PyPDFium2Loader") -> TSCC:
     file_path = os.path.join(config["UPLOAD_PATH"], filename)
 
     # Initialize PyPDFLoader with the file path
@@ -60,24 +70,24 @@ def extract_tokens(filename, loader_choice="PyPDFium2Loader") -> TSCC:
     document = loader.load()
 
     # Split texts into chunks
-    text_chunks = tokenizer(document)
+    chunk_dicts = tokenizer(document)
 
-    print(f"DEV:\t{len(text_chunks)} Chunk Count")
+    # print(f"DEV:\t{len(text_chunks)} Chunk Count")
 
-    # Extract page_content from each chunk
-    text_chunks = [extract_page_content(str(chunk)) for chunk in text_chunks]
+    # Extract the 'curr' contents for TSCC object construction
+    text_chunks = [chunk_dict["curr"] for chunk_dict in chunk_dicts]
 
     # Construct the TSCC object
     tscc = TSCC(
         uid=filename,  # Assuming filename is used as the UID
         processed=datetime.now(),
-        chunks=text_chunks,
         model_used="model-v1",  # Replace with actual model name if applicable
         doc_loader_used=loader_choice,
         chunk_size=DEFAULT_CHUNK_SIZE,
         chunk_overlap=DEFAULT_CHUNK_OVERLAP,
         token_count=sum(len(chunk.split()) for chunk in text_chunks),
-        chunks_generated=len(text_chunks),
+        chunks_generated=len(chunk_dicts),
+        chunks=chunk_dicts,
     )
 
     return tscc

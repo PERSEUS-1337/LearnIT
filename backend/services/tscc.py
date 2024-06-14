@@ -12,7 +12,8 @@ from utils.config import (
     PROMPT_2_2,
     PROMPT_MAIN,
 )
-from models import Extracted
+
+# from models import Extracted
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
@@ -21,7 +22,7 @@ from langchain_openai import ChatOpenAI
 from langchain.chains import LLMChain
 
 
-from utils import log_error, write_to_file
+# from utils import log_error, write_to_file
 
 
 load_dotenv()
