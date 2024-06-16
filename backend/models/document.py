@@ -4,29 +4,38 @@ from pydantic import BaseModel
 
 
 class UploadDoc(BaseModel):
-    name: str
     uid: str
+    name: str
     uploaded_at: datetime
-    processed: bool = False  # Default since it is newly uploaded
-    tscc_uid: Optional[str] = (
-        None  # Reference to the TSCC document located in docs collection
-    )
+    tokenized: bool = False
+    processed: bool = False
+    tokens_uid: Optional[str] = None
+    tscc_uid: Optional[str] = None
 
     class Config:
         json_encoders = {datetime: lambda dt: dt.isoformat()}
 
+    def dict(self):
+        return {
+            "uid": self.uid,
+            "name": self.name,
+            "uploaded_at": self.uploaded_at.isoformat(),
+            "tokenized": self.tokenized,
+            "processed": self.processed,
+            "tokens_uid": self.tokens_uid,
+            "tscc_uid": self.tscc_uid,
+        }
 
-class TSCC(BaseModel):
-    uid: str
+
+class DocTokens(BaseModel):
+    uid: str = None
     processed: datetime
-    model_used: str
     doc_loader_used: str
     chunk_size: int
     chunk_overlap: int
     token_count: int
     chunks_generated: int
-    chunks: List[str]
-    # chunks: List[Dict[str, str]]
+    chunks: List[Dict[str, str]]
 
     class Config:
         json_encoders = {datetime: lambda dt: dt.isoformat()}
@@ -34,7 +43,6 @@ class TSCC(BaseModel):
     def dict(self):
         return {
             "processed": self.processed.isoformat(),
-            "model_used": self.model_used,
             "doc_loader_used": self.doc_loader_used,
             "chunk_size": self.chunk_size,
             "chunk_overlap": self.chunk_overlap,
@@ -43,13 +51,23 @@ class TSCC(BaseModel):
             "chunks": self.chunks,
         }
 
-    def __str__(self) -> str:
-        # Convert datetime to ISO format for readability
-        processed_str = self.processed.isoformat()
 
-        # Join chunks into a single string for display
-        chunks_str = ", ".join(
-            f"Prev: {chunk['prev']}, Curr: {chunk['curr']}" for chunk in self.chunks
-        )
+class TSCC(BaseModel):
+    uid: str = None
+    processed: datetime
+    model_used: str
+    token_count: int
+    chunk_count: int
+    chunks: List[str]
 
-        return f"Processed: {processed_str}, Model Used: {self.model_used}, Doc Loader Used: {self.doc_loader_used},\nChunk Size: {self.chunk_size}, Chunk Overlap: {self.chunk_overlap}, Token Count: {self.token_count}, Chunks Generated: {self.chunks_generated}\nChunks: {chunks_str}"
+    class Config:
+        json_encoders = {datetime: lambda dt: dt.isoformat()}
+
+    def dict(self):
+        return {
+            "processed": self.processed.isoformat(),
+            "model_used": self.model_used,
+            "token_count": self.token_count,
+            "chunk_count": self.chunk_count,
+            "chunks": self.chunks,
+        }

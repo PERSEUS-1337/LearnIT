@@ -2,7 +2,7 @@ from datetime import datetime
 import os
 import re
 import time
-from typing import Dict, List
+
 from dotenv import dotenv_values, load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
@@ -15,7 +15,7 @@ from langchain_community.document_loaders import (
     PyMuPDFLoader,
 )
 
-from models.document import TSCC
+from models.document import TSCC, DocTokens
 from utils.config import (
     DEFAULT_CHUNK_OVERLAP,
     DEFAULT_CHUNK_SIZE,
@@ -41,7 +41,21 @@ def extract_page_content(chunk: str) -> str:
     return ""
 
 
-def tokenizer(document) -> List[Dict[str, str]]:
+def document_tokenizer(file_path, loader_choice="PyPDFium2Loader") -> DocTokens:
+    # file_path = os.path.join(config["UPLOAD_PATH"], filename)
+
+    # Initialize PyPDFLoader with the file path
+    if loader_choice == "PyPDFLoader":
+        loader = PyPDFLoader(file_path)
+    elif loader_choice == "PyPDFium2Loader":
+        loader = PyPDFium2Loader(file_path)
+    elif loader_choice == "PyMuPDFLoader":
+        loader = PyMuPDFLoader(file_path)
+    elif loader_choice == "TextLoader":
+        loader = TextLoader(file_path)
+
+    document = loader.load()
+
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=DEFAULT_CHUNK_SIZE,
         chunk_overlap=DEFAULT_CHUNK_OVERLAP,
@@ -58,7 +72,17 @@ def tokenizer(document) -> List[Dict[str, str]]:
             {"prev": text_chunks[i - 1] if i > 0 else "", "curr": text_chunks[i]}
         )
 
-    return chunk_dicts
+    doc_tokens = DocTokens(
+        processed=datetime.now(),
+        doc_loader_used=loader_choice,
+        chunk_size=DEFAULT_CHUNK_SIZE,
+        chunk_overlap=DEFAULT_CHUNK_OVERLAP,
+        token_count=sum(len(chunk.split()) for chunk in text_chunks),
+        chunks_generated=len(chunk_dicts),
+        chunks=chunk_dicts,
+    )
+
+    return doc_tokens
 
 
 def llm_process(curr_chunk, prev_chunk, chosen_model=LLMS["dev"]) -> str:
@@ -77,64 +101,44 @@ def llm_process(curr_chunk, prev_chunk, chosen_model=LLMS["dev"]) -> str:
 
     prompt = PromptTemplate.from_template(template=PROMPT_MAIN)
     llm_chain = LLMChain(prompt=prompt, llm=turbo_llm)
-    response = llm_chain.invoke(
-        {"curr_chunk": curr_chunk, "prev_chunk": prev_chunk}
-    )
+    response = llm_chain.invoke({"curr_chunk": curr_chunk, "prev_chunk": prev_chunk})
     return response["text"]
 
 
-def summarize_tokens(filename, loader_choice="PyPDFium2Loader") -> TSCC:
-    file_path = os.path.join(config["UPLOAD_PATH"], filename)
-
-    # Initialize PyPDFLoader with the file path
-    if loader_choice == "PyPDFLoader":
-        loader = PyPDFLoader(file_path)
-    elif loader_choice == "PyPDFium2Loader":
-        loader = PyPDFium2Loader(file_path)
-    elif loader_choice == "PyMuPDFLoader":
-        loader = PyMuPDFLoader(file_path)
-    elif loader_choice == "TextLoader":
-        loader = TextLoader(file_path)
-        
+def generate_tscc(filename,
+    chosen_model=LLMS["dev"]
+) -> TSCC:
     start_time = time.time()  # Record start time
     print(f"> [PROCESS]\t{filename} - TSCC():\n", end="", flush=True)
 
+    # # Go through the whole chunk list and one by one pass to LLM
+    # processed_chunks = []
+    # for chunk in chunk_dicts:
+    #     result = llm_process(chunk["curr"], chunk["prev"], chosen_model)
+    #     processed_chunks.append(result)
 
-    document = loader.load()
+    # # Extract the 'curr' contents for TSCC object construction
+    # text_chunks = [chunk_dict["curr"] for chunk_dict in chunk_dicts]
 
-    # Split texts into chunks
-    chunk_dicts = tokenizer(document)
+    # # Construct the TSCC object
+    # tscc = TSCC(
+    #     processed=datetime.now(),
+    #     model_used=chosen_model,  # Replace with actual model name if applicable
+    #     doc_loader_used=loader_choice,
+    #     chunk_size=DEFAULT_CHUNK_SIZE,
+    #     chunk_overlap=DEFAULT_CHUNK_OVERLAP,
+    #     token_count=sum(len(chunk.split()) for chunk in text_chunks),
+    #     chunks_generated=len(chunk_dicts),
+    #     chunks=processed_chunks,
+    # )
 
-    processed_chunks = []
-    for chunk in chunk_dicts:
-        # print(f"Curr Chunk: {chunk['curr']}\nPrev Chunk: {chunk['prev']}")
-        result = llm_process(chunk["curr"], chunk["prev"])
-        processed_chunks.append(result)
-    print(processed_chunks)
-    
-    # Extract the 'curr' contents for TSCC object construction
-    text_chunks = [chunk_dict["curr"] for chunk_dict in chunk_dicts]
+    # print("> DONE!\t")
 
-    # Construct the TSCC object
-    tscc = TSCC(
-        uid=filename,  # Assuming filename is used as the UID
-        processed=datetime.now(),
-        model_used="model-v1",  # Replace with actual model name if applicable
-        doc_loader_used=loader_choice,
-        chunk_size=DEFAULT_CHUNK_SIZE,
-        chunk_overlap=DEFAULT_CHUNK_OVERLAP,
-        token_count=sum(len(chunk.split()) for chunk in text_chunks),
-        chunks_generated=len(chunk_dicts),
-        chunks=processed_chunks,
-    )
-    
-    print("> DONE!\t")
+    # end_time = time.time()  # Record end time
+    # elapsed_time = end_time - start_time
+    # print(f"> [INFO]\tElapsed time: {elapsed_time:.2f}s")
+    # print(
+    #     f"> [INFO]\tTime completed: {time.strftime('%m-%d %H:%M:%S', time.localtime())}"
+    # )
 
-    end_time = time.time()  # Record end time
-    elapsed_time = end_time - start_time
-    print(f"> [INFO]\tElapsed time: {elapsed_time:.2f}s")
-    print(
-        f"> [INFO]\tTime completed: {time.strftime('%m-%d %H:%M:%S', time.localtime())}"
-    )
-
-    return tscc
+    # return tscc

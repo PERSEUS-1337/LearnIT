@@ -7,7 +7,7 @@ from dotenv import dotenv_values
 from fastapi import status, Request, UploadFile, status
 from fastapi.responses import JSONResponse
 
-from services.nlp_chain import summarize_tokens
+from services.nlp_chain import document_tokenizer
 from utils.fileUtils import gen_uid
 from middleware.apiMsg import APIMessages
 from models.user import UserBase
@@ -147,8 +147,9 @@ async def delete_file(req: Request, user: UserBase, filename: str):
             content={"message": str(e)},
         )
 
-
-async def process_tscc(req: Request, user: UserBase, filename: str):
+# TODO: Separate Generate Tokens with TSCC Process
+# TODO: 
+async def generate_tokens(req: Request, user: UserBase, filename: str):
     db = req.app.database
     user_db = db[config["USER_DB"]]
     docs_db = db[config["DOCS_DB"]]
@@ -158,6 +159,7 @@ async def process_tscc(req: Request, user: UserBase, filename: str):
 
     # Construct the file path
     file_path = os.path.join(config["UPLOAD_PATH"], uid)
+    print(file_path)
     try:
         # Check if the file exists
         if not os.path.exists(file_path):
@@ -165,22 +167,24 @@ async def process_tscc(req: Request, user: UserBase, filename: str):
 
         for doc in user.uploaded_files:
             if doc.name == filename:
-                if doc.processed:
+                if doc.tokenized:
                     return JSONResponse(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        content={"message": f"File '{filename}' has already been processed"},
+                        status_code=status.HTTP_409_BAD_REQUEST,
+                        content={
+                            "message": f"File '{filename}' has already been tokenized"
+                        },
                     )
-                
-                # Extract tokens and create TSCC object
-                tscc = summarize_tokens(uid)
-                tscc.uid = str(ObjectId())  # Set unique identifier for TSCC
+
+                # Extract tokens and create DocTokens object
+                doc_tokens = document_tokenizer(file_path, "PyMuPDFLoader")
+                doc_tokens.uid = str(ObjectId())  # Set unique identifier for DocTokens
 
                 # Store the TSCC document in the docs collection
-                tscc_id = docs_db.insert_one(tscc.dict()).inserted_id
+                doc_tokens_id = docs_db.insert_one(doc_tokens.dict()).inserted_id
 
                 # Update the UploadDoc object with the tscc_uid
-                doc.tscc_uid = str(tscc_id)
-                doc.processed = True
+                doc.tokens_uid = str(doc_tokens_id)
+                doc.tokenized = True
 
                 # Update the user document with the modified UploadDoc object
                 user_db.update_one(
@@ -190,13 +194,51 @@ async def process_tscc(req: Request, user: UserBase, filename: str):
 
                 return JSONResponse(
                     status_code=status.HTTP_200_OK,
-                    content={"message": tscc.dict()},
+                    content={"message": doc_tokens.dict()},
                 )
 
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
             content={"message": f"File '{filename}' not found in user uploaded files"},
         )
+    except FileNotFoundError as e:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND, content={"message": str(e)}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"message": str(e)},
+        )
+
+
+async def process_tscc(req: Request, user: UserBase, filename: str):
+    db = req.app.database
+    user_db = db[config["USER_DB"]]
+    docs_db = db[config["DOCS_DB"]]
+    
+    # Generate the unique identifier for the file using the user's username and filename
+    uid = gen_uid(user.username, filename)
+    
+    try:
+        # Check if file exists in the uploaded file list of user
+        for doc in user.uploaded_files:
+            if doc.name == filename:
+                # Check if the file is already tokenized and ready for tscc processing
+                if not doc.tokenized:
+                    return JSONResponse(
+                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        content={
+                            "message": f"File '{filename}' has not yet been tokenized. Please generate tokens for '{filename}' first"
+                        },
+                    )
+                if doc.processed:
+                    uid = user.uploaded_files
+                    print(uid)
+                    # pre_tokens = await docs_db.find_one({"uid": username}, {"_id": 0, "username": 1, "email": 1})
+                    
+                
+                
     except FileNotFoundError as e:
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND, content={"message": str(e)}
