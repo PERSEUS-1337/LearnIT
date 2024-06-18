@@ -9,8 +9,8 @@ class UploadDoc(BaseModel):
     uploaded_at: datetime
     tokenized: bool = False
     processed: bool = False
-    tokens_uid: Optional[str] = None
-    tscc_uid: Optional[str] = None
+    tokens_id: Optional[str] = None
+    tscc_id: Optional[str] = None
 
     class Config:
         json_encoders = {datetime: lambda dt: dt.isoformat()}
@@ -22,13 +22,12 @@ class UploadDoc(BaseModel):
             "uploaded_at": self.uploaded_at.isoformat(),
             "tokenized": self.tokenized,
             "processed": self.processed,
-            "tokens_uid": self.tokens_uid,
-            "tscc_uid": self.tscc_uid,
+            "tokens_id": self.tokens_id,
+            "tscc_id": self.tscc_id,
         }
 
 
 class DocTokens(BaseModel):
-    uid: str = None
     processed: datetime
     doc_loader_used: str
     chunk_size: int
@@ -53,7 +52,6 @@ class DocTokens(BaseModel):
 
 
 class TSCC(BaseModel):
-    uid: str = None
     processed: datetime
     model_used: str
     token_count: int

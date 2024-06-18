@@ -105,9 +105,7 @@ def llm_process(curr_chunk, prev_chunk, chosen_model=LLMS["dev"]) -> str:
     return response["text"]
 
 
-def generate_tscc(filename,
-    chosen_model=LLMS["dev"]
-) -> TSCC:
+def generate_tscc(filename, chosen_model=LLMS["dev"]) -> TSCC:
     start_time = time.time()  # Record start time
     print(f"> [PROCESS]\t{filename} - TSCC():\n", end="", flush=True)
 
