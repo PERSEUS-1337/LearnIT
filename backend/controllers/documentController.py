@@ -80,12 +80,11 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
         uploaded_file_info = UploadDoc(
             name=file.filename, uid=uid, uploaded_at=datetime.now()
         )
-        user.uploaded_files.append(uploaded_file_info.model_dump())
-
+        
         # Update the user in MongoDB with the new uploaded file information
         update_result = db.update_one(
             {"username": user.username},
-            {"$set": {"uploaded_files": user.uploaded_files}},
+            {"$push": {"uploaded_files": uploaded_file_info.dict()}},
         )
 
         if update_result.modified_count == 0:
@@ -110,7 +109,7 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
         print(f"Unexpected error: {str(e)}")
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"message": "Internal server error"},
+            content={"message": str(e)},
         )
 
 
