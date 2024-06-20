@@ -30,27 +30,27 @@ async def get_uploaded_files():
         # Get a list of all files in the directory
         files = os.listdir(directory)
         # Filter out directories (if any)
-        files = [file for file in files if os.path.isfile(os.path.join(directory, file))]
+        files = [
+            file for file in files if os.path.isfile(os.path.join(directory, file))
+        ]
 
         # Return the list of files or an empty list if no files found
         return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={"files": files if files else []}
+            status_code=status.HTTP_200_OK, content={"files": files if files else []}
         )
     except OSError as e:
         # Handle OS errors
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"message": f"OS error: {str(e)}"}
+            content={"message": f"OS error: {str(e)}"},
         )
     except Exception as e:
         # Handle any other unexpected errors
         print(f"Unexpected error: {str(e)}")
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"message": "Internal server error"}
+            content={"message": "Internal server error"},
         )
-
 
 
 async def upload_file(req: Request, file: UploadFile, user: UserBase):
@@ -89,7 +89,9 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
         )
 
         if update_result.modified_count == 0:
-            raise ValueError(f"Failed to update user '{user.username}' with the new file information")
+            raise ValueError(
+                f"Failed to update user '{user.username}' with the new file information"
+            )
 
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
@@ -108,7 +110,7 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
         print(f"Unexpected error: {str(e)}")
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"message": "Internal server error"}
+            content={"message": "Internal server error"},
         )
 
 
@@ -234,7 +236,7 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
                     {"username": user.username, "uploaded_files.name": filename},
                     {"$set": {"uploaded_files.$": doc.dict()}},
                 )
-                
+
                 if update_result.modified_count == 0:
                     raise ValueError(
                         f"Failed to update user '{user.username}' with tokenized file '{filename}'"
@@ -333,7 +335,7 @@ async def process_tscc(req: Request, user: UserBase, filename: str):
                             "message": f"File '{filename}' has already been processed"
                         },
                     )
-                    
+
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
             content={"message": f"File '{filename}' not found in user uploaded files"},

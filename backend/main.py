@@ -6,7 +6,6 @@ from pymongo import MongoClient
 from starlette.responses import Response
 
 from routes.authRouter import router as auth_router
-from routes.bookRouter import router as book_router
 from routes.userRouter import router as user_router
 from routes.documentRouter import router as docu_router
 
@@ -57,5 +56,4 @@ def shutdown_db_client():
 
 app.include_router(auth_router, tags=["auth"], prefix="/auth")
 app.include_router(user_router, tags=["user"], prefix="/user")
-app.include_router(book_router, tags=["book"], prefix="/book")
 app.include_router(docu_router, tags=["docu"], prefix="/docu")
