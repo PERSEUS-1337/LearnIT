@@ -83,7 +83,7 @@ def main():
     generated_folder = f"./output_data/{chunk_size}_{chunk_overlap}"
     output_json_file = f"./rouge/{chunk_size}_{chunk_overlap}.jsonl"
     os.makedirs("./rouge", exist_ok=True)
-    create_empty_file(output_json_file);
+    create_empty_file(output_json_file)
 
     # Read file list
     file_list = load_file_list(file_list_path)

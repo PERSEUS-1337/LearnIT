@@ -87,7 +87,7 @@ def final_summarize_documents(chunk_size, chunk_overlap, filename):
         files_to_process,
         files_processed,
     ) = prepare_directories_and_files(chunk_size, chunk_overlap)
-    
+
     files_to_process = read_file_to_list(os.path.join(paths.LOGS_PATH, filename))
     for i, file_name in enumerate(files_to_process):
         if file_name in files_processed:
@@ -137,9 +137,9 @@ def summarize_documents(files_to_process):
 def split_file():
     input_file = paths.TEST_FINAL_PATH
     # Read the contents of the input file
-    with open(input_file, 'r') as f:
+    with open(input_file, "r") as f:
         lines = f.readlines()
-    
+
     # Shuffle the lines
     random.shuffle(lines)
 
@@ -148,14 +148,17 @@ def split_file():
     lines_per_part = total_lines // 4
 
     # Split the lines into four parts
-    parts = [lines[i:i + lines_per_part] for i in range(0, total_lines, lines_per_part)]
+    parts = [
+        lines[i : i + lines_per_part] for i in range(0, total_lines, lines_per_part)
+    ]
 
     # Write each part into a separate file
     for i, part in enumerate(parts, start=1):
         output_file = os.path.join(paths.LOGS_PATH, f"part_{i}.txt")
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             f.writelines(part)
         print(f"Part {i} saved to {output_file}")
+
 
 def main():
     """Main Menu for testing purposes"""

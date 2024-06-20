@@ -72,13 +72,16 @@ def document_tokenizer(file_path, loader_choice="PyPDFium2Loader") -> DocTokens:
             {"prev": text_chunks[i - 1] if i > 0 else "", "curr": text_chunks[i]}
         )
 
+    token_count = sum(len(chunk.split()) for chunk in text_chunks)
+    chunk_count = len(chunk_dicts)
+
     doc_tokens = DocTokens(
         processed=datetime.now(),
         doc_loader_used=loader_choice,
         chunk_size=DEFAULT_CHUNK_SIZE,
         chunk_overlap=DEFAULT_CHUNK_OVERLAP,
-        token_count=sum(len(chunk.split()) for chunk in text_chunks),
-        chunks_generated=len(chunk_dicts),
+        token_count=token_count,
+        chunk_count=chunk_count,
         chunks=chunk_dicts,
     )
 
@@ -105,38 +108,42 @@ def llm_process(curr_chunk, prev_chunk, chosen_model=LLMS["dev"]) -> str:
     return response["text"]
 
 
-def generate_tscc(filename, chosen_model=LLMS["dev"]) -> TSCC:
+def generate_tscc(document, chosen_model=LLMS["dev"]) -> TSCC:
+    # Save properties for later
+    _id = document["_id"]
+    loader_choice = document["doc_loader_used"]
+    chunk_dicts = document["chunks"]
+
     start_time = time.time()  # Record start time
-    print(f"> [PROCESS]\t{filename} - TSCC():\n", end="", flush=True)
+    print(f"> [PROCESS]\t{document['_id']} - TSCC():\n", end="", flush=True)
 
-    # # Go through the whole chunk list and one by one pass to LLM
-    # processed_chunks = []
-    # for chunk in chunk_dicts:
-    #     result = llm_process(chunk["curr"], chunk["prev"], chosen_model)
-    #     processed_chunks.append(result)
+    # Go through the whole chunk list and one by one pass to LLM
+    processed_chunks = []
+    for chunk in chunk_dicts:
+        result = llm_process(chunk["curr"], chunk["prev"], chosen_model)
+        processed_chunks.append(result)
 
-    # # Extract the 'curr' contents for TSCC object construction
-    # text_chunks = [chunk_dict["curr"] for chunk_dict in chunk_dicts]
+    token_count = sum(len(chunk.split()) for chunk in processed_chunks)
+    chunk_count = len(chunk_dicts)
 
-    # # Construct the TSCC object
-    # tscc = TSCC(
-    #     processed=datetime.now(),
-    #     model_used=chosen_model,  # Replace with actual model name if applicable
-    #     doc_loader_used=loader_choice,
-    #     chunk_size=DEFAULT_CHUNK_SIZE,
-    #     chunk_overlap=DEFAULT_CHUNK_OVERLAP,
-    #     token_count=sum(len(chunk.split()) for chunk in text_chunks),
-    #     chunks_generated=len(chunk_dicts),
-    #     chunks=processed_chunks,
-    # )
+    # Construct the TSCC object
+    tscc = TSCC(
+        processed=datetime.now(),
+        model_used=chosen_model,  # Replace with actual model name if applicable
+        doc_loader_used=loader_choice,
+        chunk_size=DEFAULT_CHUNK_SIZE,
+        chunk_overlap=DEFAULT_CHUNK_OVERLAP,
+        token_count=token_count,
+        chunk_count=chunk_count,
+        chunks=processed_chunks,
+    )
 
-    # print("> DONE!\t")
+    print("> DONE!\t")
 
-    # end_time = time.time()  # Record end time
-    # elapsed_time = end_time - start_time
-    # print(f"> [INFO]\tElapsed time: {elapsed_time:.2f}s")
-    # print(
-    #     f"> [INFO]\tTime completed: {time.strftime('%m-%d %H:%M:%S', time.localtime())}"
-    # )
+    end_time = time.time()  # Record end time
+    elapsed_time = end_time - start_time
+    print(
+        f"> [INFO]\tTime completed: {elapsed_time}s |  {time.strftime('%m-%d %H:%M:%S', time.localtime())}"
+    )
 
-    # return tscc
+    return tscc

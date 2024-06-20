@@ -33,7 +33,7 @@ class DocTokens(BaseModel):
     chunk_size: int
     chunk_overlap: int
     token_count: int
-    chunks_generated: int
+    chunk_count: int
     chunks: List[Dict[str, str]]
 
     class Config:
@@ -46,7 +46,7 @@ class DocTokens(BaseModel):
             "chunk_size": self.chunk_size,
             "chunk_overlap": self.chunk_overlap,
             "token_count": self.token_count,
-            "chunks_generated": self.chunks_generated,
+            "chunk_count": self.chunk_count,
             "chunks": self.chunks,
         }
 
@@ -54,6 +54,9 @@ class DocTokens(BaseModel):
 class TSCC(BaseModel):
     processed: datetime
     model_used: str
+    doc_loader_used: str
+    chunk_size: int
+    chunk_overlap: int
     token_count: int
     chunk_count: int
     chunks: List[str]
@@ -65,6 +68,9 @@ class TSCC(BaseModel):
         return {
             "processed": self.processed.isoformat(),
             "model_used": self.model_used,
+            "doc_loader_used": self.doc_loader_used,
+            "chunk_size": self.chunk_size,
+            "chunk_overlap": self.chunk_overlap,
             "token_count": self.token_count,
             "chunk_count": self.chunk_count,
             "chunks": self.chunks,
