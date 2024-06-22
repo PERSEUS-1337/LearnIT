@@ -13,6 +13,11 @@ config = dotenv_values(".env")
 
 app = FastAPI()
 
+origins = [
+    "http://localhost:3000",
+    "localhost:3000"
+]
+
 
 @app.middleware("http")
 async def measure_request_time(request: Request, call_next):
