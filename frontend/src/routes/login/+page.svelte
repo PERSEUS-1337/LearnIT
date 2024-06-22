@@ -10,7 +10,6 @@
 
         const formData = new FormData(event.target); // Collect form data
         try {
-			console.log(formData);
             // Include withCredentials: true in the Axios request configuration
             const response = await axios.post('http://localhost:8000/auth/login/', formData);
             console.log(response.data);
@@ -22,8 +21,6 @@
         }
     }
 </script>
-
-
 
 <div class="hero min-h-screen">
 	<div class="hero-content flex-col">
@@ -38,13 +35,13 @@
 				<div class="card-body">
 					<div class="form-control">
 						<label for="email" class="label">
-							<span class="label-text">Email</span>
+							<span class="label-text">Username</span>
 						</label>
 						<input
 							type="text"
 							name="username"
 							value=''
-							placeholder="example@mail.com"
+							placeholder="example123"
 							class="input input-bordered required:border-red-500 invalid:border-red-500 autofill:bg-yellow-200"
 						/>
 					</div>
