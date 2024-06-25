@@ -14,3 +14,4 @@ __pycache__
 .vscode
 /testing/db_directory
 /testing/dataset_code
+/backend/db

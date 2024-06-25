@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from services.nlp_chain import (
     document_tokenizer,
     generate_tscc,
+    setup_chain,
     setup_db,
 )
 from utils.fileUtils import find_file_by_uid, gen_uid
@@ -284,7 +285,7 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
         )
 
 
-async def query_rag(req: Request, user: UserBase, filename: str):
+async def query_rag(req: Request, user: UserBase, filename: str, query: str):
     db = req.app.database
     # docs_db = db[config["DOCS_DB"]]
 
@@ -313,10 +314,14 @@ async def query_rag(req: Request, user: UserBase, filename: str):
                         },
                     )
 
-                # qa_chain = qa_chain_setup(document["chunks"], doc.uid)
+                # qa_chain = qa_chain_setup()
+                qa_chain = setup_chain(doc.vec_db_path)
+                response = qa_chain(str(query))
+                print(response['result'])
+                
 
                 return JSONResponse(
-                    status_code=status.HTTP_200_OK, content={"message": "ok"}
+                    status_code=status.HTTP_200_OK, content={"message": response['result']}
                 )
 
         if not file_found:

@@ -74,11 +74,11 @@ async def process_tscc_route(
     return await process_tscc(req, user, filename)
 
 
-@router.post("/process-rag")
-async def process_rag_route(
-    req: Request, filename: str, user: UserBase = Depends(auth_curr_user)
+@router.post("/query-rag")
+async def query_rag_route(
+    req: Request, filename: str, query: str, user: UserBase = Depends(auth_curr_user)
 ):
-    return await query_rag(req, user, filename)
+    return await query_rag(req, user, filename, query)
 
 
 @router.delete("/delete-tokens")
