@@ -23,28 +23,3 @@ PROMPT_MAIN = """
     
     Step 4: Output the summarized chunk
 """
-PROMPT_2_1 = """
-    Extractively Summarize the following text, by preserving key details, and condensing the text by removing irrelevant words:
-    
-    "
-    {curr_chunk}
-    "
-    
-    Step 2: Output the summarized chunk
-"""
-PROMPT_2_2 = """
-    Step 1: Analyze the following chunk labeled as "curr_chunk" that you will be adjusting:
-    
-    "
-    {curr_chunk}
-    "
-    
-    Step 2: Analyze the following text chunk, which is labeled as "prev_chunk" to reduce any redundant context that is included with the "curr_chunk" that you just have analyzed:
-    
-    "
-    {prev_chunk}
-    "
-    
-    Step 3: Output the summarized chunk
-    
-"""

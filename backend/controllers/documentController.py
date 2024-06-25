@@ -7,11 +7,15 @@ from dotenv import dotenv_values
 from fastapi import status, Request, UploadFile, status
 from fastapi.responses import JSONResponse
 
-from services.nlp_chain import document_tokenizer, generate_tscc
-from utils.fileUtils import gen_uid
+from services.nlp_chain import (
+    document_tokenizer,
+    generate_tscc,
+    setup_db,
+)
+from utils.fileUtils import find_file_by_uid, gen_uid
 from middleware.apiMsg import APIMessages
 from models.user import UserBase
-from models.document import TSCC, UploadDoc
+from models.document import TSCC, DocTokens, UploadDoc
 
 
 config = dotenv_values(".env")
@@ -60,7 +64,7 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
     uid = gen_uid(user.username, file.filename)
 
     # Construct the file path
-    file_path = os.path.join(config["UPLOAD_PATH"], uid)
+    file_path = os.path.join(config["UPLOAD_PATH"], f"{uid}.pdf")
 
     try:
         # Check if the directory exists, if not, create it
@@ -80,7 +84,7 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
         uploaded_file_info = UploadDoc(
             name=file.filename, uid=uid, uploaded_at=datetime.now()
         )
-        
+
         # Update the user in MongoDB with the new uploaded file information
         update_result = db.update_one(
             {"username": user.username},
@@ -119,14 +123,14 @@ async def delete_file(req: Request, user: UserBase, filename: str):
     # Generate the unique identifier for the file using the user's username and filename
     uid = gen_uid(user.username, filename)
 
-    # Construct the file path
-    file_path = os.path.join(config["UPLOAD_PATH"], uid)
-    print(file_path)
-
     try:
+        # Construct the file path
+        file_path = find_file_by_uid(config["UPLOAD_PATH"], uid)
+        print(file_path)
+
         # Check if the file exists
         if not os.path.exists(file_path):
-            raise FileNotFoundError(f"File '{filename}' does not exist")
+            raise FileNotFoundError(f"File '{filename}' does not exist on the server")
 
         # Retrieve the user's files from the database
         user_files = db.find_one({"username": user.username}, {"uploaded_files": 1})
@@ -188,11 +192,11 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
     # Generate the unique identifier for the file using the user's username and filename
     uid = gen_uid(user.username, filename)
 
-    # Construct the file path
-    file_path = os.path.join(config["UPLOAD_PATH"], uid)
-    print(file_path)
-
     try:
+        # Construct the file path
+        file_path = find_file_by_uid(config["UPLOAD_PATH"], uid)
+        print(file_path)
+
         # Check if the file exists
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"File '{filename}' does not exist on the server")
@@ -212,11 +216,18 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
 
                 # Extract tokens and create DocTokens object
                 try:
-                    doc_tokens = document_tokenizer(file_path, "PyMuPDFLoader")
+                    doc_tokens, pre_text_chunks = document_tokenizer(
+                        file_path, uid, "PyMuPDFLoader"
+                    )
                 except Exception as e:
                     raise ValueError(
                         f"Tokenization failed for file '{filename}': {str(e)}"
                     )
+
+                # This is where we inject the function of prepping the ChromaDb to be retrieved later when we start doing the QnA
+                vec_db_path = setup_db(uid, pre_text_chunks)
+                doc.vec_db_path = str(vec_db_path)
+                doc.embedded = True
 
                 # Store the DocTokens document in the docs collection
                 try:
@@ -243,7 +254,69 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
 
                 return JSONResponse(
                     status_code=status.HTTP_200_OK,
-                    content={"message": doc_tokens.dict()},
+                    content={
+                        "message": f"File {filename} has been tokenized and embedded in ChromaDB successfully",
+                        "data": doc_tokens.dict()
+                    },
+                )
+
+        if not file_found:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={
+                    "message": f"File '{filename}' not found in user uploaded files"
+                },
+            )
+    except FileNotFoundError as e:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND, content={"message": str(e)}
+        )
+    except ValueError as e:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST, content={"message": str(e)}
+        )
+    except Exception as e:
+        # Log unexpected errors
+        print(f"Unexpected error: {str(e)}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"message": str(e)},
+        )
+
+
+async def query_rag(req: Request, user: UserBase, filename: str):
+    db = req.app.database
+    # docs_db = db[config["DOCS_DB"]]
+
+    # Generate the unique identifier for the file using the user's username and filename
+    uid = gen_uid(user.username, filename)
+
+    try:
+        file_found = False
+        for doc in user.uploaded_files:
+            if doc.name == filename:
+                file_found = True
+
+                if not doc.tokenized:
+                    return JSONResponse(
+                        status_code=status.HTTP_409_CONFLICT,
+                        content={
+                            "message": f"File '{filename}' has not yet been tokenized"
+                        },
+                    )
+                
+                if not doc.embedded:
+                    return JSONResponse(
+                        status_code=status.HTTP_409_CONFLICT,
+                        content={
+                            "message": f"File '{filename}' has not yet been tokenized"
+                        },
+                    )
+
+                # qa_chain = qa_chain_setup(document["chunks"], doc.uid)
+
+                return JSONResponse(
+                    status_code=status.HTTP_200_OK, content={"message": "ok"}
                 )
 
         if not file_found:
@@ -365,7 +438,7 @@ async def delete_tokens(req: Request, user: UserBase, filename: str):
     uid = gen_uid(user.username, filename)
 
     # Construct the file path
-    file_path = os.path.join(config["UPLOAD_PATH"], uid)
+    file_path = find_file_by_uid(config["UPLOAD_PATH"], uid)
     try:
         # Check if the file exists
         if not os.path.exists(file_path):
@@ -437,7 +510,7 @@ async def delete_tscc(req: Request, user: UserBase, filename: str):
     uid = gen_uid(user.username, filename)
 
     # Construct the file path
-    file_path = os.path.join(config["UPLOAD_PATH"], uid)
+    file_path = find_file_by_uid(config["UPLOAD_PATH"], uid)
     try:
         # Check if the file exists
         if not os.path.exists(file_path):

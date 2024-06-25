@@ -2,11 +2,14 @@ from datetime import datetime
 import os
 import re
 import time
+from typing import Tuple, List
 
+from chromadb import PersistentClient
 from dotenv import dotenv_values, load_dotenv
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.prompts import PromptTemplate
-from langchain.chains import LLMChain
+from langchain.chains import LLMChain, RetrievalQA
+from langchain_community.vectorstores import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import (
     PyPDFLoader,
@@ -21,8 +24,6 @@ from utils.config import (
     DEFAULT_CHUNK_SIZE,
     LLM_TEMP,
     LLMS,
-    PROMPT_2_1,
-    PROMPT_2_2,
     PROMPT_MAIN,
 )
 
@@ -41,9 +42,9 @@ def extract_page_content(chunk: str) -> str:
     return ""
 
 
-def document_tokenizer(file_path, loader_choice="PyPDFium2Loader") -> DocTokens:
-    # file_path = os.path.join(config["UPLOAD_PATH"], filename)
-
+def document_tokenizer(
+    file_path, doc_uid, loader_choice="PyPDFium2Loader"
+) -> Tuple[DocTokens, List]:
     # Initialize PyPDFLoader with the file path
     if loader_choice == "PyPDFLoader":
         loader = PyPDFLoader(file_path)
@@ -60,10 +61,11 @@ def document_tokenizer(file_path, loader_choice="PyPDFium2Loader") -> DocTokens:
         chunk_size=DEFAULT_CHUNK_SIZE,
         chunk_overlap=DEFAULT_CHUNK_OVERLAP,
     )
-    text_chunks = text_splitter.split_documents(document)
+
+    pre_text_chunks = text_splitter.split_documents(document)
 
     # Extract page_content from each chunk
-    text_chunks = [extract_page_content(str(chunk)) for chunk in text_chunks]
+    text_chunks = [extract_page_content(str(chunk)) for chunk in pre_text_chunks]
 
     # Create a list of dicts with 'prev' and 'curr'
     chunk_dicts = []
@@ -76,6 +78,7 @@ def document_tokenizer(file_path, loader_choice="PyPDFium2Loader") -> DocTokens:
     chunk_count = len(chunk_dicts)
 
     doc_tokens = DocTokens(
+        doc_uid=doc_uid,
         processed=datetime.now(),
         doc_loader_used=loader_choice,
         chunk_size=DEFAULT_CHUNK_SIZE,
@@ -85,9 +88,48 @@ def document_tokenizer(file_path, loader_choice="PyPDFium2Loader") -> DocTokens:
         chunks=chunk_dicts,
     )
 
-    return doc_tokens
+    return doc_tokens, pre_text_chunks
 
 
+### RAG RELATED FUNCTIONS
+def setup_db(filename, chunks):
+    # Supply the directory, which is /db, where we will embed and store the texts
+    persist_directory = (
+        f"db/rag/{filename}"  # Use the document name as part of the db_directory
+    )
+    
+    embedding = OpenAIEmbeddings()
+
+    vectordb = Chroma.from_documents(
+        documents=chunks,
+        embedding=embedding,
+        persist_directory=persist_directory,
+    )
+    vectordb.persist()
+
+    return persist_directory
+
+
+def setup_chain(db, chosen_model):
+    # Set up the turbo LLM
+    turbo_llm = ChatOpenAI(temperature=0, model_name=chosen_model)
+    retriever = db.as_retriever(search_kwargs={"k": 10})
+    chain = RetrievalQA.from_chain_type(
+        llm=turbo_llm,
+        chain_type="stuff",
+        retriever=retriever,
+        return_source_documents=True,
+    )
+    return chain
+
+
+def qa_chain_setup(filename, chunks, chosen_model=LLMS["dev"]):
+    db = setup_db(chunks, filename)
+    # chain = setup_chain(db, chosen_model)
+    return True
+
+
+### TSCC RELATED FUNCTIONS
 def llm_process(curr_chunk, prev_chunk, chosen_model=LLMS["dev"]) -> str:
     """_summary_
 
@@ -128,6 +170,7 @@ def generate_tscc(document, chosen_model=LLMS["dev"]) -> TSCC:
 
     # Construct the TSCC object
     tscc = TSCC(
+        doc_uid=_id,
         processed=datetime.now(),
         model_used=chosen_model,  # Replace with actual model name if applicable
         doc_loader_used=loader_choice,
