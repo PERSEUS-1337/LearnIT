@@ -159,7 +159,7 @@ def llm_process(curr_chunk, prev_chunk, chosen_model=LLMS["dev"]) -> str:
 
 def generate_tscc(document, chosen_model=LLMS["dev"]) -> TSCC:
     # Save properties for later
-    _id = document["_id"]
+    _id = str(document["_id"])
     loader_choice = document["doc_loader_used"]
     chunk_dicts = document["chunks"]
 

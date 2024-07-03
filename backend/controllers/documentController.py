@@ -287,7 +287,6 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
 
 async def query_rag(req: Request, user: UserBase, filename: str, query: str):
     db = req.app.database
-    # docs_db = db[config["DOCS_DB"]]
 
     # Generate the unique identifier for the file using the user's username and filename
     uid = gen_uid(user.username, filename)
@@ -387,7 +386,7 @@ async def process_tscc(req: Request, user: UserBase, filename: str):
                     tscc_insert_result = tscc_db.insert_one(tscc.dict())
                     if not tscc_insert_result.inserted_id:
                         raise ValueError("Failed to insert TSCC document into tscc_db")
-
+                    print(tscc_insert_result)
                     # Update the UploadDoc object inside the user
                     doc.tscc_id = str(tscc_insert_result.inserted_id)
                     doc.processed = True
