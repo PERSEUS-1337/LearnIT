@@ -8,9 +8,9 @@ node_modules
 .env.*
 !.env.example
 vite.config.js.timestamp-*
-vite.config.ts.timestamp-*
 __pycache__
 .idea
 .vscode
 /testing/db_directory
 /testing/dataset_code
+/backend/db

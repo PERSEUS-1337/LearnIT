@@ -94,6 +94,7 @@ class APIMessages:
     # Routes
     AUTH_ROUTE_SUCCESS = "This is the AUTH Route"
     DOCU_ROUTE_SUCCESS = "This is the DOCU Route"
+    QNA_ROUTE_SUCCESS = "This is the QnA Route"
 
     # Custom Application-Specific Messages
     # Add your custom messages here

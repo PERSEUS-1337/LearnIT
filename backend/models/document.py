@@ -8,8 +8,10 @@ class UploadDoc(BaseModel):
     name: str
     uploaded_at: datetime
     tokenized: bool = False
+    embedded: bool = False
     processed: bool = False
     tokens_id: Optional[str] = None
+    vec_db_path: Optional[str] = None
     tscc_id: Optional[str] = None
 
     class Config:
@@ -21,13 +23,16 @@ class UploadDoc(BaseModel):
             "name": self.name,
             "uploaded_at": self.uploaded_at.isoformat(),
             "tokenized": self.tokenized,
+            "embedded": self.embedded,
             "processed": self.processed,
             "tokens_id": self.tokens_id,
+            "vec_db_path": self.vec_db_path,
             "tscc_id": self.tscc_id,
         }
 
 
 class DocTokens(BaseModel):
+    doc_uid: str
     processed: datetime
     doc_loader_used: str
     chunk_size: int
@@ -41,6 +46,7 @@ class DocTokens(BaseModel):
 
     def dict(self):
         return {
+            "doc_uid": self.doc_uid,
             "processed": self.processed.isoformat(),
             "doc_loader_used": self.doc_loader_used,
             "chunk_size": self.chunk_size,
@@ -52,6 +58,7 @@ class DocTokens(BaseModel):
 
 
 class TSCC(BaseModel):
+    doc_uid: str
     processed: datetime
     model_used: str
     doc_loader_used: str
@@ -66,6 +73,7 @@ class TSCC(BaseModel):
 
     def dict(self):
         return {
+            "doc_uid": self.doc_uid,
             "processed": self.processed.isoformat(),
             "model_used": self.model_used,
             "doc_loader_used": self.doc_loader_used,

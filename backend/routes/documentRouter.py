@@ -18,6 +18,7 @@ from middleware.apiMsg import APIMessages
 from controllers.documentController import (
     delete_tokens,
     get_uploaded_files,
+    query_rag,
     process_tscc,
     upload_file,
     delete_file,
@@ -71,6 +72,13 @@ async def process_tscc_route(
     req: Request, filename: str, user: UserBase = Depends(auth_curr_user)
 ):
     return await process_tscc(req, user, filename)
+
+
+@router.post("/query-rag")
+async def query_rag_route(
+    req: Request, filename: str, query: str, user: UserBase = Depends(auth_curr_user)
+):
+    return await query_rag(req, user, filename, query)
 
 
 @router.delete("/delete-tokens")
