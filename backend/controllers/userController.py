@@ -71,9 +71,7 @@ async def register_user(req: Request, user: UserReg = Body(...)):
             return JSONResponse(
                 status_code=status.HTTP_409_CONFLICT,
                 headers={"WWW-Authenticate": "Bearer"},
-                content={
-                    "message":APIMessages.USER_ALREADY_EXISTS
-                },
+                content={"message": APIMessages.USER_ALREADY_EXISTS},
             )
 
         hashed_pass = get_password_hash(user.password)
@@ -173,12 +171,14 @@ async def delete_user(req: Request, user: UserBase):
     try:
         # Find the user in the database by username
         db = req.app.database[config["USER_DB"]]
-        
+
         # If user is found, delete the user from the database
         result = db.delete_one({"username": user.username})
-        
+
         if result.deleted_count == 0:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            )
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
@@ -190,13 +190,10 @@ async def delete_user(req: Request, user: UserBase):
     except HTTPException as e:
         # Re-raise HTTPExceptions if necessary
         raise e
-    
+
     except Exception as e:
         # Handle any unexpected errors
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={
-                "message": APIMessages.INTERNAL_SERVER_ERROR,
-                "data": str(e)
-            }
+            detail={"message": APIMessages.INTERNAL_SERVER_ERROR, "data": str(e)},
         )

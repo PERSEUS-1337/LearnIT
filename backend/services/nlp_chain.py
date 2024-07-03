@@ -116,7 +116,7 @@ def retrieve_db(db_dir):
 
 
 def setup_chain(db_dir, chosen_model=LLMS["dev"]):
-
+    print(db_dir)
     db = Chroma(persist_directory=db_dir, embedding_function=OpenAIEmbeddings())
     # Set up the turbo LLM
     turbo_llm = ChatOpenAI(temperature=0, model_name=chosen_model)
@@ -128,12 +128,6 @@ def setup_chain(db_dir, chosen_model=LLMS["dev"]):
         return_source_documents=True,
     )
     return chain
-
-
-def qa_chain_setup(filename, chunks, chosen_model=LLMS["dev"]):
-    # db = setup_db(chunks, filename)
-    # chain = setup_chain(db, chosen_model)
-    return True
 
 
 ### TSCC RELATED FUNCTIONS

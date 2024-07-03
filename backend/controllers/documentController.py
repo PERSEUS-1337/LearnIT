@@ -15,7 +15,7 @@ from services.nlp_chain import (
     setup_db,
 )
 from utils.fileUtils import find_file_by_uid, gen_uid
-from middleware.apiMsg import APIMessages
+from middleware.apiMsg import APIMessages as apiMsg
 from models.user import UserBase
 from models.document import TSCC, DocTokens, UploadDoc
 
@@ -31,7 +31,10 @@ async def get_uploaded_files():
         # Check if the directory exists
         if not os.path.exists(directory):
             # If directory does not exist, return an empty list
-            return JSONResponse(status_code=status.HTTP_200_OK, content={"files": []})
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={"message": apiMsg.FILES_NOT_FOUND},
+            )
 
         # Get a list of all files in the directory
         files = os.listdir(directory)
@@ -48,14 +51,14 @@ async def get_uploaded_files():
         # Handle OS errors
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"message": f"OS error: {str(e)}"},
+            content={"message": "OS error", "data": str(e)},
         )
     except Exception as e:
         # Handle any other unexpected errors
         print(f"Unexpected error: {str(e)}")
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"message": "Internal server error"},
+            content={"message": "Internal server error", "data": str(e)},
         )
 
 
@@ -75,7 +78,7 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
 
         # Check if the file already exists
         if os.path.exists(file_path):
-            raise FileExistsError(f"File '{file.filename}' already exists")
+            raise FileExistsError(apiMsg.FILE_ALREADY_EXISTS.format(file=file.filename))
 
         # Open the file in write-binary mode and save the content
         async with aiofiles.open(file_path, "wb") as out_file:
@@ -94,13 +97,11 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
         )
 
         if update_result.modified_count == 0:
-            raise ValueError(
-                f"Failed to update user '{user.username}' with the new file information"
-            )
+            raise ValueError(apiMsg.USER_FILE_UPDATE_FAIL.format(user=user.username))
 
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
-            content={"message": "Upload successful"},
+            content={"message": apiMsg.FILE_UPLOADED.format(file=file.filename)},
         )
 
     except FileExistsError as e:
@@ -121,7 +122,6 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
 
 async def delete_file(req: Request, user: UserBase, filename: str):
     db = req.app.database[config["USER_DB"]]
-
     # Generate the unique identifier for the file using the user's username and filename
     uid = gen_uid(user.username, filename)
 
@@ -132,12 +132,12 @@ async def delete_file(req: Request, user: UserBase, filename: str):
 
         # Check if the file exists
         if not os.path.exists(file_path):
-            raise FileNotFoundError(f"File '{filename}' does not exist on the server")
+            raise FileNotFoundError(apiMsg.FILE_NOT_FOUND_LOCAL.format(file=filename))
 
         # Retrieve the user's files from the database
         user_files = db.find_one({"username": user.username}, {"uploaded_files": 1})
         if not user_files:
-            raise ValueError(f"User '{user.username}' does not exist in the database")
+            raise ValueError(apiMsg.FILE_NOT_FOUND_DB.format(file=filename))
 
         # Get the list of all files
         uploaded_files = user_files.get("uploaded_files", [])
@@ -150,9 +150,7 @@ async def delete_file(req: Request, user: UserBase, filename: str):
             {"$set": {"uploaded_files": updated_files}},
         )
         if update_result.modified_count == 0:
-            raise ValueError(
-                f"Failed to update user '{user.username}' files in the database"
-            )
+            raise ValueError(apiMsg.USER_FILE_UPDATE_FAIL.format(user=user))
 
         # Remove the file from the filesystem
         try:
@@ -162,7 +160,7 @@ async def delete_file(req: Request, user: UserBase, filename: str):
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={"message": f"File '{filename}' deleted successfully"},
+            content={"message": apiMsg.FILE_DELETED.format(file=filename)},
         )
     except FileNotFoundError as e:
         return JSONResponse(
@@ -197,11 +195,10 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
     try:
         # Construct the file path
         file_path = find_file_by_uid(config["UPLOAD_PATH"], uid)
-        print(file_path)
 
         # Check if the file exists
         if not os.path.exists(file_path):
-            raise FileNotFoundError(f"File '{filename}' does not exist on the server")
+            raise FileNotFoundError(apiMsg.FILE_NOT_FOUND_LOCAL.format(file=filename))
 
         file_found = False
         for doc in user.uploaded_files:
@@ -212,7 +209,9 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
                     return JSONResponse(
                         status_code=status.HTTP_409_CONFLICT,
                         content={
-                            "message": f"File '{filename}' has already been tokenized"
+                            "message": apiMsg.FILE_ALREADY_TOKENIZED.format(
+                                file=filename
+                            )
                         },
                     )
 
@@ -223,7 +222,7 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
                     )
                 except Exception as e:
                     raise ValueError(
-                        f"Tokenization failed for file '{filename}': {str(e)}"
+                        apiMsg.TOKENIZE_FILE_FAIL.format(file=filename, error=str(e))
                     )
 
                 # This is where we inject the function of prepping the ChromaDb to be retrieved later when we start doing the QnA
@@ -236,7 +235,9 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
                     doc_tokens_id = docs_db.insert_one(doc_tokens.dict()).inserted_id
                 except Exception as e:
                     raise ValueError(
-                        f"Failed to insert DocTokens into docs_db: {str(e)}"
+                        apiMsg.TOKENS_DB_INSERT_FAIL.format(
+                            file=filename, error=str(e)
+                        )
                     )
 
                 # Update the UploadDoc object with the tokens_id
@@ -251,13 +252,15 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
 
                 if update_result.modified_count == 0:
                     raise ValueError(
-                        f"Failed to update user '{user.username}' with tokenized file '{filename}'"
+                        apiMsg.USER_TOKENS_UPDATE_FAIL.format(
+                            user=user.username, file=filename
+                        )
                     )
 
                 return JSONResponse(
                     status_code=status.HTTP_200_OK,
                     content={
-                        "message": f"File {filename} has been tokenized and embedded in ChromaDB successfully",
+                        "message": apiMsg.FILE_TOKENIZE_SUCCESS.format(file=filename),
                         "data": doc_tokens.dict(),
                     },
                 )
@@ -265,9 +268,7 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
         if not file_found:
             return JSONResponse(
                 status_code=status.HTTP_404_NOT_FOUND,
-                content={
-                    "message": f"File '{filename}' not found in user uploaded files"
-                },
+                content={"message": apiMsg.USER_UPLOAD_NOT_FOUND.format(file=filename)},
             )
     except FileNotFoundError as e:
         return JSONResponse(
@@ -289,9 +290,6 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
 async def query_rag(req: Request, user: UserBase, filename: str, query: str):
     db = req.app.database
 
-    # Generate the unique identifier for the file using the user's username and filename
-    uid = gen_uid(user.username, filename)
-
     try:
         file_found = False
         for doc in user.uploaded_files:
@@ -302,7 +300,9 @@ async def query_rag(req: Request, user: UserBase, filename: str, query: str):
                     return JSONResponse(
                         status_code=status.HTTP_409_CONFLICT,
                         content={
-                            "message": f"File '{filename}' has not yet been tokenized"
+                            "message": apiMsg.FILE_NOT_YET_TOKENIZED.format(
+                                file=filename
+                            )
                         },
                     )
 
@@ -310,27 +310,25 @@ async def query_rag(req: Request, user: UserBase, filename: str, query: str):
                     return JSONResponse(
                         status_code=status.HTTP_409_CONFLICT,
                         content={
-                            "message": f"File '{filename}' has not yet been tokenized"
+                            "message": apiMsg.FILE_NOT_YET_EMBEDDED.format(
+                                file=filename
+                            )
                         },
                     )
 
-                # qa_chain = qa_chain_setup()
                 qa_chain = setup_chain(doc.vec_db_path)
                 response = qa_chain(str(query))
-                print(response["result"])
 
                 return JSONResponse(
                     status_code=status.HTTP_200_OK,
-                    content={"message": response["result"]},
+                    content={
+                        "message": apiMsg.RAG_QUERY_SUCCESS,
+                        "data": {"query": str(query), "response": response["result"]},
+                    },
                 )
 
         if not file_found:
-            return JSONResponse(
-                status_code=status.HTTP_404_NOT_FOUND,
-                content={
-                    "message": f"File '{filename}' not found in user uploaded files"
-                },
-            )
+            raise FileNotFoundError(apiMsg.USER_UPLOAD_NOT_FOUND.format(file=filename))
     except FileNotFoundError as e:
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND, content={"message": str(e)}
@@ -364,58 +362,58 @@ async def process_tscc(req: Request, user: UserBase, filename: str):
                 # Check if the file is already tokenized and ready for tscc processing
                 if not doc.tokenized:
                     return JSONResponse(
-                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        status_code=status.HTTP_409_CONFLICT,
                         content={
-                            "message": f"File '{filename}' has not yet been tokenized. Please generate tokens for '{filename}' first"
+                            "message": apiMsg.FILE_NOT_YET_TOKENIZED.format(
+                                file=filename
+                            )
                         },
                     )
 
-                if not doc.processed:
-                    # Retrieve the tokenized document from the docs collection
-                    document = docs_db.find_one({"_id": ObjectId(doc.tokens_id)})
-                    if not document:
-                        return JSONResponse(
-                            status_code=status.HTTP_404_NOT_FOUND,
-                            content={
-                                "message": f"Tokenized document with ID '{doc.tokens_id}' not found in docs_db"
-                            },
-                        )
-
-                    tscc = generate_tscc(document)
-
-                    # Insert the TSCC document into the tscc collection
-                    tscc_insert_result = tscc_db.insert_one(tscc.dict())
-                    if not tscc_insert_result.inserted_id:
-                        raise ValueError("Failed to insert TSCC document into tscc_db")
-
-                    # Update the UploadDoc object inside the user
-                    doc.tscc_id = str(tscc_insert_result.inserted_id)
-                    doc.processed = True
-
-                    # Update the user document with the modified UploadDoc object
-                    user_db.update_one(
-                        {"username": user.username, "uploaded_files.name": filename},
-                        {"$set": {"uploaded_files.$": doc.dict()}},
-                    )
-
-                    return JSONResponse(
-                        status_code=status.HTTP_200_OK,
-                        content={
-                            "message": f"File '{filename}' has been successfully processed for TSCC",
-                            "tscc_id": doc.tscc_id,
-                        },
-                    )
-                else:
+                if doc.processed:
                     return JSONResponse(
                         status_code=status.HTTP_409_CONFLICT,
                         content={
-                            "message": f"File '{filename}' has already been processed"
+                            "message": apiMsg.TSCC_ALREADY_PROCESSED.format(file=filename)
                         },
                     )
+                # Retrieve the tokenized document from the docs collection
+                document = docs_db.find_one({"_id": ObjectId(doc.tokens_id)})
+                if not document:
+                    return JSONResponse(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        content={
+                            "message": apiMsg.TOKENS_NOT_FOUND_DB.format(tokens_id=doc.tokens_id)
+                        },
+                    )
+                    
+                tscc = generate_tscc(document)
 
+                # Insert the TSCC document into the tscc collection
+                tscc_insert_result = tscc_db.insert_one(tscc.dict())
+                if not tscc_insert_result.inserted_id:
+                    raise ValueError(apiMsg.TSCC_DB_INSERT_FAIL.format(file=filename))
+
+                # Update the UploadDoc object inside the user
+                doc.tscc_id = str(tscc_insert_result.inserted_id)
+                doc.processed = True
+
+                # Update the user document with the modified UploadDoc object
+                user_db.update_one(
+                    {"username": user.username, "uploaded_files.name": filename},
+                    {"$set": {"uploaded_files.$": doc.dict()}},
+                )
+
+                return JSONResponse(
+                    status_code=status.HTTP_200_OK,
+                    content={
+                        "message": apiMsg.TSCC_PROCESS_SUCCESS.format(file=filename),
+                        "tscc_id": doc.tscc_id,
+                    },
+                )
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
-            content={"message": f"File '{filename}' not found in user uploaded files"},
+            content={"message": apiMsg.USER_UPLOAD_NOT_FOUND},
         )
     except FileNotFoundError as e:
         return JSONResponse(
@@ -439,44 +437,22 @@ async def delete_tokens(req: Request, user: UserBase, filename: str):
     user_db = db[config["USER_DB"]]
     docs_db = db[config["DOCS_DB"]]
 
-    # Generate the unique identifier for the file using the user's username and filename
-    uid = gen_uid(user.username, filename)
-
-    # Construct the file path
-    file_path = find_file_by_uid(config["UPLOAD_PATH"], uid)
     try:
-        # Check if the file exists
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"File '{filename}' does not exist on the server")
-
         for doc in user.uploaded_files:
             if doc.name == filename:
-                # Log the document details
-                print(f"Deleting document with tokens_id: {doc.tokens_id}")
-
                 # Check if the document exists in the docs collection
                 doc_in_db = docs_db.find_one({"_id": ObjectId(doc.tokens_id)})
                 if not doc_in_db:
                     raise ValueError(
-                        f"Document with tokens_id '{doc.tokens_id}' does not exist in docs_db"
+                        apiMsg.FILE_NOT_FOUND_DB.format(tokens_id=doc.tokens_id)
                     )
 
                 # Delete the document in the docs collection
                 delete_result = docs_db.delete_one({"_id": ObjectId(doc.tokens_id)})
                 if delete_result.deleted_count == 0:
                     raise ValueError(
-                        f"Failed to delete document with tokens_id '{doc.tokens_id}'"
+                        apiMsg.DELETE_TOKENS_FAIL.format(tokens_id=doc.tokens_id)
                     )
-
-                # # Check and delete the vec_db_path if it exists
-                # if doc.vec_db_path and os.path.exists(doc.vec_db_path):
-                #     vectordb = retrieve_db(doc.vec_db_path)
-                #     # os.remove(doc.vec_db_path)
-                #     # Optionally remove the directory if it's empty
-                #     try:
-                #         os.rmdir(os.path.dirname(doc.vec_db_path))
-                #     except OSError:
-                #         pass
 
                 # Modify the UploadedDoc object inside the user
                 doc.tokens_id = None
@@ -493,13 +469,14 @@ async def delete_tokens(req: Request, user: UserBase, filename: str):
                 return JSONResponse(
                     status_code=status.HTTP_200_OK,
                     content={
-                        "message": f"Updated User {user.username}'s files and deleted {doc.name}'s tokens from the database"
+                        "message": apiMsg.DELETE_TOKENS_SUCCESS.format(file=filename),
+                        "data": doc.dict()
                     },
                 )
 
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
-            content={"message": f"File '{filename}' not found in user uploaded files"},
+            content={"message": apiMsg.USER_UPLOAD_NOT_FOUND.format(file=filename)},
         )
     except FileNotFoundError as e:
         return JSONResponse(
@@ -523,33 +500,21 @@ async def delete_tscc(req: Request, user: UserBase, filename: str):
     user_db = db[config["USER_DB"]]
     tscc_db = db[config["TSCC_DB"]]
 
-    # Generate the unique identifier for the file using the user's username and filename
-    uid = gen_uid(user.username, filename)
-
-    # Construct the file path
-    file_path = find_file_by_uid(config["UPLOAD_PATH"], uid)
     try:
-        # Check if the file exists
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"File '{filename}' does not exist on the server")
-
         for doc in user.uploaded_files:
             if doc.name == filename:
-                # Log the document details
-                print(f"Deleting document with tscc_id: {doc.tscc_id}")
-
                 # Check if the document exists in the docs collection
                 tscc_in_db = tscc_db.find_one({"_id": ObjectId(doc.tscc_id)})
                 if not tscc_in_db:
                     raise ValueError(
-                        f"Document with tscc_id '{doc.tscc_id}' does not exist in tscc_db"
+                        apiMsg.TSCC_NOT_FOUND.format(tscc_id=doc.tscc_id)
                     )
 
                 # Delete the document in the docs collection
                 delete_result = tscc_db.delete_one({"_id": ObjectId(doc.tscc_id)})
                 if delete_result.deleted_count == 0:
                     raise ValueError(
-                        f"Failed to delete document with tscc_id '{doc.tscc_id}'"
+                        apiMsg.TSCC_DB_DELETE_FAIL.format(file=filename)
                     )
 
                 # Modify the UploadedDoc object inside the user
@@ -565,13 +530,14 @@ async def delete_tscc(req: Request, user: UserBase, filename: str):
                 return JSONResponse(
                     status_code=status.HTTP_200_OK,
                     content={
-                        "message": f"Updated User {user.username}'s files and deleted {doc.name}'s tscc from the database"
+                        "message": apiMsg.TSCC_DB_DELETE_SUCCESS.format(file=filename),
+                        "data": doc.dict()
                     },
                 )
 
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
-            content={"message": f"File '{filename}' not found in user uploaded files"},
+            content={"message": apiMsg.USER_UPLOAD_NOT_FOUND.format(file=filename)},
         )
     except FileNotFoundError as e:
         return JSONResponse(
