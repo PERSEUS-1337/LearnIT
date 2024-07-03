@@ -387,7 +387,8 @@ async def process_tscc(req: Request, user: UserBase, filename: str):
                     tscc_insert_result = tscc_db.insert_one(tscc.dict())
                     if not tscc_insert_result.inserted_id:
                         raise ValueError("Failed to insert TSCC document into tscc_db")
-                    print(tscc_insert_result)
+                    
+                    
                     # Update the UploadDoc object inside the user
                     doc.tscc_id = str(tscc_insert_result.inserted_id)
                     doc.processed = True
