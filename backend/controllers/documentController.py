@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from services.nlp_chain import (
     document_tokenizer,
     generate_tscc,
+    retrieve_db,
     setup_chain,
     setup_db,
 )
@@ -467,9 +468,21 @@ async def delete_tokens(req: Request, user: UserBase, filename: str):
                         f"Failed to delete document with tokens_id '{doc.tokens_id}'"
                     )
 
+                # # Check and delete the vec_db_path if it exists
+                # if doc.vec_db_path and os.path.exists(doc.vec_db_path):
+                #     vectordb = retrieve_db(doc.vec_db_path)
+                #     # os.remove(doc.vec_db_path)
+                #     # Optionally remove the directory if it's empty
+                #     try:
+                #         os.rmdir(os.path.dirname(doc.vec_db_path))
+                #     except OSError:
+                #         pass
+
                 # Modify the UploadedDoc object inside the user
                 doc.tokens_id = None
                 doc.tokenized = False
+                doc.embedded = False
+                doc.vec_db_path = None
 
                 # Update the user document with the modified UploadDoc object
                 user_db.update_one(
