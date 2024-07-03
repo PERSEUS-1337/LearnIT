@@ -1,6 +1,5 @@
 from typing import Optional, List
 from pydantic import BaseModel, EmailStr
-
 from models.document import UploadDoc
 
 
@@ -21,24 +20,39 @@ class UserBase(BaseModel):
             }
         }
 
+    def dict(self):
+        return {
+            "username": self.username,
+            "email": self.email,
+            "full_name": self.full_name,
+            "uploaded_files": [file.dict() for file in self.uploaded_files],
+        }
 
-# Model used for accepting passwords
+
 class UserReg(UserBase):
     password: str
 
     class Config(UserBase.Config):
         pass
 
+    def dict(self):
+        base_dict = super().dict()
+        base_dict.update({"password": self.password})
+        return base_dict
 
-# Model used for registering a UserBase to the DB with a hashed password
+
 class UserInDB(UserBase):
     hashed_password: str
 
     class Config(UserBase.Config):
         pass
 
+    def dict(self):
+        base_dict = super().dict()
+        base_dict.update({"hashed_password": self.hashed_password})
+        return base_dict
 
-# Model used for retrieving username and hash_pwd for verification purposes
+
 class UserCreds(BaseModel):
     username: str
     hashed_password: str
@@ -46,8 +60,10 @@ class UserCreds(BaseModel):
     class Config(UserBase.Config):
         pass
 
+    def dict(self):
+        return {"username": self.username, "hashed_password": self.hashed_password}
 
-# Model used for updating user details
+
 class UserUpdate(BaseModel):
     username: Optional[str] = None
     full_name: Optional[str] = None
@@ -63,8 +79,19 @@ class UserUpdate(BaseModel):
             }
         }
 
+    def dict(self):
+        return {
+            "username": self.username,
+            "full_name": self.full_name,
+            "email": self.email,
+            "uploaded_files": (
+                [file.dict() for file in self.uploaded_files]
+                if self.uploaded_files
+                else None
+            ),
+        }
 
-# Model used for generating JWT during login
+
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -77,10 +104,15 @@ class Token(BaseModel):
             }
         }
 
+    def dict(self):
+        return {"access_token": self.access_token, "token_type": self.token_type}
 
-# Model used for retrieving username embedded in token for user detail retrieval
+
 class TokenData(BaseModel):
-    username: str | None = None
+    username: Optional[str] = None
 
     class Config:
         json_schema_extra = {"example": {"username": "johndoe"}}
+
+    def dict(self):
+        return {"username": self.username}

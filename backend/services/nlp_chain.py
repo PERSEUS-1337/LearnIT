@@ -97,7 +97,7 @@ def setup_db(filename, chunks):
     persist_directory = (
         f"db/rag/{filename}"  # Use the document name as part of the db_directory
     )
-    
+
     embedding = OpenAIEmbeddings()
 
     vectordb = Chroma.from_documents(
@@ -113,10 +113,10 @@ def setup_db(filename, chunks):
 def retrieve_db(db_dir):
     vectordb = Chroma.load(db_dir)
     return vectordb
-    
-    
+
+
 def setup_chain(db_dir, chosen_model=LLMS["dev"]):
-    
+
     db = Chroma(persist_directory=db_dir, embedding_function=OpenAIEmbeddings())
     # Set up the turbo LLM
     turbo_llm = ChatOpenAI(temperature=0, model_name=chosen_model)

@@ -36,7 +36,7 @@ async def login_user(
         if not match_pass:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=f"Password is incorrect",
+                detail=APIMessages.INCORRECT_PWD,
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
@@ -68,14 +68,15 @@ async def register_user(req: Request, user: UserReg = Body(...)):
         db = req.app.database[config["USER_DB"]]
         user_exists = get_user_creds(db, user.username)
         if user_exists:
-            raise HTTPException(
+            return JSONResponse(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=APIMessages.USER_ALREADY_EXISTS,
                 headers={"WWW-Authenticate": "Bearer"},
+                content={
+                    "message":APIMessages.USER_ALREADY_EXISTS
+                },
             )
 
         hashed_pass = get_password_hash(user.password)
-        # time_now = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
 
         new_user_data = UserInDB(
             username=user.username,
@@ -84,26 +85,41 @@ async def register_user(req: Request, user: UserReg = Body(...)):
             hashed_password=hashed_pass,
         )
 
-        new_user_data = new_user_data.model_dump()
-        insert_result = db.insert_one(new_user_data)
+        insert_result = db.insert_one(new_user_data.dict())
+
+        if not insert_result.acknowledged:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to insert user into the database.",
+            )
+
+        # Convert UserInDB to UserBase
+        user_base_data = UserBase(
+            username=new_user_data.username,
+            email=new_user_data.email,
+            full_name=new_user_data.full_name,
+            uploaded_files=new_user_data.uploaded_files,
+        )
 
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
-            content={"message": APIMessages.USER_CREATED},
+            content={
+                "message": APIMessages.USER_CREATED,
+                "data": user_base_data.dict(),
+            },
         )
 
     except HTTPException as he:
-        # Re-raise if it already has a status code
-        print(f"An unexpected error occurred: {str(he)}")
+        # Re-raise HTTPException with additional logging
+        print(f"HTTP error occurred: {str(he.detail)} (status code: {he.status_code})")
         raise he
 
     except Exception as e:
-        # Print the error
-        print(f"An unexpected error occurred: {str(e)}")
-        # Handle exceptions here and return a proper status code and detail message
+        # Log the detailed error and re-raise with a generic message
+        print(f"Unexpected error during user registration: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An unexpected error occurred: {str(e)}",
+            detail="An unexpected error occurred during user registration. Please try again later.",
         )
 
 
@@ -154,15 +170,33 @@ async def update_user(
 
 
 async def delete_user(req: Request, user: UserBase):
-    # Find the user in the database by username
-    db = req.app.database[config["USER_DB"]]
+    try:
+        # Find the user in the database by username
+        db = req.app.database[config["USER_DB"]]
+        
+        # If user is found, delete the user from the database
+        result = db.delete_one({"username": user.username})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-    # If user is found, delete the user from the database
-    db.delete_one({"username": user.username})
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={
-            "message": APIMessages.USER_DELETED,
-            "user_data": user.model_dump(),
-        },
-    )
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "message": APIMessages.USER_DELETED,
+                "data": user.model_dump(),
+            },
+        )
+    except HTTPException as e:
+        # Re-raise HTTPExceptions if necessary
+        raise e
+    
+    except Exception as e:
+        # Handle any unexpected errors
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "message": APIMessages.INTERNAL_SERVER_ERROR,
+                "data": str(e)
+            }
+        )

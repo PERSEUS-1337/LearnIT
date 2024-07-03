@@ -258,7 +258,7 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
                     status_code=status.HTTP_200_OK,
                     content={
                         "message": f"File {filename} has been tokenized and embedded in ChromaDB successfully",
-                        "data": doc_tokens.dict()
+                        "data": doc_tokens.dict(),
                     },
                 )
 
@@ -305,7 +305,7 @@ async def query_rag(req: Request, user: UserBase, filename: str, query: str):
                             "message": f"File '{filename}' has not yet been tokenized"
                         },
                     )
-                
+
                 if not doc.embedded:
                     return JSONResponse(
                         status_code=status.HTTP_409_CONFLICT,
@@ -317,11 +317,11 @@ async def query_rag(req: Request, user: UserBase, filename: str, query: str):
                 # qa_chain = qa_chain_setup()
                 qa_chain = setup_chain(doc.vec_db_path)
                 response = qa_chain(str(query))
-                print(response['result'])
-                
+                print(response["result"])
 
                 return JSONResponse(
-                    status_code=status.HTTP_200_OK, content={"message": response['result']}
+                    status_code=status.HTTP_200_OK,
+                    content={"message": response["result"]},
                 )
 
         if not file_found:
@@ -387,8 +387,7 @@ async def process_tscc(req: Request, user: UserBase, filename: str):
                     tscc_insert_result = tscc_db.insert_one(tscc.dict())
                     if not tscc_insert_result.inserted_id:
                         raise ValueError("Failed to insert TSCC document into tscc_db")
-                    
-                    
+
                     # Update the UploadDoc object inside the user
                     doc.tscc_id = str(tscc_insert_result.inserted_id)
                     doc.processed = True
