@@ -116,7 +116,6 @@ def retrieve_db(db_dir):
 
 
 def setup_chain(db_dir, chosen_model=LLMS["dev"]):
-    print(db_dir)
     db = Chroma(persist_directory=db_dir, embedding_function=OpenAIEmbeddings())
     # Set up the turbo LLM
     turbo_llm = ChatOpenAI(temperature=0, model_name=chosen_model)

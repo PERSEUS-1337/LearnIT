@@ -183,7 +183,6 @@ async def delete_file(req: Request, user: UserBase, filename: str):
             content={"message": str(e)},
         )
 
-
 async def generate_tokens(req: Request, user: UserBase, filename: str):
     db = req.app.database
     user_db = db[config["USER_DB"]]

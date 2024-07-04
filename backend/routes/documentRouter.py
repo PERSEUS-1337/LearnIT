@@ -17,6 +17,7 @@ from models.user import UserBase
 from middleware.apiMsg import APIMessages
 from controllers.documentController import (
     delete_tokens,
+    get_tscc,
     get_uploaded_files,
     query_rag,
     process_tscc,
@@ -59,6 +60,11 @@ async def delete_file_route(
 ):
     return await delete_file(req, user, filename)
 
+@router.get("/read")
+async def read_tscc_route(
+    req: Request, doc_uid, user: UserBase = Depends(auth_curr_user)
+):
+    return await get_tscc(req, user, doc_uid)
 
 @router.post("/gen-tokens")
 async def generate_tokens_route(
