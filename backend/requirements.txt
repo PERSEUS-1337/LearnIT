@@ -19,3 +19,5 @@ unidecode
 chromadb
 fastapi
 uvicorn
+pymongo
+python-jose
