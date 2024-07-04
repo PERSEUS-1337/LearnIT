@@ -15,13 +15,7 @@ nltk
 numpy
 six
 tqdm
-beautifulsoup4
-joblib
-tabulate
-pandas
-torch
-fairseq
 unidecode
-jq
 chromadb
 fastapi
+uvicorn
