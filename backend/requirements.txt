@@ -23,3 +23,5 @@ torch
 fairseq
 unidecode
 jq
+chromadb
+fastapi
