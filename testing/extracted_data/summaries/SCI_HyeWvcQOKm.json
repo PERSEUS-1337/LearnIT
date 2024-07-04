@@ -1,4 +1,0 @@
-{
-    "title": "HyeWvcQOKm",
-    "content": "We extend the Consensus Network framework to Transductive Consensus Network (TCN), a semi-supervised multi-modal classification framework, and identify its two mechanisms: consensus and classification. By putting forward three variants as ablation studies, we show both mechanisms should be functioning together. Overall, TCNs outperform or align with the best benchmark algorithms when only 20 to 200 labeled data points are available."
-}

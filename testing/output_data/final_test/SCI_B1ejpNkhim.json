@@ -1,4 +1,0 @@
-{
-    "title": "B1ejpNkhim",
-    "content": "Autoregressive recurrent neural decoders are commonly used in machine translation to generate sequences of tokens. A new decoder architecture is proposed in this work that can generate natural language sequences in any order by selecting the optimal position for each token. The decoder is compatible with the seq2seq framework and can replace classical decoders. Performance is demonstrated on the IWSLT machine translation task, and decoding patterns are analyzed to understand how the model selects positions for tokens."
-}

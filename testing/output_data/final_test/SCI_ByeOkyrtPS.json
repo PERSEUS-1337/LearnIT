@@ -1,4 +1,0 @@
-{
-    "title": "ByeOkyrtPS",
-    "content": "Plan recognition involves identifying target plans that best explain observed actions using plan libraries and domain models. Previous approaches have been successful but often rely heavily on accurate action observations. Recent advances in visual activity recognition aim to enable applications like automated video surveillance by recognizing agents' plans from video information. Traditional plan recognition algorithms rely on detailed planning domain models, but a new direction involves learning approximate domain models directly from observed activity sequences. This approach deals with noisy and uncertain visual inference results, recognizing plans with an approximate domain model learned from uncertain visual data."
-}

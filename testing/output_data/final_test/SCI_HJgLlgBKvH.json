@@ -1,4 +1,0 @@
-{
-    "title": "HJgLlgBKvH",
-    "content": "The backpropagation algorithm faces issues like forward locking, backward locking, and update locking, especially in large neural networks spread across multiple devices. Existing solutions are limited in handling these problems without accuracy loss or memory inefficiency. A new approach called Layer-wise Staleness and the training algorithm Diversely Stale Parameters (DSP) are proposed to address these challenges effectively. Experimental results show that DSP converges to critical points for non-convex problems, offering a promising solution for training deep convolutional neural networks. The proposed DSP algorithm achieves significant training speedup, robustness, and generalization in training deep convolutional neural networks compared to existing methods."
-}

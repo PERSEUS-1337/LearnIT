@@ -1,4 +1,0 @@
-{
-    "title": "SyxkWkdPoX",
-    "content": "Deep learning is widely used in various fields but requires specialized hardware for efficient computation. Optimizing code, algorithms, and hardware is crucial for real-time tasks. Our focus is on automated face detection and emotion recognition, which lack optimization for embedded platforms. The study focuses on automated face detection and emotion recognition, highlighting the lack of optimization for embedded platforms. Comparing computation times, Raspberry Pi takes double the time of Movidius, with 150ms per frame compared to 70ms. Inference times for each task and the entire pipeline are reported in a table."
-}

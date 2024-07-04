@@ -1,4 +1,0 @@
-{
-    "title": "BJgFcj0qKX",
-    "content": "Many imaging tasks require global information for semantic segmentation and object detection. Conventional networks globalize information by decreasing resolution, but this paper proposes stacked u-nets (SUNets) which maintain resolution while combining features from different scales. SUNets perform well on semantic segmentation tasks with a small number of parameters."
-}

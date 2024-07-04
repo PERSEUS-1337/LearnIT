@@ -1,4 +1,0 @@
-{
-    "title": "SyVuRiC5K7",
-    "content": "The Transductive Propagation Network (TPN) is a novel meta-learning framework for transductive inference that addresses the low-data problem in few-shot learning. It classifies the entire test set at once by propagating labels from labeled instances to unlabeled test instances using a graph construction module. TPN jointly learns feature embedding parameters and graph construction in an end-to-end manner. The Transductive Propagation Network (TPN) is a meta-learning framework that addresses the low-data problem in few-shot learning by classifying the entire test set at once through label propagation and joint learning of feature embedding and graph construction. TPN outperforms existing few-shot learning approaches on benchmark datasets."
-}

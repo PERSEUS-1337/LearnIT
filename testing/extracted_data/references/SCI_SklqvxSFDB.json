@@ -1,4 +1,0 @@
-{
-    "title": "SklqvxSFDB",
-    "content": "This paper fosters the idea that deep learning methods can be sided to classical\nvisual odometry pipelines to improve their accuracy and to produce uncertainty\nmodels to their estimations. We show that the biases inherent to the visual odom-\netry process can be faithfully learnt and compensated for, and that a learning ar-\nchitecture associated to a probabilistic loss function can jointly estimate a full\ncovariance matrix of the residual errors, defining a heteroscedastic error model.\n Experiments on autonomous driving image sequences and micro aerial vehicles\ncamera acquisitions assess the possibility to concurrently improve visual odome-\ntry and estimate an error associated to its outputs."
-}

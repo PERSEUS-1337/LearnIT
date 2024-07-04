@@ -14,3 +14,7 @@ __pycache__
 /testing/db_directory
 /testing/dataset_code
 /backend/db
+/testing/dataset_code
+/testing/output_data
+/testing/extracted_data
+/testing

@@ -1,4 +1,0 @@
-{
-    "title": "Hye5NQYU8r",
-    "content": "Place and grid-cells are known to aid navigation in animals and humans. Together with concept cells, they allow humans to form an internal representation of the external world, namely the concept space. We investigate the presence of such a space in deep neural networks by plotting the activation profile of its hidden layer neurons. Although place cell and concept-cell like properties are found, grid-cell like firing patterns are absent thereby indicating a lack of path integration or feature transformation functionality in trained networks. Overall, we present a plausible inadequacy in current deep learning practices that restrict deep networks from performing analogical reasoning and memory retrieval tasks."
-}

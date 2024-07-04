@@ -1,4 +1,0 @@
-{
-    "title": "SyGdZXSboX",
-    "content": "Neural networks offer high-accuracy solutions but are computationally costly. A technique called Deep Learning Approximation manipulates already-trained models to build faster networks without re-training. Sequential optimizations reduce FLOPs for a 2x speedup with a 5% drop in accuracy, which can be regained through finetuning. This enables deployment in compute-constrained systems. An optimal approximation is chosen by calculating the runtime and accuracy loss from all possible options. Chaining approximations involves calculating the ratio of final output FLOPs to initial FLOPs, and the product of accuracy scores for each approximation in the chain. Input parameter p can be selected based on desired runtime/accuracy tradeoff, with improvements in runtime observed for certain networks. Pushing beyond a 2x speedup without significant accuracy loss is not feasible."
-}

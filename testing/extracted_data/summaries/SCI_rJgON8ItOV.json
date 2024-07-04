@@ -1,4 +1,0 @@
-{
-    "title": "rJgON8ItOV",
-    "content": "We present an analytic framework to visualize and understand GANs at the unit-, object-, and scene-level. We first identify a group of interpretable units that are closely related to object concepts with a segmentation-based network dissection method. Then, we examine the causal effect of interpretable units by measuring the ability of interventions to control objects in the output. Finally, we examine the contextual relationship between these units and their surrounding by inserting the discovered object concepts into new images. We show several practical applications enabled by our framework, from comparing internal representations across different layers and models, to improving GANs by locating and removing artifact-causing units, to interactively manipulating objects in the scene."
-}

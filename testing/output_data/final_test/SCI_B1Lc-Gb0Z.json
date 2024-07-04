@@ -1,4 +1,0 @@
-{
-    "title": "B1Lc-Gb0Z",
-    "content": "As neural networks become deeper and wider, learning networks with hard-threshold activations is crucial for network quantization and creating large integrated systems. Gradient descent is not applicable to hard-threshold functions, so setting targets for hard-threshold hidden units to minimize loss is a discrete optimization problem that can be solved by finding targets for linear separability. This allows the network to decompose into individual perceptrons that can be learned with standard convex approaches. Our algorithm improves classification accuracy for deep hard-threshold networks, including AlexNet and ResNet-18 on ImageNet, compared to the straight-through estimator."
-}

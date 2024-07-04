@@ -1,4 +1,0 @@
-{
-    "title": "SkJKHMW0Z",
-    "content": "Humans have the ability to reason abstractly about objects and their interactions, a skill not shared with current deep learning models. Relational networks, introduced by Santoro et al. (2017), enable relational reasoning in neural networks but have limitations. Recurrent relational networks expand the range of solvable tasks, including solving Sudoku puzzles with 96.6% success rate and performing well on textual QA tasks. This model can enhance any neural network with relational reasoning capabilities. The general purpose module enhances neural network models with multi-step relational reasoning capacity."
-}

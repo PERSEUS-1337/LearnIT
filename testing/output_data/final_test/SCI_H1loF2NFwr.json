@@ -1,4 +1,0 @@
-{
-    "title": "H1loF2NFwr",
-    "content": "Neural Architecture Search (NAS) aims to streamline deep network design for new tasks by searching over architecture space and validating the best architecture. NAS algorithms are typically evaluated based on downstream task results, but this paper proposes evaluating the NAS search phase. Comparison shows that state-of-the-art NAS algorithms perform similarly to random selection, and weight sharing strategy can degrade NAS candidate ranking, reducing search effectiveness. Our evaluation framework will be crucial for designing NAS strategies that outperform random architectures consistently."
-}

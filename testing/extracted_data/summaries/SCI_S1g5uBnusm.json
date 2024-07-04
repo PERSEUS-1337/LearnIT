@@ -1,4 +1,0 @@
-{
-    "title": "S1g5uBnusm",
-    "content": "In this paper, we investigate learning the deep neural networks for automated optical inspection in industrial manufacturing. Our preliminary result has shown the stunning performance improvement by transfer learning from the completely dissimilar source domain: ImageNet. Further study for demystifying this improvement shows that the transfer learning produces a highly compressible network, which was not the case for the network learned from scratch. The experimental result shows that there is a negligible accuracy drop in the network learned by transfer learning until it is compressed to 1/128 reduction of the number of convolution \ufb01lters. This result is contrary to the compression without transfer learning which loses more than 5% accuracy at the same compression rate."
-}

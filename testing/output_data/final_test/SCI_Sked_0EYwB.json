@@ -1,4 +1,0 @@
-{
-    "title": "Sked_0EYwB",
-    "content": "Model-based reinforcement learning (MBRL) is a powerful framework for efficiently learning control of continuous tasks. A fundamental issue identified in MBRL is the objective mismatch problem, where optimizing one objective may not necessarily optimize a second, uncorrelated metric. This issue is seen in training forward dynamics models based on one-step ahead prediction likelihood, which may not align with the overall goal of improving performance on a control task. In MBRL, there is an objective mismatch issue where one-step ahead prediction likelihood may not correlate with control performance. This flaw in the framework requires further research for understanding and resolution. A proposed method involves re-weighting dynamics model training to address this problem. Future research directions are also discussed."
-}

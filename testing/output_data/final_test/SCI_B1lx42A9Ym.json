@@ -1,4 +1,0 @@
-{
-    "title": "B1lx42A9Ym",
-    "content": "Unsupervised and semi-supervised learning are challenging with complex data like natural images. The Neural Rendering Model (NRM) is a hierarchical generative model inspired by Convolutional Neural Networks (CNNs). It introduces latent variables and dependencies among them via a conjugate prior distribution. The Rendering Path Normalization (RPN) regularizer improves generalization in training CNNs. The Neural Rendering Model (NRM) introduces a new Max-Min cross entropy training loss, leading to the Max-Min network architecture that achieves state-of-the-art results in semi-supervised and supervised learning on SVHN, CIFAR10, and CIFAR100 datasets."
-}

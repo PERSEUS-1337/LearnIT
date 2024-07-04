@@ -1,4 +1,0 @@
-{
-    "title": "r1gzaCEtPS",
-    "content": "In this work, a structured latent-variable approach is proposed to add discrete control states within neural network models for natural language processing tasks. This approach allows for fine-grained control and enforcement of task-specific constraints, improving text generation and part-of-speech induction benchmarks."
-}

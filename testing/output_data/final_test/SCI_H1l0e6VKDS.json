@@ -1,4 +1,0 @@
-{
-    "title": "H1l0e6VKDS",
-    "content": "We propose learning to transfer learn (L2TL) to improve transfer learning by extracting information from a source dataset. L2TL optimizes shared weights between models for source and target tasks, using adaptive weights based on reinforcement learning. It outperforms fine-tuning baselines on various datasets, especially in cases of small-scale target datasets and label mismatch."
-}

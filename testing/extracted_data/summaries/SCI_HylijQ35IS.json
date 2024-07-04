@@ -1,4 +1,0 @@
-{
-    "title": "HylijQ35IS",
-    "content": "The Deep Image Prior (DIP, Ulyanov et al., 2017) is a fascinating recent approach for recovering images which appear natural, yet is not fully understood. This work aims at shedding some further light on this approach by investigating the properties of the early outputs of the DIP. First, we show that these early iterations demonstrate invariance to adversarial perturbations by classifying progressive DIP outputs and using a novel saliency map approach. Next we explore using DIP as a defence against adversaries, showing good potential. Finally, we examine the adversarial invariancy of the early DIP outputs, and hypothesize that these outputs may remove non-robust image features. By comparing classification confidence values we show some evidence confirming this hypothesis."
-}

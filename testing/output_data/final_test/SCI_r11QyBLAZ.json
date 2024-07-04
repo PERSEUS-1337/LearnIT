@@ -1,4 +1,0 @@
-{
-    "title": "r11QyBLAZ",
-    "content": "Learning effective text representations is crucial for machine learning and NLP applications. Word2Vec provides rich word representations, but it is unclear whether sentence or document representations should be based on word embeddings. The Word Mover's Distance (WMD) aligns semantically similar words in documents, improving KNN classification accuracy. However, WMD is computationally expensive. A new approach called Word Mover's Embedding (WME) builds unsupervised document embeddings from pre-trained word embeddings, showing convergence to a positive-definite kernel. The proposed Word Mover's Embedding (WME) technique converts word embeddings into a positive-definite kernel, serving as a soft version of WMD. It is more efficient and flexible, reducing computational costs significantly while maintaining or surpassing state-of-the-art accuracy in text classification and similarity tasks."
-}

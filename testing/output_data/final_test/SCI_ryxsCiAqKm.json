@@ -1,4 +1,0 @@
-{
-    "title": "ryxsCiAqKm",
-    "content": "Spectral Graph Convolutional Networks (GCNs) generalize convolutional networks for graph-structured data. Chebyshev GCNs are effective for graph classification tasks with variable structures. A novel multigraph network is proposed to learn from multi-relational graphs, modeling different edge types and fusing representations. This addresses limitations of current GCNs, allowing for more complex graph relationships. We relax the restriction on edge types for all datasets and achieve state-of-the-art results on various graph classification benchmarks in chemistry, social networks, and computer vision."
-}

@@ -1,4 +1,0 @@
-{
-    "title": "Skl-fAVYvH",
-    "content": "Our new algorithm for imitation learning from a single expert demonstration leverages an exploration policy to acquire unsupervised trajectories, training an encoder and a context-aware imitation policy. The optimization procedures for the encoder, imitation learner, and exploration policy are tightly linked, creating a feedback loop. The algorithm is evaluated on 6 MujoCo robotics tasks."
-}

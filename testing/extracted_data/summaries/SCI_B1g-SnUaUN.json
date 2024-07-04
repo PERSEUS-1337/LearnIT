@@ -1,4 +1,0 @@
-{
-    "title": "B1g-SnUaUN",
-    "content": "We propose a study of the stability of several few-shot learning algorithms subject to variations in the hyper-parameters and optimization schemes while controlling the random seed.   We propose a methodology for testing for statistical differences in model performances under several replications. To study this specific design, we attempt to reproduce results from three prominent papers: Matching Nets, Prototypical Networks, and TADAM. We analyze on the miniImagenet dataset on the standard classification task in the 5-ways, 5-shots learning setting at test time. We find that the selected implementations exhibit stability across random seed, and repeats."
-}

@@ -1,4 +1,0 @@
-{
-    "title": "SJzQ0OZQom",
-    "content": " Large deep neural networks require huge memory to run and their running speed is sometimes too slow for real applications. Therefore network size reduction with keeping accuracy is crucial for practical applications. We present a novel neural network operator, chopout, with which neural networks are trained, even in a single training process, so as to truncated sub-networks perform as well as possible. Chopout is easy to implement and integrate into most type of existing neural networks. Furthermore it enables to reduce size of networks and latent representations even after training just by truncating layers. We show its effectiveness through several experiments."
-}

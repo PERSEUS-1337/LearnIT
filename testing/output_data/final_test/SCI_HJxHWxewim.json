@@ -1,4 +1,0 @@
-{
-    "title": "HJxHWxewim",
-    "content": "We study compressing the U-net architecture using knowledge distillation. By incorporating regularization methods like batch normalization and class re-weighting, we can compress the U-net by over 1000x with minimal decrease in performance. This involves generating probability maps and reducing the softmax temperature during training. Using standard distillation methods did not effectively compress a standard U-net into a smaller network. To address this, two modifications to the original strategy were proposed."
-}

@@ -1,4 +1,0 @@
-{
-    "title": "H1ldzA4tPr",
-    "content": "In this paper, researchers propose using graph neural networks to learn compositional Koopman operators for efficient system identification and control synthesis. This approach encodes the state into object-centric embeddings and uses a block-wise linear transition matrix to regularize the shared structure across objects. The learned dynamics can adapt quickly to new environments and produce control signals to achieve specific goals. The proposed method using graph neural networks learns compositional Koopman operators for efficient system identification and control synthesis. Experiments show better efficiency and generalization in manipulating ropes and controlling soft robots compared to existing baselines."
-}

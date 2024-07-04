@@ -1,4 +1,0 @@
-{
-    "title": "SkliR1SKDS",
-    "content": "Data augmentation techniques, such as flipping or cropping, are effective in improving deep neural networks' generalization performance by generating more training samples. In the supervised setting, assigning the same label to all augmented samples can be challenging when there is a distributional discrepancy. To address this, a joint learning framework is proposed to learn the original and self-supervised labels of augmented samples, enabling aggregated inference for performance improvement. Our data augmentation framework improves model performance by transferring knowledge of augmentation into the model itself. It is effective in few-shot and imbalanced classification scenarios."
-}

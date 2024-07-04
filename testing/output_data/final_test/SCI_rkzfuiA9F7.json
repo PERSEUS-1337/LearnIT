@@ -1,4 +1,0 @@
-{
-    "title": "rkzfuiA9F7",
-    "content": "In this paper, Projective Subspace Networks (PSN) are introduced as a deep learning paradigm for learning non-linear embeddings from limited supervision. The PSN approach models samples of a class as forming an affine subspace, leading to robust solutions and competitive results in supervised and semi-supervised few-shot classification. This method allows for end-to-end learning and captures higher-order information for modeling new concepts."
-}

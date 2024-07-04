@@ -1,2 +1,0 @@
-BILL_113_hr5289.json
-BILL_107_s870.json

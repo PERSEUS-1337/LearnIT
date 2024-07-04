@@ -1,4 +1,0 @@
-{
-    "title": "Byg5KyHYwr",
-    "content": "Imitation learning from human-expert demonstrations is beneficial for challenging reinforcement learning problems. Recent works on self-imitation learning suggest imitating diverse trajectories from the agent's past experiences to drive exploration. This approach helps avoid myopic behavior and increases the chance of finding globally optimal solutions for hard-exploration tasks. Our method improves exploration in challenging tasks by outperforming existing techniques, achieving a state-of-the-art score of over 20,000 points on Montezumas Revenge without expert demonstrations or arbitrary resets."
-}

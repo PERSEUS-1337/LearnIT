@@ -1,4 +1,0 @@
-{
-    "title": "BkisuzWRW",
-    "content": "The current dominant paradigm for imitation learning relies on strong supervision of expert actions to learn both 'what' and 'how' to imitate. An alternative paradigm is proposed where an agent explores the world without expert supervision and distills its experience into a goal-conditioned skill policy with a forward consistency loss. The expert only communicates goals during inference, and the learned policy mimics the expert after seeing images of the desired task. This zero-shot imitator is evaluated in real-world settings like rope manipulation with a Baxter robot and navigation in new office environments with a TurtleBot. In new office environments, experiments with a TurtleBot show that improved exploration leads to better learning and task performance. More details can be found at https://pathak22.github.io/zeroshot-imitation/."
-}

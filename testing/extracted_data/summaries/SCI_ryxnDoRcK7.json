@@ -1,4 +1,0 @@
-{
-    "title": "ryxnDoRcK7",
-    "content": "We develop the Y-learner for estimating heterogeneous treatment effects in experimental and observational studies. The Y-learner is designed to leverage the abilities of neural networks to optimize multiple objectives and continually update, which allows for better pooling of underlying feature information between treatment and control groups. We evaluate the Y-learner on three test problems: (1) A set of six simulated data benchmarks from the literature. (2) A real-world large-scale experiment on voter persuasion. (3) A task from the literature that estimates artificially generated treatment effects on MNIST didgits. The Y-learner achieves state of the art results on two of the three tasks. On the MNIST task, it gets the second best results."
-}

@@ -1,4 +1,0 @@
-{
-    "title": "rkl6As0cF7",
-    "content": "Humans have the ability to attribute beliefs and intentions to others, which is crucial for planning ahead. A probabilistic recursive reasoning framework, PR2, is introduced for multi-agent reinforcement learning, where agents consider opponents' reactions to their actions. Decentralized-training-decentralized-execution algorithms, PR2-Q and PR2-Actor-Critic, are developed to converge in self-play scenarios. Our methods, PR2-Q and PR2-Actor-Critic, are tested on matrix and differential games with non-trivial equilibriums. It is crucial to consider opponents' beliefs about the agent's beliefs for successful convergence. This work introduces a new approach to modeling opponents in multi-agent reinforcement learning."
-}

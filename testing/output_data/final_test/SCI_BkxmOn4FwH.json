@@ -1,4 +1,0 @@
-{
-    "title": "BkxmOn4FwH",
-    "content": "In a study analyzing EEG signals for educational tasks, eight machine learning classification algorithms were reviewed. The focus was on different classifier categories, including linear classifiers, Bayesian classifiers, nearest neighbour classifiers, ensemble methods, adaptive classifiers, tensor classifiers, transfer learning, and deep learning. The evaluation showed that Random Forest and LSTM outperformed other approaches on the same dataset. The goal was to find an approach suitable for mainstream personal computers and smartphones. Random Forest and LSTM were found to outperform other machine learning algorithms in classifying users based on learning-related tasks. Random Forest is recommended for mainstream hardware due to its speed and accuracy, while LSTM shows potential as the preferred approach when computers and smartphones can process more data quickly."
-}

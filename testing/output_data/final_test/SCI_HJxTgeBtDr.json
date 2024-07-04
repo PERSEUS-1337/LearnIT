@@ -1,4 +1,0 @@
-{
-    "title": "HJxTgeBtDr",
-    "content": "Understanding the differences between natural language processing models is challenging due to the variety of models available. Simply comparing metrics like accuracy, BLEU, or F1 scores does not provide insight into why a particular method is superior or how dataset biases impact model design choices. The paper introduces a methodology for interpretable evaluation of NLP systems, focusing on named entity recognition (NER). The method helps analyze model biases, dataset biases, and how dataset differences influence model design. The tool provided enables researchers to conduct similar analyses and advance research in this area."
-}

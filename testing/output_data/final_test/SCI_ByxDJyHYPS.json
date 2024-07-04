@@ -1,4 +1,0 @@
-{
-    "title": "ByxDJyHYPS",
-    "content": "Multi-hop question answering involves gathering information from different parts of a text to answer a question. A proposed method extracts a reasoning chain from the text, feeding it to a BERT-based QA model for answer prediction. The approach does not rely on gold annotated chains or supporting facts during training or testing. Testing on WikiHop and HotpotQA datasets shows state-of-the-art performance on WikiHop. The proposed method for multi-hop question answering extracts reasoning chains from text and feeds them to a BERT-based QA model. It achieves state-of-the-art performance on WikiHop and strong performance on HotpotQA. Analysis shows the importance of modeling extraction sequentially and dealing with candidate sentences in a context-aware way. Human evaluation indicates that the extracted chains enable confident answers, serving as a strong intermediate abstraction for the task."
-}

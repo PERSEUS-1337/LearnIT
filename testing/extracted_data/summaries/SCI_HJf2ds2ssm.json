@@ -1,4 +1,0 @@
-{
-    "title": "HJf2ds2ssm",
-    "content": "Neural networks are known to produce unexpected results on inputs that are far from the training distribution. One approach to tackle this problem is to detect the samples on which the trained network can not answer reliably. ODIN is a recently proposed method for out-of-distribution detection that does not modify the trained network and achieves good performance for various image classification tasks. In this paper we adapt ODIN for sentence classification and word tagging tasks. We show that the scores produced by ODIN can be used as a confidence measure for the predictions on both in-distribution and out-of-distribution datasets."
-}

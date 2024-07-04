@@ -1,4 +1,0 @@
-{
-    "title": "HyxcZT4KwB",
-    "content": "GANs can generate realistic face images that can deceive humans, while CNNs like ResNet-18 can accurately discern fake/real faces. The study found that fake faces have distinct textures from real ones, which CNNs can detect better than humans. Global image texture information is more reliable for recognizing fake faces across different GANs and datasets. A new architecture called Gram-Net, incorporating \"Gram Block,\" is proposed to extract global image texture representations. Our Gram-Net outperforms existing methods in detecting fake faces, showing robustness to image editing such as downsampling, JPEG compression, blur, and noise. It also generalizes well in detecting fake faces from GAN models not seen during training."
-}

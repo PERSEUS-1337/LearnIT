@@ -1,4 +1,0 @@
-{
-    "title": "B1zKGg3soX",
-    "content": "The Wave-U-Net architecture is used for speech enhancement, operating in the time domain and improving metrics like PESQ and SSNR on the Voice Bank corpus dataset. Fewer hidden layers are needed for speech enhancement compared to singing voice separation in music. This method shows promise for further exploration in speech enhancement and as a pre-processing step for speech recognition systems. The Wave-U-Net architecture is utilized for speech enhancement, aiming to separate a mixture waveform to improve speech quality. It applies dilated convolutions and non-linearities to estimate target sources, with potential for multi-channel audio and multi-source separation."
-}

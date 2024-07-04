@@ -1,4 +1,0 @@
-{
-    "title": "rJ8X2VT7M",
-    "content": "This paper introduces an information theoretic co-training objective for unsupervised learning, focusing on predicting future sensations through hypotheses confirmed by future sensations. It trains predictor model $P_\\Phi(z|x)$ and confirmation model $P_\\Psi(z|y)$ to measure mutual information between past sensation $x$ and future sensation $y. The training objective aims to maximize mutual information between $x$ and $z$ under the distribution defined by the confirmation model $P_\\Psi(z|y). The training objective involves model $P_\\Psi(z|y)$ to match predictions from $x$ with confirmations from $y. Experiments are conducted on phonetics learning using the TIMIT dataset."
-}

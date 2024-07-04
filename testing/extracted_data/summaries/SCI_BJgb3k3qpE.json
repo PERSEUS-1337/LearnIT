@@ -1,4 +1,0 @@
-{
-    "title": "BJgb3k3qpE",
-    "content": "We recently observed that convolutional filters initialized\n farthest apart from each other using offthe-\n shelf pre-computed Grassmannian subspace\n packing codebooks performed surprisingly well\n across many datasets. Through this short paper,\n we\u2019d like to disseminate some initial results in this\n regard in the hope that we stimulate the curiosity\n of the deep-learning community towards considering\n classical Grassmannian subspace packing\n results as a source of new ideas for more efficient\n initialization strategies."
-}

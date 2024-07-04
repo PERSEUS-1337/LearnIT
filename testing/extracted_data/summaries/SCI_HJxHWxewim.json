@@ -1,4 +1,0 @@
-{
-    "title": "HJxHWxewim",
-    "content": "We study the use of knowledge distillation to compress the U-net architecture. We show that, while standard distillation is not sufficient to reliably train a compressed U-net, introducing other regularization methods, such as batch normalization and class re-weighting, in knowledge distillation significantly improves the training process. This allows us to compress a U-net by over 1000x, i.e., to 0.1% of its original number of parameters, at a negligible decrease in performance."
-}
