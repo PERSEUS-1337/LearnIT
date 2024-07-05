@@ -58,6 +58,6 @@ def shutdown_db_client():
     app.mongodb_client.close()
 
 
-app.include_router(auth_router, tags=["auth"], prefix="/api/auth")
-app.include_router(user_router, tags=["user"], prefix="/api/user")
-app.include_router(docu_router, tags=["docu"], prefix="/api/docu")
+app.include_router(auth_router, tags=["auth"], prefix="/auth")
+app.include_router(user_router, tags=["user"], prefix="/user")
+app.include_router(docu_router, tags=["docu"], prefix="/docu")
