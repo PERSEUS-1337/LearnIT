@@ -36,6 +36,7 @@ class APIMessages:
     FILES_NOT_FOUND = "There are no files uploaded on the server yet."
 
     # Tokenization
+    TOKEN_GET_SUCCESS = "Token '{tokens_id}' has successfully been retrieved."
     TOKENIZE_SUCCESS = "File '{file}' has been tokenized and embedded in ChromaDB successfully."
     TOKENS_EXISTS = "File '{file}' has already been tokenized."
     NOT_TOKENIZED = "File '{file}' has not yet been tokenized."

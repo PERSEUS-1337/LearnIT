@@ -208,10 +208,8 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
         if not os.path.exists(file_path):
             raise FileNotFoundError(apiMsg.FILE_NOT_FOUND_LOCAL.format(file=filename))
 
-        file_found = False
         for doc in user.uploaded_files:
             if doc.name == filename:
-                file_found = True
 
                 if doc.tokenized:
                     return JSONResponse(
@@ -271,7 +269,6 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
                     },
                 )
 
-        if not file_found:
             return JSONResponse(
                 status_code=status.HTTP_404_NOT_FOUND,
                 content={"message": apiMsg.USER_UPLOAD_NOT_FOUND.format(file=filename)},
@@ -292,6 +289,52 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
             content={"message": str(e)},
         )
 
+async def get_tokens(req: Request, user: UserBase, filename: str):
+    docs_db = req.app.database[config["DOCS_DB"]]
+    
+    try:
+        for doc in user.uploaded_files:
+            if doc.name == filename:
+                if not doc.tokenized:
+                    return JSONResponse(
+                        status_code=status.HTTP_409_CONFLICT,
+                        content={
+                            "message": apiMsg.FILE_NOT_YET_TOKENIZED.format(file=filename)
+                        },
+                    )
+
+                doc_tokens = docs_db.find_one({"_id": ObjectId(doc.tokens_id)})
+                if not doc_tokens:
+                    return JSONResponse(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        content={
+                            "message": apiMsg.TOKENS_NOT_FOUND.format(
+                                tokens_id=doc.tokens_id
+                            )
+                        },
+                    )
+                    
+                doc_tokens = DocTokens(**doc_tokens)
+                return JSONResponse(
+                    status_code=status.HTTP_200_OK,
+                    content={
+                        "message": apiMsg.TOKEN_GET_SUCCESS.format(tokens_id=doc.tokens_id),
+                        "data": doc_tokens.dict(),
+                    },
+                )
+
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={"message": apiMsg.USER_UPLOAD_NOT_FOUND.format(file=filename)},
+            )
+    except Exception as e:
+        # Log unexpected errors
+        print(f"Unexpected error: {str(e)}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"message": str(e)},
+        )
+    
 
 async def query_rag(req: Request, user: UserBase, filename: str, query: str):
     try:
