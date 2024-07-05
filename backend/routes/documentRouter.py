@@ -37,7 +37,7 @@ router = APIRouter()
 def hello():
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content={"message": APIMessages.DOCU_ROUTE_SUCCESS},
+        content={"message": APIMessages.DOC_ROUTE_SUCCESS},
     )
 
 

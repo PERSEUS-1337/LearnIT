@@ -13,13 +13,12 @@ config = dotenv_values(".env")
 
 app = FastAPI()
 
-
 @app.middleware("http")
 async def measure_request_time(request: Request, call_next):
     start_time = time.time()
     response = await call_next(request)
     process_time = time.time() - start_time
-    response.headers["X-Process-Time"] = f"{process_time} ms"
+    response.headers["X-Process-Time"] = f"{process_time} s"
     return response
 
 
@@ -34,11 +33,11 @@ app.add_middleware(
 )
 
 
-@app.get("/api")
+@app.get("/")
 async def root():
     return {"message": "This is the API route of LearnIT!"}
 
-@app.get("/api/hello")
+@app.get("/hello")
 async def root():
     return {"message": "Hello World!"}
 

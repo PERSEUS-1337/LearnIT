@@ -97,7 +97,7 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
         )
 
         if update_result.modified_count == 0:
-            raise ValueError(apiMsg.USER_FILE_UPDATE_FAIL.format(user=user.username))
+            raise ValueError(apiMsg.USER_FILE_INSERT_FAIL.format(file=file.filename, user=user.username))
 
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
@@ -122,21 +122,24 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
 
 async def delete_file(req: Request, user: UserBase, filename: str):
     db = req.app.database[config["USER_DB"]]
+    
     # Generate the unique identifier for the file using the user's username and filename
     uid = gen_uid(user.username, filename)
 
     try:
         # Construct the file path
         file_path = find_file_by_uid(config["UPLOAD_PATH"], uid)
-        print(file_path)
-
-        # Check if the file exists
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(apiMsg.FILE_NOT_FOUND_LOCAL.format(file=filename))
 
         # Retrieve the user's files from the database
         user_files = db.find_one({"username": user.username}, {"uploaded_files": 1})
         if not user_files:
+            raise ValueError(apiMsg.FILE_NOT_FOUND_DB.format(file=filename))
+        
+        # Get the list of all files
+        uploaded_files = user_files.get("uploaded_files", [])
+        # Check if the file is registered in the user_db
+        file_registered = any(file["uid"] == uid for file in uploaded_files)
+        if not file_registered:
             raise ValueError(apiMsg.FILE_NOT_FOUND_DB.format(file=filename))
 
         # Get the list of all files
@@ -150,18 +153,23 @@ async def delete_file(req: Request, user: UserBase, filename: str):
             {"$set": {"uploaded_files": updated_files}},
         )
         if update_result.modified_count == 0:
-            raise ValueError(apiMsg.USER_FILE_UPDATE_FAIL.format(user=user))
+            raise ValueError(apiMsg.USER_FILE_DELETE_FAIL.format(file=filename, user=user.username))
 
-        # Remove the file from the filesystem
-        try:
-            os.remove(file_path)
-        except OSError as e:
-            raise OSError(f"Error removing file '{file_path}': {e.strerror}")
-
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={"message": apiMsg.FILE_DELETED.format(file=filename)},
-        )
+         # Check if the file exists on the filesystem
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+                return JSONResponse(
+                    status_code=status.HTTP_200_OK,
+                    content={"message": apiMsg.FILE_DELETED.format(file=filename)},
+                )
+            except OSError as e:
+                raise OSError(f"Error removing file '{file_path}': {e.strerror}")
+        else:
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content={"message": apiMsg.FILE_DELETED_DB_ONLY.format(file=filename)},
+            )
     except FileNotFoundError as e:
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND, content={"message": str(e)}
@@ -209,7 +217,7 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
                     return JSONResponse(
                         status_code=status.HTTP_409_CONFLICT,
                         content={
-                            "message": apiMsg.FILE_ALREADY_TOKENIZED.format(
+                            "message": apiMsg.TOKENS_EXISTS.format(
                                 file=filename
                             )
                         },
@@ -222,7 +230,7 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
                     )
                 except Exception as e:
                     raise ValueError(
-                        apiMsg.TOKENIZE_FILE_FAIL.format(file=filename, error=str(e))
+                        apiMsg.TOKENIZATION_FAIL.format(file=filename, error=str(e))
                     )
 
                 # This is where we inject the function of prepping the ChromaDb to be retrieved later when we start doing the QnA
@@ -235,7 +243,7 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
                     doc_tokens_id = docs_db.insert_one(doc_tokens.dict()).inserted_id
                 except Exception as e:
                     raise ValueError(
-                        apiMsg.TOKENS_DB_INSERT_FAIL.format(file=filename, error=str(e))
+                        apiMsg.TOKENS_INSERT_FAIL.format(file=filename, error=str(e))
                     )
 
                 # Update the UploadDoc object with the tokens_id
@@ -250,15 +258,15 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
 
                 if update_result.modified_count == 0:
                     raise ValueError(
-                        apiMsg.USER_TOKENS_UPDATE_FAIL.format(
-                            user=user.username, file=filename
+                        apiMsg.USER_TOKENS_INSERT_FAIL.format(
+                             tokens_id=doc.tokens_id, user=user.username
                         )
                     )
 
                 return JSONResponse(
                     status_code=status.HTTP_200_OK,
                     content={
-                        "message": apiMsg.FILE_TOKENIZE_SUCCESS.format(file=filename),
+                        "message": apiMsg.TOKENIZE_SUCCESS.format(file=filename),
                         "data": doc_tokens.dict(),
                     },
                 )
@@ -286,21 +294,14 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
 
 
 async def query_rag(req: Request, user: UserBase, filename: str, query: str):
-    db = req.app.database
-
     try:
-        file_found = False
         for doc in user.uploaded_files:
             if doc.name == filename:
-                file_found = True
-
                 if not doc.tokenized:
                     return JSONResponse(
                         status_code=status.HTTP_409_CONFLICT,
                         content={
-                            "message": apiMsg.FILE_NOT_YET_TOKENIZED.format(
-                                file=filename
-                            )
+                            "message": apiMsg.FILE_NOT_YET_TOKENIZED.format(file=filename)
                         },
                     )
 
@@ -308,11 +309,12 @@ async def query_rag(req: Request, user: UserBase, filename: str, query: str):
                     return JSONResponse(
                         status_code=status.HTTP_409_CONFLICT,
                         content={
-                            "message": apiMsg.FILE_NOT_YET_EMBEDDED.format(
-                                file=filename
-                            )
+                            "message": apiMsg.FILE_NOT_YET_EMBEDDED.format(file=filename)
                         },
                     )
+
+                if not os.path.exists(doc.vec_db_path):
+                    raise OSError(apiMsg.FILE_NOT_FOUND_LOCAL.format(file=doc.vec_db_path))
 
                 qa_chain = setup_chain(doc.vec_db_path)
                 response = qa_chain(str(query))
@@ -325,8 +327,7 @@ async def query_rag(req: Request, user: UserBase, filename: str, query: str):
                     },
                 )
 
-        if not file_found:
-            raise FileNotFoundError(apiMsg.USER_UPLOAD_NOT_FOUND.format(file=filename))
+        raise FileNotFoundError(apiMsg.USER_UPLOAD_NOT_FOUND.format(file=filename))
     except FileNotFoundError as e:
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND, content={"message": str(e)}
@@ -334,6 +335,11 @@ async def query_rag(req: Request, user: UserBase, filename: str, query: str):
     except ValueError as e:
         return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST, content={"message": str(e)}
+        )
+    except OSError as e:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"message": f"File system error: {str(e)}"},
         )
     except Exception as e:
         # Log unexpected errors
@@ -350,19 +356,14 @@ async def process_tscc(req: Request, user: UserBase, filename: str):
     docs_db = db[config["DOCS_DB"]]
     tscc_db = db[config["TSCC_DB"]]
 
-    # Generate the unique identifier for the file using the user's username and filename
-    uid = gen_uid(user.username, filename)
-
     try:
-        # Check if file exists in the uploaded file list of user
         for doc in user.uploaded_files:
             if doc.name == filename:
-                # Check if the file is already tokenized and ready for tscc processing
                 if not doc.tokenized:
                     return JSONResponse(
                         status_code=status.HTTP_409_CONFLICT,
                         content={
-                            "message": apiMsg.FILE_NOT_YET_TOKENIZED.format(
+                            "message": apiMsg.NOT_TOKENIZED.format(
                                 file=filename
                             )
                         },
@@ -377,13 +378,13 @@ async def process_tscc(req: Request, user: UserBase, filename: str):
                             )
                         },
                     )
-                # Retrieve the tokenized document from the docs collection
+                
                 document = docs_db.find_one({"_id": ObjectId(doc.tokens_id)})
                 if not document:
                     return JSONResponse(
                         status_code=status.HTTP_404_NOT_FOUND,
                         content={
-                            "message": apiMsg.TOKENS_NOT_FOUND_DB.format(
+                            "message": apiMsg.TOKENS_NOT_FOUND.format(
                                 tokens_id=doc.tokens_id
                             )
                         },
@@ -391,20 +392,24 @@ async def process_tscc(req: Request, user: UserBase, filename: str):
 
                 tscc = generate_tscc(document)
 
-                # Insert the TSCC document into the tscc collection
                 tscc_insert_result = tscc_db.insert_one(tscc.dict())
                 if not tscc_insert_result.inserted_id:
                     raise ValueError(apiMsg.TSCC_DB_INSERT_FAIL.format(file=filename))
 
-                # Update the UploadDoc object inside the user
                 doc.tscc_id = str(tscc_insert_result.inserted_id)
                 doc.processed = True
 
-                # Update the user document with the modified UploadDoc object
-                user_db.update_one(
+                update_result = user_db.update_one(
                     {"username": user.username, "uploaded_files.name": filename},
                     {"$set": {"uploaded_files.$": doc.dict()}},
                 )
+                
+                if update_result.modified_count == 0:
+                    raise ValueError(
+                        apiMsg.USER_TSCC_INSERT_FAIL.format(
+                            user=user.username, file=filename
+                        )
+                    )
 
                 return JSONResponse(
                     status_code=status.HTTP_200_OK,
@@ -442,36 +447,47 @@ async def delete_tokens(req: Request, user: UserBase, filename: str):
     try:
         for doc in user.uploaded_files:
             if doc.name == filename:
-                # Check if the document exists in the docs collection
+
+                if not doc.tokenized:
+                    return JSONResponse(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        content={"message": apiMsg.NOT_TOKENIZED.format(file=filename)},
+                    )
+
                 doc_in_db = docs_db.find_one({"_id": ObjectId(doc.tokens_id)})
                 if not doc_in_db:
                     raise ValueError(
-                        apiMsg.FILE_NOT_FOUND_DB.format(tokens_id=doc.tokens_id)
+                        apiMsg.TOKENS_NOT_FOUND.format(tokens_id=doc.tokens_id)
                     )
 
-                # Delete the document in the docs collection
+
                 delete_result = docs_db.delete_one({"_id": ObjectId(doc.tokens_id)})
                 if delete_result.deleted_count == 0:
                     raise ValueError(
-                        apiMsg.DELETE_TOKENS_FAIL.format(tokens_id=doc.tokens_id)
+                        apiMsg.TOKENS_DELETE_FAIL.format(tokens_id=doc.tokens_id)
                     )
 
-                # Modify the UploadedDoc object inside the user
                 doc.tokens_id = None
                 doc.tokenized = False
                 doc.embedded = False
                 doc.vec_db_path = None
 
-                # Update the user document with the modified UploadDoc object
-                user_db.update_one(
+                update_result = user_db.update_one(
                     {"username": user.username, "uploaded_files.name": filename},
                     {"$set": {"uploaded_files.$": doc.dict()}},
                 )
+                
+                if update_result.modified_count == 0:
+                    raise ValueError(
+                        apiMsg.USER_TOKENS_DELETE_FAIL.format(
+                            tokens_id=doc.tokens_id, user=user.username
+                        )
+                    )
 
                 return JSONResponse(
                     status_code=status.HTTP_200_OK,
                     content={
-                        "message": apiMsg.DELETE_TOKENS_SUCCESS.format(file=filename),
+                        "message": apiMsg.TOKENS_DELETE_SUCCESS.format(file=filename),
                         "data": doc.dict(),
                     },
                 )
@@ -520,10 +536,17 @@ async def delete_tscc(req: Request, user: UserBase, filename: str):
                 doc.processed = False
 
                 # Update the user document with the modified UploadDoc object
-                user_db.update_one(
+                update_result = user_db.update_one(
                     {"username": user.username, "uploaded_files.name": filename},
                     {"$set": {"uploaded_files.$": doc.dict()}},
                 )
+                
+                if update_result.modified_count == 0:
+                    raise ValueError(
+                        apiMsg.USER_TSCC_DELETE_FAIL.format(
+                            tscc_id=doc.tscc_id, user=user.username
+                        )
+                    )
 
                 return JSONResponse(
                     status_code=status.HTTP_200_OK,

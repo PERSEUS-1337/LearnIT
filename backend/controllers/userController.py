@@ -36,7 +36,7 @@ async def login_user(
         if not match_pass:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=APIMessages.INCORRECT_PWD,
+                detail=APIMessages.INCORRECT_PASSWORD,
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
