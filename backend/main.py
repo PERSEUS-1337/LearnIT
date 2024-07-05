@@ -13,6 +13,7 @@ config = dotenv_values(".env")
 
 app = FastAPI()
 
+
 @app.middleware("http")
 async def measure_request_time(request: Request, call_next):
     start_time = time.time()
@@ -36,6 +37,7 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return {"message": "This is the API route of LearnIT!"}
+
 
 @app.get("/hello")
 async def root():

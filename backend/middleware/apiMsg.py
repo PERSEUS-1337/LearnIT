@@ -9,12 +9,24 @@ class APIMessages:
     USERS_NOT_FOUND = "Users not found."
     USER_ALREADY_EXISTS = "User with this username already exists"
     USER_UPLOAD_NOT_FOUND = "File '{file}' not found in user uploaded files."
-    USER_FILE_INSERT_FAIL = "Failed to insert file '{file}' into user '{user}' information."
-    USER_FILE_DELETE_FAIL = "Failed to remove file '{file}' from user '{user}' information."
-    USER_TOKENS_INSERT_FAIL = "Failed to insert tokens document '{tokens_id}' to user '{user}'."
-    USER_TOKENS_DELETE_FAIL = "Failed to remove tokens document '{tokens_id}' from user '{user}'."
-    USER_TSCC_INSERT_FAIL = "Failed to insert tscc document '{tscc_id}' to user '{user}'."
-    USER_TSCC_DELETE_FAIL = "Failed to remove tscc document '{tscc_id}' from user '{user}'."
+    USER_FILE_INSERT_FAIL = (
+        "Failed to insert file '{file}' into user '{user}' information."
+    )
+    USER_FILE_DELETE_FAIL = (
+        "Failed to remove file '{file}' from user '{user}' information."
+    )
+    USER_TOKENS_INSERT_FAIL = (
+        "Failed to insert tokens document '{tokens_id}' to user '{user}'."
+    )
+    USER_TOKENS_DELETE_FAIL = (
+        "Failed to remove tokens document '{tokens_id}' from user '{user}'."
+    )
+    USER_TSCC_INSERT_FAIL = (
+        "Failed to insert tscc document '{tscc_id}' to user '{user}'."
+    )
+    USER_TSCC_DELETE_FAIL = (
+        "Failed to remove tscc document '{tscc_id}' from user '{user}'."
+    )
 
     # Authentication and Login
     LOGIN_SUCCESSFUL = "Login successful."
@@ -37,7 +49,9 @@ class APIMessages:
 
     # Tokenization
     TOKEN_GET_SUCCESS = "Token '{tokens_id}' has successfully been retrieved."
-    TOKENIZE_SUCCESS = "File '{file}' has been tokenized and embedded in ChromaDB successfully."
+    TOKENIZE_SUCCESS = (
+        "File '{file}' has been tokenized and embedded in ChromaDB successfully."
+    )
     TOKENS_EXISTS = "File '{file}' has already been tokenized."
     NOT_TOKENIZED = "File '{file}' has not yet been tokenized."
     TOKENIZATION_FAIL = "Tokenization failed for file '{file}': {error}"
@@ -57,5 +71,9 @@ class APIMessages:
     TSCC_ALREADY_PROCESSED = "File '{file}' has already been processed."
     TSCC_PROCESS_SUCCESS = "File '{file}' has been successfully processed for TSCC."
     TSCC_DB_DELETE_SUCCESS = "Sucessfully deleted {file}'s tscc from the database."
-    TSCC_DB_DELETE_FAIL = "Failed to delete TSCC document of file '{file}' from tscc_db."
-    TSCC_DB_INSERT_FAIL = "Failed to insert TSCC document of file '{file}' into tscc_db."
+    TSCC_DB_DELETE_FAIL = (
+        "Failed to delete TSCC document of file '{file}' from tscc_db."
+    )
+    TSCC_DB_INSERT_FAIL = (
+        "Failed to insert TSCC document of file '{file}' into tscc_db."
+    )
