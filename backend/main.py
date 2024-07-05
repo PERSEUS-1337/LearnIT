@@ -34,9 +34,13 @@ app.add_middleware(
 )
 
 
-@app.get("/")
+@app.get("/api")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "This is the API route of LearnIT!"}
+
+@app.get("/api/hello")
+async def root():
+    return {"message": "Hello World!"}
 
 
 @app.on_event("startup")
@@ -54,6 +58,6 @@ def shutdown_db_client():
     app.mongodb_client.close()
 
 
-app.include_router(auth_router, tags=["auth"], prefix="/auth")
-app.include_router(user_router, tags=["user"], prefix="/user")
-app.include_router(docu_router, tags=["docu"], prefix="/docu")
+app.include_router(auth_router, tags=["auth"], prefix="/api/auth")
+app.include_router(user_router, tags=["user"], prefix="/api/user")
+app.include_router(docu_router, tags=["docu"], prefix="/api/docu")

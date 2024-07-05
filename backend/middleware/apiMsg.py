@@ -45,15 +45,19 @@ class APIMessages:
         "Failed to insert DocTokens of '{file}' into docs_db: {error}"
     )
     TOKENS_NOT_FOUND_DB = "DocTokens with ID '{tokens_id}' not found in docs_db."
-    
+
     # RAG
     FILE_NOT_YET_EMBEDDED = "File '{file}' has not yet been embedded to ChromaDB."
     RAG_QUERY_SUCCESS = "RAG Query successful"
-    
+
     # TSCC
     TSCC_NOT_FOUND = "TSCC with tscc_id '{tscc_id}' does not exists in tscc_db."
     TSCC_ALREADY_PROCESSED = "File '{file}' has already been processed."
     TSCC_PROCESS_SUCCESS = "File '{file}' has been successfully processed for TSCC."
     TSCC_DB_DELETE_SUCCESS = "Sucessfully deleted {file}'s tscc from the database."
-    TSCC_DB_DELETE_FAIL = "Failed to delete TSCC document of file '{file}' from tscc_db."
-    TSCC_DB_INSERT_FAIL = "Failed to insert TSCC document of file '{file}' into tscc_db."
+    TSCC_DB_DELETE_FAIL = (
+        "Failed to delete TSCC document of file '{file}' from tscc_db."
+    )
+    TSCC_DB_INSERT_FAIL = (
+        "Failed to insert TSCC document of file '{file}' into tscc_db."
+    )

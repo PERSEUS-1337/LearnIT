@@ -183,6 +183,7 @@ async def delete_file(req: Request, user: UserBase, filename: str):
             content={"message": str(e)},
         )
 
+
 async def generate_tokens(req: Request, user: UserBase, filename: str):
     db = req.app.database
     user_db = db[config["USER_DB"]]
@@ -234,9 +235,7 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
                     doc_tokens_id = docs_db.insert_one(doc_tokens.dict()).inserted_id
                 except Exception as e:
                     raise ValueError(
-                        apiMsg.TOKENS_DB_INSERT_FAIL.format(
-                            file=filename, error=str(e)
-                        )
+                        apiMsg.TOKENS_DB_INSERT_FAIL.format(file=filename, error=str(e))
                     )
 
                 # Update the UploadDoc object with the tokens_id
@@ -373,7 +372,9 @@ async def process_tscc(req: Request, user: UserBase, filename: str):
                     return JSONResponse(
                         status_code=status.HTTP_409_CONFLICT,
                         content={
-                            "message": apiMsg.TSCC_ALREADY_PROCESSED.format(file=filename)
+                            "message": apiMsg.TSCC_ALREADY_PROCESSED.format(
+                                file=filename
+                            )
                         },
                     )
                 # Retrieve the tokenized document from the docs collection
@@ -382,10 +383,12 @@ async def process_tscc(req: Request, user: UserBase, filename: str):
                     return JSONResponse(
                         status_code=status.HTTP_404_NOT_FOUND,
                         content={
-                            "message": apiMsg.TOKENS_NOT_FOUND_DB.format(tokens_id=doc.tokens_id)
+                            "message": apiMsg.TOKENS_NOT_FOUND_DB.format(
+                                tokens_id=doc.tokens_id
+                            )
                         },
                     )
-                    
+
                 tscc = generate_tscc(document)
 
                 # Insert the TSCC document into the tscc collection
@@ -469,7 +472,7 @@ async def delete_tokens(req: Request, user: UserBase, filename: str):
                     status_code=status.HTTP_200_OK,
                     content={
                         "message": apiMsg.DELETE_TOKENS_SUCCESS.format(file=filename),
-                        "data": doc.dict()
+                        "data": doc.dict(),
                     },
                 )
 
@@ -505,16 +508,12 @@ async def delete_tscc(req: Request, user: UserBase, filename: str):
                 # Check if the document exists in the docs collection
                 tscc_in_db = tscc_db.find_one({"_id": ObjectId(doc.tscc_id)})
                 if not tscc_in_db:
-                    raise ValueError(
-                        apiMsg.TSCC_NOT_FOUND.format(tscc_id=doc.tscc_id)
-                    )
+                    raise ValueError(apiMsg.TSCC_NOT_FOUND.format(tscc_id=doc.tscc_id))
 
                 # Delete the document in the docs collection
                 delete_result = tscc_db.delete_one({"_id": ObjectId(doc.tscc_id)})
                 if delete_result.deleted_count == 0:
-                    raise ValueError(
-                        apiMsg.TSCC_DB_DELETE_FAIL.format(file=filename)
-                    )
+                    raise ValueError(apiMsg.TSCC_DB_DELETE_FAIL.format(file=filename))
 
                 # Modify the UploadedDoc object inside the user
                 doc.tscc_id = None
@@ -530,7 +529,7 @@ async def delete_tscc(req: Request, user: UserBase, filename: str):
                     status_code=status.HTTP_200_OK,
                     content={
                         "message": apiMsg.TSCC_DB_DELETE_SUCCESS.format(file=filename),
-                        "data": doc.dict()
+                        "data": doc.dict(),
                     },
                 )
 
