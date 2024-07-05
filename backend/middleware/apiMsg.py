@@ -51,7 +51,9 @@ class APIMessages:
     RAG_QUERY_SUCCESS = "RAG Query successful"
 
     # TSCC
+    TSCC_GET_SUCCESS = "Token '{tscc_id}' has successfully been retrieved."
     TSCC_NOT_FOUND = "TSCC with tscc_id '{tscc_id}' does not exist in tscc_db."
+    NOT_TSCC_PROCESSED = "TSCC with tscc_id '{tscc_id}' does not exist in tscc_db."
     TSCC_ALREADY_PROCESSED = "File '{file}' has already been processed."
     TSCC_PROCESS_SUCCESS = "File '{file}' has been successfully processed for TSCC."
     TSCC_DB_DELETE_SUCCESS = "Sucessfully deleted {file}'s tscc from the database."

@@ -24,7 +24,8 @@ from controllers.documentController import (
     delete_file,
     generate_tokens,
     delete_tscc,
-    get_tokens
+    get_tokens,
+    get_tscc
 )
 
 router = APIRouter()
@@ -60,6 +61,17 @@ async def delete_file_route(
 ):
     return await delete_file(req, user, filename)
 
+@router.get("/get-tokens")
+async def get_tokens_route(
+    req: Request, filename: str, user: UserBase = Depends(auth_curr_user)
+):
+    return await get_tokens(req, user, filename)
+
+@router.get("/get-tscc")
+async def get_tscc_route(
+    req: Request, filename: str, user: UserBase = Depends(auth_curr_user)
+):
+    return await get_tscc(req, user, filename)
 
 @router.post("/gen-tokens")
 async def generate_tokens_route(
@@ -67,11 +79,6 @@ async def generate_tokens_route(
 ):
     return await generate_tokens(req, user, filename)
 
-@router.get("/get-tokens")
-async def get_tokens_route(
-    req: Request, filename: str, user: UserBase = Depends(auth_curr_user)
-):
-    return await get_tokens(req, user, filename)
 
 @router.post("/process-tscc")
 async def process_tscc_route(

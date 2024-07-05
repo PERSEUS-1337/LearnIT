@@ -299,7 +299,7 @@ async def get_tokens(req: Request, user: UserBase, filename: str):
                     return JSONResponse(
                         status_code=status.HTTP_409_CONFLICT,
                         content={
-                            "message": apiMsg.FILE_NOT_YET_TOKENIZED.format(file=filename)
+                            "message": apiMsg.NOT_TOKENIZED.format(file=filename)
                         },
                     )
 
@@ -320,6 +320,61 @@ async def get_tokens(req: Request, user: UserBase, filename: str):
                     content={
                         "message": apiMsg.TOKEN_GET_SUCCESS.format(tokens_id=doc.tokens_id),
                         "data": doc_tokens.dict(),
+                    },
+                )
+
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={"message": apiMsg.USER_UPLOAD_NOT_FOUND.format(file=filename)},
+            )
+    except Exception as e:
+        # Log unexpected errors
+        print(f"Unexpected error: {str(e)}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"message": str(e)},
+        )
+
+
+async def get_tscc(req: Request, user: UserBase, filename: str):
+    tscc_db = req.app.database[config["TSCC_DB"]]
+    
+    try:
+        for doc in user.uploaded_files:
+            if doc.name == filename:
+                if not doc.tokenized:
+                    return JSONResponse(
+                        status_code=status.HTTP_409_CONFLICT,
+                        content={
+                            "message": apiMsg.NOT_TOKENIZED.format(file=filename)
+                        },
+                    )
+                    
+                if not doc.processed:
+                    return JSONResponse(
+                        status_code=status.HTTP_409_CONFLICT,
+                        content={
+                            "message": apiMsg.NOT_TSCC_PROCESSED.format(file=filename)
+                        },
+                    )
+
+                tscc_tokens = tscc_db.find_one({"_id": ObjectId(doc.tscc_id)})
+                if not tscc_tokens:
+                    return JSONResponse(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        content={
+                            "message": apiMsg.TSCC_NOT_FOUND.format(
+                                tscc_id=doc.tscc_id
+                            )
+                        },
+                    )
+                    
+                tscc_tokens = TSCC(**tscc_tokens)
+                return JSONResponse(
+                    status_code=status.HTTP_200_OK,
+                    content={
+                        "message": apiMsg.TSCC_GET_SUCCESS.format(tscc_id=doc.tscc_id),
+                        "data": tscc_tokens.dict(),
                     },
                 )
 
