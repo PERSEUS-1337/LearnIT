@@ -58,6 +58,7 @@ class APIMessages:
     TOKENS_DELETE_SUCCESS = "Successfully deleted {file}'s tokens from the database."
     TOKENS_DELETE_FAIL = "Failed to delete document with tokens_id {tokens_id}."
     TOKENS_INSERT_FAIL = "Failed to insert DocTokens of '{file}' into docs_db: {error}"
+    TOKENS_UPDATE_FAIL = "Failed to updated DocTokens of '{file}' in docs_db: {error}"
     TOKENS_NOT_FOUND = "DocTokens with ID '{tokens_id}' not found in docs_db."
 
     # RAG
@@ -65,9 +66,9 @@ class APIMessages:
     RAG_QUERY_SUCCESS = "RAG Query successful"
 
     # TSCC
-    TSCC_GET_SUCCESS = "Token '{tscc_id}' has successfully been retrieved."
+    TSCC_GET_SUCCESS = "TSCC '{tscc_id}' has successfully been retrieved."
     TSCC_NOT_FOUND = "TSCC with tscc_id '{tscc_id}' does not exist in tscc_db."
-    NOT_TSCC_PROCESSED = "TSCC with tscc_id '{tscc_id}' does not exist in tscc_db."
+    NOT_TSCC_PROCESSED = "File '{file}' is not yet processed for TSCC."
     TSCC_ALREADY_PROCESSED = "File '{file}' has already been processed."
     TSCC_PROCESS_SUCCESS = "File '{file}' has been successfully processed for TSCC."
     TSCC_DB_DELETE_SUCCESS = "Sucessfully deleted {file}'s tscc from the database."

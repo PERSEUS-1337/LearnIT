@@ -4,7 +4,7 @@ import aiofiles
 from bson import ObjectId
 from dotenv import dotenv_values
 
-from fastapi import status, Request, UploadFile, status
+from fastapi import HTTPException, status, Request, UploadFile, status
 from fastapi.responses import JSONResponse
 
 from services.nlp_chain import (
@@ -137,17 +137,21 @@ async def delete_file(req: Request, user: UserBase, filename: str):
         # Retrieve the user's files from the database
         user_files = db.find_one({"username": user.username}, {"uploaded_files": 1})
         if not user_files:
-            raise ValueError(apiMsg.FILE_NOT_FOUND_DB.format(file=filename))
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=apiMsg.FILE_NOT_FOUND_DB.format(file=filename),
+            )
 
         # Get the list of all files
         uploaded_files = user_files.get("uploaded_files", [])
         # Check if the file is registered in the user_db
         file_registered = any(file["uid"] == uid for file in uploaded_files)
         if not file_registered:
-            raise ValueError(apiMsg.FILE_NOT_FOUND_DB.format(file=filename))
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=apiMsg.FILE_NOT_FOUND_DB.format(file=filename),
+            )
 
-        # Get the list of all files
-        uploaded_files = user_files.get("uploaded_files", [])
         # Remove the file to be deleted
         updated_files = [file for file in uploaded_files if file["uid"] != uid]
 
@@ -157,8 +161,11 @@ async def delete_file(req: Request, user: UserBase, filename: str):
             {"$set": {"uploaded_files": updated_files}},
         )
         if update_result.modified_count == 0:
-            raise ValueError(
-                apiMsg.USER_FILE_DELETE_FAIL.format(file=filename, user=user.username)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=apiMsg.USER_FILE_DELETE_FAIL.format(
+                    file=filename, user=user.username
+                ),
             )
 
         # Check if the file exists on the filesystem
@@ -170,31 +177,22 @@ async def delete_file(req: Request, user: UserBase, filename: str):
                     content={"message": apiMsg.FILE_DELETED.format(file=filename)},
                 )
             except OSError as e:
-                raise OSError(f"Error removing file '{file_path}': {e.strerror}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Error removing file '{file_path}': {e.strerror}",
+                )
         else:
             return JSONResponse(
                 status_code=status.HTTP_200_OK,
                 content={"message": apiMsg.FILE_DELETED_DB_ONLY.format(file=filename)},
             )
-    except FileNotFoundError as e:
-        return JSONResponse(
-            status_code=status.HTTP_404_NOT_FOUND, content={"message": str(e)}
-        )
-    except ValueError as e:
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST, content={"message": str(e)}
-        )
-    except OSError as e:
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"message": f"File system error: {str(e)}"},
-        )
+    except HTTPException as e:
+        raise e  # Re-raise the HTTP exceptions
     except Exception as e:
         # Log unexpected errors
         print(f"Unexpected error: {str(e)}")
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"message": str(e)},
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
 
@@ -205,20 +203,16 @@ async def get_tokens(req: Request, user: UserBase, filename: str):
         for doc in user.uploaded_files:
             if doc.name == filename:
                 if not doc.tokenized:
-                    return JSONResponse(
+                    raise HTTPException(
                         status_code=status.HTTP_409_CONFLICT,
-                        content={"message": apiMsg.NOT_TOKENIZED.format(file=filename)},
+                        detail=apiMsg.NOT_TOKENIZED.format(file=filename),
                     )
 
                 doc_tokens = docs_db.find_one({"_id": ObjectId(doc.tokens_id)})
                 if not doc_tokens:
-                    return JSONResponse(
+                    raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
-                        content={
-                            "message": apiMsg.TOKENS_NOT_FOUND.format(
-                                tokens_id=doc.tokens_id
-                            )
-                        },
+                        detail=apiMsg.TOKENS_NOT_FOUND.format(tokens_id=doc.tokens_id),
                     )
 
                 doc_tokens = DocTokens(**doc_tokens)
@@ -232,16 +226,18 @@ async def get_tokens(req: Request, user: UserBase, filename: str):
                     },
                 )
 
-            return JSONResponse(
-                status_code=status.HTTP_404_NOT_FOUND,
-                content={"message": apiMsg.USER_UPLOAD_NOT_FOUND.format(file=filename)},
-            )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=apiMsg.USER_UPLOAD_NOT_FOUND.format(file=filename),
+        )
+    except HTTPException as e:
+        raise e  # Re-raise the HTTP exceptions
     except Exception as e:
         # Log unexpected errors
         print(f"Unexpected error: {str(e)}")
-        return JSONResponse(
+        raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"message": str(e)},
+            detail=str(e),
         )
 
 
@@ -252,26 +248,22 @@ async def get_tscc(req: Request, user: UserBase, filename: str):
         for doc in user.uploaded_files:
             if doc.name == filename:
                 if not doc.tokenized:
-                    return JSONResponse(
+                    raise HTTPException(
                         status_code=status.HTTP_409_CONFLICT,
-                        content={"message": apiMsg.NOT_TOKENIZED.format(file=filename)},
+                        detail=apiMsg.NOT_TOKENIZED.format(file=filename),
                     )
 
                 if not doc.processed:
-                    return JSONResponse(
+                    raise HTTPException(
                         status_code=status.HTTP_409_CONFLICT,
-                        content={
-                            "message": apiMsg.NOT_TSCC_PROCESSED.format(file=filename)
-                        },
+                        detail=apiMsg.NOT_TSCC_PROCESSED.format(file=filename),
                     )
 
                 tscc_tokens = tscc_db.find_one({"_id": ObjectId(doc.tscc_id)})
                 if not tscc_tokens:
-                    return JSONResponse(
+                    raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
-                        content={
-                            "message": apiMsg.TSCC_NOT_FOUND.format(tscc_id=doc.tscc_id)
-                        },
+                        detail=apiMsg.TSCC_NOT_FOUND.format(tscc_id=doc.tscc_id),
                     )
 
                 tscc_tokens = TSCC(**tscc_tokens)
@@ -283,83 +275,109 @@ async def get_tscc(req: Request, user: UserBase, filename: str):
                     },
                 )
 
-            return JSONResponse(
-                status_code=status.HTTP_404_NOT_FOUND,
-                content={"message": apiMsg.USER_UPLOAD_NOT_FOUND.format(file=filename)},
-            )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=apiMsg.USER_UPLOAD_NOT_FOUND.format(file=filename),
+        )
+    except HTTPException as e:
+        raise e  # Re-raise the HTTP exceptions
     except Exception as e:
         # Log unexpected errors
         print(f"Unexpected error: {str(e)}")
-        return JSONResponse(
+        raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"message": str(e)},
+            detail=str(e),
         )
 
 
-async def generate_tokens(req: Request, user: UserBase, filename: str):
+async def generate_tokens(
+    req: Request, user: UserBase, filename: str, pdf_loader: str, overwrite: bool
+):
     db = req.app.database
     user_db = db[config["USER_DB"]]
     docs_db = db[config["DOCS_DB"]]
 
-    # Generate the unique identifier for the file using the user's username and filename
     uid = gen_uid(user.username, filename)
 
     try:
-        # Construct the file path
         file_path = find_file_by_uid(config["UPLOAD_PATH"], uid)
 
-        # Check if the file exists
         if not os.path.exists(file_path):
-            raise FileNotFoundError(apiMsg.FILE_NOT_FOUND_LOCAL.format(file=filename))
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=apiMsg.FILE_NOT_FOUND_LOCAL.format(file=filename),
+            )
 
         for doc in user.uploaded_files:
             if doc.name == filename:
 
-                if doc.tokenized:
-                    return JSONResponse(
+                if doc.tokenized and not overwrite:
+                    raise HTTPException(
                         status_code=status.HTTP_409_CONFLICT,
-                        content={"message": apiMsg.TOKENS_EXISTS.format(file=filename)},
+                        detail=apiMsg.TOKENS_EXISTS.format(file=filename),
                     )
 
-                # Extract tokens and create DocTokens object
                 try:
                     doc_tokens, pre_text_chunks = document_tokenizer(
-                        file_path, uid, "PyMuPDFLoader"
+                        file_path, uid, pdf_loader
                     )
                 except Exception as e:
-                    raise ValueError(
-                        apiMsg.TOKENIZATION_FAIL.format(file=filename, error=str(e))
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=apiMsg.TOKENIZATION_FAIL.format(
+                            file=filename, error=str(e)
+                        ),
                     )
 
-                # This is where we inject the function of prepping the ChromaDb to be retrieved later when we start doing the QnA
                 vec_db_path = setup_db(uid, pre_text_chunks)
                 doc.vec_db_path = str(vec_db_path)
                 doc.embedded = True
 
-                # Store the DocTokens document in the docs collection
-                try:
-                    doc_tokens_id = docs_db.insert_one(doc_tokens.dict()).inserted_id
-                except Exception as e:
-                    raise ValueError(
-                        apiMsg.TOKENS_INSERT_FAIL.format(file=filename, error=str(e))
-                    )
-
-                # Update the UploadDoc object with the tokens_id
-                doc.tokens_id = str(doc_tokens_id)
-                doc.tokenized = True
-
-                # Update the user document with the modified UploadDoc object
-                update_result = user_db.update_one(
-                    {"username": user.username, "uploaded_files.name": filename},
-                    {"$set": {"uploaded_files.$": doc.dict()}},
-                )
-
-                if update_result.modified_count == 0:
-                    raise ValueError(
-                        apiMsg.USER_TOKENS_INSERT_FAIL.format(
-                            tokens_id=doc.tokens_id, user=user.username
+                if overwrite and doc.tokenized:
+                    try:
+                        update_result = docs_db.update_one(
+                            {"_id": ObjectId(doc.tokens_id)},
+                            {"$set": doc_tokens.dict()},
                         )
+                        if update_result.modified_count == 0:
+                            raise HTTPException(
+                                status_code=status.HTTP_400_BAD_REQUEST,
+                                detail=apiMsg.TOKENS_UPDATE_FAIL.format(file=filename),
+                            )
+                    except Exception as e:
+                        raise HTTPException(
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=apiMsg.TOKENS_UPDATE_FAIL.format(
+                                file=filename, error=str(e)
+                            ),
+                        )
+                else:
+                    try:
+                        doc_tokens_id = docs_db.insert_one(doc_tokens.dict()).inserted_id
+                    except Exception as e:
+                        raise HTTPException(
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=apiMsg.TOKENS_INSERT_FAIL.format(
+                                file=filename, error=str(e)
+                            ),
+                        )
+
+                    doc.tokens_id = str(doc_tokens_id)
+                    doc.tokenized = True
+
+                    update_result = user_db.update_one(
+                        {"username": user.username, "uploaded_files.name": filename},
+                        {"$set": {"uploaded_files.$": doc.dict()}},
                     )
+                    print(update_result)
+
+                    if update_result.modified_count == 0:
+                        raise HTTPException(
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=apiMsg.USER_TOKENS_INSERT_FAIL.format(
+                                tokens_id=doc.tokens_id, user=user.username
+                            ),
+                        )
 
                 return JSONResponse(
                     status_code=status.HTTP_200_OK,
@@ -369,24 +387,18 @@ async def generate_tokens(req: Request, user: UserBase, filename: str):
                     },
                 )
 
-            return JSONResponse(
-                status_code=status.HTTP_404_NOT_FOUND,
-                content={"message": apiMsg.USER_UPLOAD_NOT_FOUND.format(file=filename)},
-            )
-    except FileNotFoundError as e:
-        return JSONResponse(
-            status_code=status.HTTP_404_NOT_FOUND, content={"message": str(e)}
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=apiMsg.USER_UPLOAD_NOT_FOUND.format(file=filename),
         )
-    except ValueError as e:
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST, content={"message": str(e)}
-        )
+    except HTTPException as e:
+        raise e  # Re-raise the HTTP exceptions
     except Exception as e:
         # Log unexpected errors
         print(f"Unexpected error: {str(e)}")
-        return JSONResponse(
+        raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"message": str(e)},
+            detail=str(e),
         )
 
 
@@ -395,28 +407,21 @@ async def query_rag(req: Request, user: UserBase, filename: str, query: str):
         for doc in user.uploaded_files:
             if doc.name == filename:
                 if not doc.tokenized:
-                    return JSONResponse(
+                    raise HTTPException(
                         status_code=status.HTTP_409_CONFLICT,
-                        content={
-                            "message": apiMsg.FILE_NOT_YET_TOKENIZED.format(
-                                file=filename
-                            )
-                        },
+                        detail=apiMsg.FILE_NOT_YET_TOKENIZED.format(file=filename),
                     )
 
                 if not doc.embedded:
-                    return JSONResponse(
+                    raise HTTPException(
                         status_code=status.HTTP_409_CONFLICT,
-                        content={
-                            "message": apiMsg.FILE_NOT_YET_EMBEDDED.format(
-                                file=filename
-                            )
-                        },
+                        detail=apiMsg.FILE_NOT_YET_EMBEDDED.format(file=filename),
                     )
 
                 if not os.path.exists(doc.vec_db_path):
-                    raise OSError(
-                        apiMsg.FILE_NOT_FOUND_LOCAL.format(file=doc.vec_db_path)
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail=apiMsg.FILE_NOT_FOUND_LOCAL.format(file=doc.vec_db_path),
                     )
 
                 qa_chain = setup_chain(doc.vec_db_path)
@@ -430,26 +435,18 @@ async def query_rag(req: Request, user: UserBase, filename: str, query: str):
                     },
                 )
 
-        raise FileNotFoundError(apiMsg.USER_UPLOAD_NOT_FOUND.format(file=filename))
-    except FileNotFoundError as e:
-        return JSONResponse(
-            status_code=status.HTTP_404_NOT_FOUND, content={"message": str(e)}
-        )
-    except ValueError as e:
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST, content={"message": str(e)}
-        )
-    except OSError as e:
-        return JSONResponse(
+        raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            content={"message": f"File system error: {str(e)}"},
+            detail=apiMsg.USER_UPLOAD_NOT_FOUND.format(file=filename),
         )
+    except HTTPException as e:
+        raise e  # Re-raise the HTTP exceptions
     except Exception as e:
         # Log unexpected errors
         print(f"Unexpected error: {str(e)}")
-        return JSONResponse(
+        raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"message": str(e)},
+            detail=str(e),
         )
 
 
@@ -463,37 +460,32 @@ async def process_tscc(req: Request, user: UserBase, filename: str):
         for doc in user.uploaded_files:
             if doc.name == filename:
                 if not doc.tokenized:
-                    return JSONResponse(
+                    raise HTTPException(
                         status_code=status.HTTP_409_CONFLICT,
-                        content={"message": apiMsg.NOT_TOKENIZED.format(file=filename)},
+                        detail=apiMsg.NOT_TOKENIZED.format(file=filename),
                     )
 
                 if doc.processed:
-                    return JSONResponse(
+                    raise HTTPException(
                         status_code=status.HTTP_409_CONFLICT,
-                        content={
-                            "message": apiMsg.TSCC_ALREADY_PROCESSED.format(
-                                file=filename
-                            )
-                        },
+                        detail=apiMsg.TSCC_ALREADY_PROCESSED.format(file=filename),
                     )
 
                 document = docs_db.find_one({"_id": ObjectId(doc.tokens_id)})
                 if not document:
-                    return JSONResponse(
+                    raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
-                        content={
-                            "message": apiMsg.TOKENS_NOT_FOUND.format(
-                                tokens_id=doc.tokens_id
-                            )
-                        },
+                        detail=apiMsg.TOKENS_NOT_FOUND.format(tokens_id=doc.tokens_id),
                     )
 
                 tscc = generate_tscc(document)
 
                 tscc_insert_result = tscc_db.insert_one(tscc.dict())
                 if not tscc_insert_result.inserted_id:
-                    raise ValueError(apiMsg.TSCC_DB_INSERT_FAIL.format(file=filename))
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=apiMsg.TSCC_DB_INSERT_FAIL.format(file=filename),
+                    )
 
                 doc.tscc_id = str(tscc_insert_result.inserted_id)
                 doc.processed = True
@@ -504,10 +496,11 @@ async def process_tscc(req: Request, user: UserBase, filename: str):
                 )
 
                 if update_result.modified_count == 0:
-                    raise ValueError(
-                        apiMsg.USER_TSCC_INSERT_FAIL.format(
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=apiMsg.USER_TSCC_INSERT_FAIL.format(
                             user=user.username, file=filename
-                        )
+                        ),
                     )
 
                 return JSONResponse(
@@ -517,24 +510,19 @@ async def process_tscc(req: Request, user: UserBase, filename: str):
                         "tscc_id": doc.tscc_id,
                     },
                 )
-        return JSONResponse(
+
+        raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            content={"message": apiMsg.USER_UPLOAD_NOT_FOUND},
+            detail=apiMsg.USER_UPLOAD_NOT_FOUND.format(file=filename),
         )
-    except FileNotFoundError as e:
-        return JSONResponse(
-            status_code=status.HTTP_404_NOT_FOUND, content={"message": str(e)}
-        )
-    except ValueError as e:
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST, content={"message": str(e)}
-        )
+    except HTTPException as e:
+        raise e  # Re-raise the HTTP exceptions
     except Exception as e:
         # Log unexpected errors
         print(f"Unexpected error: {str(e)}")
-        return JSONResponse(
+        raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"message": str(e)},
+            detail=str(e),
         )
 
 

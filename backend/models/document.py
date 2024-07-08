@@ -56,6 +56,17 @@ class DocTokens(BaseModel):
             "chunks": self.chunks,
         }
 
+    def details(self):
+        return {
+            "doc_uid": self.doc_uid,
+            "processed": self.processed.isoformat(),
+            "doc_loader_used": self.doc_loader_used,
+            "chunk_size": self.chunk_size,
+            "chunk_overlap": self.chunk_overlap,
+            "token_count": self.token_count,
+            "chunk_count": self.chunk_count,
+        }
+
 
 class TSCC(BaseModel):
     doc_uid: str
@@ -82,4 +93,16 @@ class TSCC(BaseModel):
             "token_count": self.token_count,
             "chunk_count": self.chunk_count,
             "chunks": self.chunks,
+        }
+
+    def details(self):
+        return {
+            "doc_uid": self.doc_uid,
+            "processed": self.processed.isoformat(),
+            "model_used": self.model_used,
+            "doc_loader_used": self.doc_loader_used,
+            "chunk_size": self.chunk_size,
+            "chunk_overlap": self.chunk_overlap,
+            "token_count": self.token_count,
+            "chunk_count": self.chunk_count,
         }

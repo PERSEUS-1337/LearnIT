@@ -78,9 +78,13 @@ async def get_tscc_route(
 
 @router.post("/gen-tokens")
 async def generate_tokens_route(
-    req: Request, filename: str, user: UserBase = Depends(auth_curr_user)
+    req: Request,
+    filename: str,
+    pdf_loader: str,
+    overwrite: bool,
+    user: UserBase = Depends(auth_curr_user),
 ):
-    return await generate_tokens(req, user, filename)
+    return await generate_tokens(req, user, filename, pdf_loader, overwrite)
 
 
 @router.post("/process-tscc")

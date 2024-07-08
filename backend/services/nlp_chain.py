@@ -25,6 +25,7 @@ from utils.config import (
     LLM_TEMP,
     LLMS,
     PROMPT_MAIN,
+    LOADERS
 )
 
 
@@ -42,17 +43,15 @@ def extract_page_content(chunk: str) -> str:
     return ""
 
 
-def document_tokenizer(
-    file_path, doc_uid, loader_choice="PyPDFium2Loader"
-) -> Tuple[DocTokens, List]:
+def document_tokenizer(file_path, doc_uid, loader_choice="default") -> Tuple[DocTokens, List]:
     # Initialize PyPDFLoader with the file path
-    if loader_choice == "PyPDFLoader":
+    if LOADERS[loader_choice] == "PyPDFLoader":
         loader = PyPDFLoader(file_path)
-    elif loader_choice == "PyPDFium2Loader":
+    elif LOADERS[loader_choice] == "PyPDFium2Loader":
         loader = PyPDFium2Loader(file_path)
-    elif loader_choice == "PyMuPDFLoader":
+    elif LOADERS[loader_choice] == "PyMuPDFLoader":
         loader = PyMuPDFLoader(file_path)
-    elif loader_choice == "TextLoader":
+    elif LOADERS[loader_choice] == "TextLoader":
         loader = TextLoader(file_path)
 
     document = loader.load()
@@ -80,7 +79,7 @@ def document_tokenizer(
     doc_tokens = DocTokens(
         doc_uid=doc_uid,
         processed=datetime.now(),
-        doc_loader_used=loader_choice,
+        doc_loader_used=LOADERS[loader_choice],
         chunk_size=DEFAULT_CHUNK_SIZE,
         chunk_overlap=DEFAULT_CHUNK_OVERLAP,
         token_count=token_count,
