@@ -2,14 +2,14 @@ DEFAULT_CHUNK_SIZE = 1000
 CHUNK_SIZE_LIST = [750, 1000, 1250, 1500]
 DEFAULT_CHUNK_OVERLAP = 100
 CHUNK_OVERLAP_LIST = [100, 200, 300]
-LLM_TEMP = 0
+LLM_TEMP = 0.5
 LLMS = {"dev": "gpt-3.5-turbo", "prod": "gpt-4o"}
 LOADERS = {
     "default": "PyMuPDFLoader",
     "0": "TextLoader",
     "1": "PyPDFLoader",
     "2": "PyPDFium2Loader",
-    "3": "PyMuPDFLoader"
+    "3": "PyMuPDFLoader",
 }
 PROMPT_MAIN = """
     Follow the steps to provide a condensed text chunk:

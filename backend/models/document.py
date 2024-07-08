@@ -35,8 +35,6 @@ class DocTokens(BaseModel):
     doc_uid: str
     processed: datetime
     doc_loader_used: str
-    chunk_size: int
-    chunk_overlap: int
     token_count: int
     chunk_count: int
     chunks: List[Dict[str, str]]
@@ -49,8 +47,6 @@ class DocTokens(BaseModel):
             "doc_uid": self.doc_uid,
             "processed": self.processed.isoformat(),
             "doc_loader_used": self.doc_loader_used,
-            "chunk_size": self.chunk_size,
-            "chunk_overlap": self.chunk_overlap,
             "token_count": self.token_count,
             "chunk_count": self.chunk_count,
             "chunks": self.chunks,
@@ -61,8 +57,6 @@ class DocTokens(BaseModel):
             "doc_uid": self.doc_uid,
             "processed": self.processed.isoformat(),
             "doc_loader_used": self.doc_loader_used,
-            "chunk_size": self.chunk_size,
-            "chunk_overlap": self.chunk_overlap,
             "token_count": self.token_count,
             "chunk_count": self.chunk_count,
         }
@@ -71,10 +65,8 @@ class DocTokens(BaseModel):
 class TSCC(BaseModel):
     doc_uid: str
     processed: datetime
+    process_time: float
     model_used: str
-    doc_loader_used: str
-    chunk_size: int
-    chunk_overlap: int
     token_count: int
     chunk_count: int
     chunks: List[str]
@@ -86,10 +78,8 @@ class TSCC(BaseModel):
         return {
             "doc_uid": self.doc_uid,
             "processed": self.processed.isoformat(),
+            "process_time": self.process_time,
             "model_used": self.model_used,
-            "doc_loader_used": self.doc_loader_used,
-            "chunk_size": self.chunk_size,
-            "chunk_overlap": self.chunk_overlap,
             "token_count": self.token_count,
             "chunk_count": self.chunk_count,
             "chunks": self.chunks,
@@ -99,10 +89,8 @@ class TSCC(BaseModel):
         return {
             "doc_uid": self.doc_uid,
             "processed": self.processed.isoformat(),
+            "process_time": self.process_time,
             "model_used": self.model_used,
-            "doc_loader_used": self.doc_loader_used,
-            "chunk_size": self.chunk_size,
-            "chunk_overlap": self.chunk_overlap,
             "token_count": self.token_count,
             "chunk_count": self.chunk_count,
         }

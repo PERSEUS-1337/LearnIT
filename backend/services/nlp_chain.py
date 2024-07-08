@@ -25,7 +25,7 @@ from utils.config import (
     LLM_TEMP,
     LLMS,
     PROMPT_MAIN,
-    LOADERS
+    LOADERS,
 )
 
 
@@ -43,8 +43,9 @@ def extract_page_content(chunk: str) -> str:
     return ""
 
 
-def document_tokenizer(file_path, doc_uid, loader_choice="default") -> Tuple[DocTokens, List]:
-    # Initialize PyPDFLoader with the file path
+def document_tokenizer(
+    file_path, doc_uid, loader_choice="default"
+) -> Tuple[DocTokens, List]:
     if LOADERS[loader_choice] == "PyPDFLoader":
         loader = PyPDFLoader(file_path)
     elif LOADERS[loader_choice] == "PyPDFium2Loader":
@@ -56,6 +57,9 @@ def document_tokenizer(file_path, doc_uid, loader_choice="default") -> Tuple[Doc
 
     document = loader.load()
 
+    start_time = time.time()
+    print(f"> [TKZR]\t{doc_uid} - document_tokenizer()\n", end="", flush=True)
+
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=DEFAULT_CHUNK_SIZE,
         chunk_overlap=DEFAULT_CHUNK_OVERLAP,
@@ -63,10 +67,8 @@ def document_tokenizer(file_path, doc_uid, loader_choice="default") -> Tuple[Doc
 
     pre_text_chunks = text_splitter.split_documents(document)
 
-    # Extract page_content from each chunk
     text_chunks = [extract_page_content(str(chunk)) for chunk in pre_text_chunks]
 
-    # Create a list of dicts with 'prev' and 'curr'
     chunk_dicts = []
     for i in range(len(text_chunks)):
         chunk_dicts.append(
@@ -80,11 +82,17 @@ def document_tokenizer(file_path, doc_uid, loader_choice="default") -> Tuple[Doc
         doc_uid=doc_uid,
         processed=datetime.now(),
         doc_loader_used=LOADERS[loader_choice],
-        chunk_size=DEFAULT_CHUNK_SIZE,
-        chunk_overlap=DEFAULT_CHUNK_OVERLAP,
         token_count=token_count,
         chunk_count=chunk_count,
         chunks=chunk_dicts,
+    )
+
+    print("> [TKZR]\tDONE!")
+
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(
+        f"> [TKZR]\tTime completed: {elapsed_time}s |  {time.strftime('%m-%d %H:%M:%S', time.localtime())}"
     )
 
     return doc_tokens, pre_text_chunks
@@ -92,10 +100,8 @@ def document_tokenizer(file_path, doc_uid, loader_choice="default") -> Tuple[Doc
 
 ### RAG RELATED FUNCTIONS
 def setup_db(filename, chunks):
-    # Supply the directory, which is /db, where we will embed and store the texts
-    persist_directory = (
-        f"db/rag/{filename}"  # Use the document name as part of the db_directory
-    )
+
+    persist_directory = f"db/rag/{filename}"
 
     embedding = OpenAIEmbeddings()
 
@@ -116,7 +122,6 @@ def retrieve_db(db_dir):
 
 def setup_chain(db_dir, chosen_model=LLMS["dev"]):
     db = Chroma(persist_directory=db_dir, embedding_function=OpenAIEmbeddings())
-    # Set up the turbo LLM
     turbo_llm = ChatOpenAI(temperature=0, model_name=chosen_model)
     retriever = db.as_retriever(search_kwargs={"k": 1}, search_type="mmr")
     chain = RetrievalQA.from_chain_type(
@@ -150,42 +155,38 @@ def llm_process(curr_chunk, prev_chunk, chosen_model=LLMS["dev"]) -> str:
 
 
 def generate_tscc(document, chosen_model=LLMS["dev"]) -> TSCC:
-    # Save properties for later
     _id = str(document["_id"])
-    loader_choice = document["doc_loader_used"]
     chunk_dicts = document["chunks"]
+    total_chunk_dicts = document["chunk_count"]
 
     start_time = time.time()  # Record start time
-    print(f"> [PROCESS]\t{document['_id']} - TSCC():\n", end="", flush=True)
+    print(f"> [TSCC]\tDocument: {document['_id']}")
 
-    # Go through the whole chunk list and one by one pass to LLM
     processed_chunks = []
-    for chunk in chunk_dicts:
+    for i, chunk in enumerate(chunk_dicts, start=1):
+        print(f"> [TSCC]\t{i} / {total_chunk_dicts} processed")
         result = llm_process(chunk["curr"], chunk["prev"], chosen_model)
         processed_chunks.append(result)
 
     token_count = sum(len(chunk.split()) for chunk in processed_chunks)
     chunk_count = len(chunk_dicts)
 
-    # Construct the TSCC object
+    print("> [TSCC]\tDONE!")
+
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(
+        f"> [TSCC]\tTime completed: {elapsed_time}s |  {time.strftime('%m-%d %H:%M:%S', time.localtime())}"
+    )
+
     tscc = TSCC(
         doc_uid=_id,
         processed=datetime.now(),
-        model_used=chosen_model,  # Replace with actual model name if applicable
-        doc_loader_used=loader_choice,
-        chunk_size=DEFAULT_CHUNK_SIZE,
-        chunk_overlap=DEFAULT_CHUNK_OVERLAP,
+        process_time=elapsed_time,
+        model_used=chosen_model,
         token_count=token_count,
         chunk_count=chunk_count,
         chunks=processed_chunks,
-    )
-
-    print("> DONE!\t")
-
-    end_time = time.time()  # Record end time
-    elapsed_time = end_time - start_time
-    print(
-        f"> [INFO]\tTime completed: {elapsed_time}s |  {time.strftime('%m-%d %H:%M:%S', time.localtime())}"
     )
 
     return tscc
