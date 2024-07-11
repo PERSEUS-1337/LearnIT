@@ -129,7 +129,7 @@ def retrieve_db(db_dir):
 def setup_chain(db_dir, chosen_model=LLMS["default"]):
     db = Chroma(persist_directory=db_dir, embedding_function=OpenAIEmbeddings())
     turbo_llm = ChatOpenAI(temperature=0, model_name=chosen_model)
-    retriever = db.as_retriever(search_kwargs={"k": 1}, search_type="mmr")
+    retriever = db.as_retriever(search_kwargs={"k": 6}, search_type="mmr")
     chain = RetrievalQA.from_chain_type(
         llm=turbo_llm,
         chain_type="stuff",
