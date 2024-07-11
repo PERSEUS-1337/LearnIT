@@ -135,7 +135,7 @@ def retrieve_db(db_dir):
     return vectordb
 
 
-def setup_chain(db_dir, chosen_model=LLMS["default"]):
+def qa_chain_sync(query: str, db_dir: str, chosen_model=LLMS["default"]):
     db = Chroma(persist_directory=db_dir, embedding_function=OpenAIEmbeddings())
     turbo_llm = ChatOpenAI(temperature=0, model_name=chosen_model)
     retriever = db.as_retriever(search_kwargs={"k": 6}, search_type="mmr")
@@ -145,21 +145,19 @@ def setup_chain(db_dir, chosen_model=LLMS["default"]):
         retriever=retriever,
         return_source_documents=True,
     )
-    return chain
+    
+    response = chain(query)
+    return response
 
+async def qa_chain_async(query: str, db_dir: str, chosen_model=LLMS["default"]) -> str:
+    """Asynchronous wrapper around qa_chain_sync"""
+    loop = asyncio.get_event_loop()
+    with ThreadPoolExecutor(max_workers=10) as pool:
+        future = loop.run_in_executor(pool, qa_chain_sync, query, db_dir, chosen_model)
+        return await future
 
 ### TSCC RELATED FUNCTIONS
-def llm_process_sync(curr_chunk, prev_chunk, chosen_model=LLMS["default"]) -> str:
-    """_summary_
-
-    Args:
-        curr_chunk (str): The text that is to be condensed by TSCC
-        prev_chunk (str): The text that provides context to aid the TSCC
-        chosen_model (str, optional): Can choose between 3.5-turbo or 4-turbo-preview
-
-    Returns:
-        str: The chunk of text that has been condensed by the TSCC
-    """ 
+def llm_process_sync(curr_chunk: str , prev_chunk, chosen_model=LLMS["default"]) -> str:
 
     turbo_llm = ChatOpenAI(temperature=LLM_TEMP, model_name=chosen_model)
 

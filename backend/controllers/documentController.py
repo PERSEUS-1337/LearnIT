@@ -9,9 +9,8 @@ from fastapi.responses import JSONResponse
 
 from services.nlp_chain import (
     document_tokenizer_async,
-    document_tokenizer_sync,
     generate_tscc,
-    setup_chain,
+    qa_chain_async,
     setup_db,
 )
 from utils.fileUtils import find_file_by_uid, gen_uid
@@ -500,8 +499,8 @@ async def query_rag(req: Request, user: UserBase, filename: str, query: str):
                     )
 
                 # Set up the QA chain using the vector database path
-                qa_chain = setup_chain(doc.vec_db_path)
-                response = await qa_chain(str(query))
+                # qa_chain = setup_chain(doc.vec_db_path)
+                response = await qa_chain_async(str(query), doc.vec_db_path)
 
                 # Return the query response
                 print(f"{log_prefix} - INFO - QUERY_SUCCESS")

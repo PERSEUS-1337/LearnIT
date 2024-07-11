@@ -78,14 +78,6 @@ async def generate_tokens_route(
     overwrite: bool,
     user: UserBase = Depends(auth_curr_user),
 ):
-    # background_tasks = req.app.state.background_tasks
-    # background_tasks.add_task(
-    #     generate_tokens, req, user, filename, pdf_loader, overwrite
-    # )
-    # return JSONResponse(
-    #     status_code=202,
-    #     content={"message": "Processing started in the background."},
-    # )
     return await generate_tokens(req, user, filename, pdf_loader, overwrite)
 
 
@@ -95,12 +87,6 @@ async def process_tscc_route(
     filename: str,
     user: UserBase = Depends(auth_curr_user),
 ):
-    # Now you can use background_tasks to add tasks
-    # background_tasks.add_task(process_tscc, req, user, filename)
-    # return JSONResponse(
-    #     status_code=202,
-    #     content={"message": "Processing started in the background."},
-    # )
     return await process_tscc(req, user, filename)
 
 
