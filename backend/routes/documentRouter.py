@@ -2,13 +2,9 @@ from typing import Annotated
 
 from fastapi import (
     APIRouter,
-    Body,
-    Form,
     Request,
     Depends,
-    FastAPI,
     UploadFile,
-    File,
     status,
 )
 from fastapi.responses import JSONResponse
@@ -44,8 +40,8 @@ def hello():
 
 
 @router.get("/list", response_description="Get a list of uploaded files")
-async def get_uploaded_files_route(req: Request):
-    return await get_uploaded_files()
+def get_uploaded_files_route(req: Request):
+    return get_uploaded_files()
 
 
 @router.post("/upload")
@@ -84,13 +80,29 @@ async def generate_tokens_route(
     overwrite: bool,
     user: UserBase = Depends(auth_curr_user),
 ):
+    # background_tasks = req.app.state.background_tasks
+    # background_tasks.add_task(
+    #     generate_tokens, req, user, filename, pdf_loader, overwrite
+    # )
+    # return JSONResponse(
+    #     status_code=202,
+    #     content={"message": "Processing started in the background."},
+    # )
     return await generate_tokens(req, user, filename, pdf_loader, overwrite)
 
 
 @router.post("/process-tscc")
 async def process_tscc_route(
-    req: Request, filename: str, user: UserBase = Depends(auth_curr_user)
+    req: Request,
+    filename: str,
+    user: UserBase = Depends(auth_curr_user),
 ):
+    # Now you can use background_tasks to add tasks
+    # background_tasks.add_task(process_tscc, req, user, filename)
+    # return JSONResponse(
+    #     status_code=202,
+    #     content={"message": "Processing started in the background."},
+    # )
     return await process_tscc(req, user, filename)
 
 

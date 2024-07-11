@@ -1,5 +1,3 @@
-from typing import Annotated
-
 from fastapi import APIRouter, Body, Request, Depends
 
 from controllers.userController import (

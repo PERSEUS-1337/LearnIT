@@ -1,9 +1,3 @@
-# import time
-# from dotenv import dotenv_values
-# from fastapi import FastAPI, Request
-# from fastapi.middleware.cors import CORSMiddleware
-# from pymongo import MongoClient
-
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -58,9 +52,11 @@ async def startup_db_client():
     except Exception as e:
         print(f"Failed to connect to the database: {e}")
 
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
-    await app.mongodb_client.close()
+    app.mongodb_client.close()
+    print("Connection to MongoDB closed.")
 
 
 app.include_router(auth_router, tags=["auth"], prefix="/auth")

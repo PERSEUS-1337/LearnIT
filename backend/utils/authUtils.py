@@ -28,12 +28,13 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, config["SECRET_KEY"], algorithm=config["ALGO"])
+    encoded_jwt = jwt.encode(
+        to_encode, config["SECRET_KEY"], algorithm=config["ALGO"]
+    )
     return encoded_jwt
 
 
 async def get_user_creds(db: AsyncIOMotorClient, username: str) -> Optional[UserCreds]:
-    # user_collection = db[config["USER_DB"]]
     user_doc = await db.find_one({"username": username})
     if user_doc:
         return UserCreds(**user_doc)

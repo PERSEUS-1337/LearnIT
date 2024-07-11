@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 import os
 import re
@@ -5,7 +6,8 @@ import time
 import cleantext
 from typing import Tuple, List
 
-from chromadb import PersistentClient
+import asyncio
+
 from dotenv import dotenv_values, load_dotenv
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.prompts import PromptTemplate
@@ -140,7 +142,7 @@ def setup_chain(db_dir, chosen_model=LLMS["default"]):
 
 
 ### TSCC RELATED FUNCTIONS
-def llm_process(curr_chunk, prev_chunk, chosen_model=LLMS["default"]) -> str:
+def llm_process_sync(curr_chunk, prev_chunk, chosen_model=LLMS["default"]) -> str:
     """_summary_
 
     Args:
@@ -150,7 +152,7 @@ def llm_process(curr_chunk, prev_chunk, chosen_model=LLMS["default"]) -> str:
 
     Returns:
         str: The chunk of text that has been condensed by the TSCC
-    """
+    """ 
 
     turbo_llm = ChatOpenAI(temperature=LLM_TEMP, model_name=chosen_model)
 
@@ -159,8 +161,15 @@ def llm_process(curr_chunk, prev_chunk, chosen_model=LLMS["default"]) -> str:
     response = llm_chain.invoke({"curr_chunk": curr_chunk, "prev_chunk": prev_chunk})
     return response["text"]
 
+async def llm_process_async(curr_chunk, prev_chunk, chosen_model=LLMS["default"]) -> str:
+    """Asynchronous wrapper around llm_process_sync"""
+    loop = asyncio.get_event_loop()
+    with ThreadPoolExecutor(max_workers=10) as pool:
+        future = loop.run_in_executor(pool, llm_process_sync, curr_chunk, prev_chunk, chosen_model)
+        return await future
 
-def generate_tscc(document, chosen_model=LLMS["default"]) -> TSCC:
+
+async def generate_tscc(document, chosen_model=LLMS["default"]) -> TSCC:
     _id = str(document["_id"])
     chunk_dicts = document["chunks"]
     total_chunk_dicts = document["chunk_count"]
@@ -169,10 +178,17 @@ def generate_tscc(document, chosen_model=LLMS["default"]) -> TSCC:
     print(f"> [TSCC]\tDocument: {document['_id']}")
 
     processed_chunks = []
+    
     for i, chunk in enumerate(chunk_dicts, start=1):
         print(f"> [TSCC]\t{i} / {total_chunk_dicts} processed")
-        result = llm_process(chunk["curr"], chunk["prev"], chosen_model)
+        result = await llm_process_async(chunk["curr"], chunk["prev"], chosen_model)
         processed_chunks.append(result)
+    
+    # Replace the for loop with asyncio.gather
+    # results = await asyncio.gather(*(llm_process(i, total_chunk_dicts, chunk['curr'], chunk['prev'], chosen_model) for i, chunk in enumerate(chunk_dicts)))
+
+    # Filter out None values (in case of errors) and append to processed_chunks
+    # processed_chunks.extend(filter(None, results))
 
     token_count = sum(len(chunk.split()) for chunk in processed_chunks)
     chunk_count = len(chunk_dicts)

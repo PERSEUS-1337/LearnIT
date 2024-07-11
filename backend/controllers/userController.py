@@ -66,7 +66,7 @@ async def login_user(
 async def register_user(req: Request, user: UserReg = Body(...)):
     try:
         db = req.app.database[config["USER_DB"]]
-        user_exists = get_user_creds(db, user.username)
+        user_exists = await get_user_creds(db, user.username)
         if user_exists:
             return JSONResponse(
                 status_code=status.HTTP_409_CONFLICT,
@@ -83,9 +83,9 @@ async def register_user(req: Request, user: UserReg = Body(...)):
             hashed_password=hashed_pass,
         )
 
-        insert_result = db.insert_one(new_user_data.dict())
+        insert_result = await db.insert_one(new_user_data.dict())
 
-        if not insert_result.acknowledged:
+        if not insert_result.inserted_id:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to insert user into the database.",

@@ -10,7 +10,6 @@ from fastapi.responses import JSONResponse
 from services.nlp_chain import (
     document_tokenizer,
     generate_tscc,
-    retrieve_db,
     setup_chain,
     setup_db,
 )
@@ -23,7 +22,7 @@ from models.document import TSCC, DocTokens, UploadDoc
 config = dotenv_values(".env")
 
 
-async def get_uploaded_files():
+def get_uploaded_files():
     # Define the directory where uploaded files are stored
     directory = config["UPLOAD_PATH"]
     log_prefix = (
@@ -100,7 +99,7 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
         )
 
         # Update the user in MongoDB with the new uploaded file information
-        update_result = db.update_one(
+        update_result = await db.update_one(
             {"username": user.username},
             {"$push": {"uploaded_files": uploaded_file_info.dict()}},
         )
@@ -150,7 +149,9 @@ async def delete_file(req: Request, user: UserBase, filename: str):
         file_path = find_file_by_uid(config["UPLOAD_PATH"], uid)
 
         # Retrieve the user's files from the database
-        user_files = db.find_one({"username": user.username}, {"uploaded_files": 1})
+        user_files = await db.find_one(
+            {"username": user.username}, {"uploaded_files": 1}
+        )
         if not user_files:
             print(f"{log_prefix} - ERROR - FILE_NOT_FOUND_DB - {filename}")
             raise HTTPException(
@@ -173,7 +174,7 @@ async def delete_file(req: Request, user: UserBase, filename: str):
         updated_files = [file for file in uploaded_files if file["uid"] != uid]
 
         # Update the database with the updated list without the deleted file
-        update_result = db.update_one(
+        update_result = await db.update_one(
             {"username": user.username},
             {"$set": {"uploaded_files": updated_files}},
         )
@@ -237,7 +238,7 @@ async def get_tokens(req: Request, user: UserBase, filename: str):
                     )
 
                 # Retrieve tokenized document from the database
-                doc_tokens = docs_db.find_one({"_id": ObjectId(doc.tokens_id)})
+                doc_tokens = await docs_db.find_one({"_id": ObjectId(doc.tokens_id)})
                 if not doc_tokens:
                     print(f"{log_prefix} - ERROR - TOKENS_NOT_FOUND - {doc.tokens_id}")
                     raise HTTPException(
@@ -302,7 +303,7 @@ async def get_tscc(req: Request, user: UserBase, filename: str):
                     )
 
                 # Retrieve TSCC data from the database
-                tscc_tokens = tscc_db.find_one({"_id": ObjectId(doc.tscc_id)})
+                tscc_tokens = await tscc_db.find_one({"_id": ObjectId(doc.tscc_id)})
                 if not tscc_tokens:
                     print(f"{log_prefix} - ERROR - TSCC_NOT_FOUND - {doc.tscc_id}")
                     raise HTTPException(
@@ -391,9 +392,9 @@ async def generate_tokens(
                 doc.embedded = True
 
                 # If overwrite is enabled and document is already tokenized, update the tokens
-                if overwrite and doc.tokenized:
+                if doc.tokenized and overwrite:
                     try:
-                        update_result = docs_db.update_one(
+                        update_result = await docs_db.update_one(
                             {"_id": ObjectId(doc.tokens_id)},
                             {"$set": doc_tokens.dict()},
                         )
@@ -412,12 +413,9 @@ async def generate_tokens(
                             ),
                         )
                 else:
-                    try:
-                        # Insert new token data into the database
-                        doc_tokens_id = docs_db.insert_one(
-                            doc_tokens.dict()
-                        ).inserted_id
-                    except Exception as e:
+                    # Insert new token data into the database
+                    doc_insert_result = await docs_db.insert_one(doc_tokens.dict())
+                    if not doc_insert_result.inserted_id:
                         print(f"{log_prefix} - ERROR - TOKENS_INSERT_FAIL - {str(e)}")
                         raise HTTPException(
                             status_code=status.HTTP_400_BAD_REQUEST,
@@ -425,12 +423,13 @@ async def generate_tokens(
                                 file=filename, error=str(e)
                             ),
                         )
+                
 
                     # Update document with new token ID
-                    doc.tokens_id = str(doc_tokens_id)
+                    doc.tokens_id = str(doc_insert_result.inserted_id)
                     doc.tokenized = True
 
-                    update_result = user_db.update_one(
+                    update_result = await user_db.update_one(
                         {"username": user.username, "uploaded_files.name": filename},
                         {"$set": {"uploaded_files.$": doc.dict()}},
                     )
@@ -501,7 +500,7 @@ async def query_rag(req: Request, user: UserBase, filename: str, query: str):
 
                 # Set up the QA chain using the vector database path
                 qa_chain = setup_chain(doc.vec_db_path)
-                response = qa_chain(str(query))
+                response = await qa_chain(str(query))
 
                 # Return the query response
                 print(f"{log_prefix} - INFO - QUERY_SUCCESS")
@@ -559,7 +558,7 @@ async def process_tscc(req: Request, user: UserBase, filename: str):
                     )
 
                 # Retrieve the document tokens from the database
-                document = docs_db.find_one({"_id": ObjectId(doc.tokens_id)})
+                document = await docs_db.find_one({"_id": ObjectId(doc.tokens_id)})
                 if not document:
                     print(f"{log_prefix} - ERROR - TOKENS_NOT_FOUND")
                     raise HTTPException(
@@ -568,10 +567,10 @@ async def process_tscc(req: Request, user: UserBase, filename: str):
                     )
 
                 # Generate TSCC for the document
-                tscc = generate_tscc(document)
+                tscc = await generate_tscc(document)
 
                 # Insert TSCC into the database
-                tscc_insert_result = tscc_db.insert_one(tscc.dict())
+                tscc_insert_result = await tscc_db.insert_one(tscc.dict())
                 if not tscc_insert_result.inserted_id:
                     print(f"{log_prefix} - ERROR - TSCC_DB_INSERT_FAIL")
                     raise HTTPException(
@@ -584,7 +583,7 @@ async def process_tscc(req: Request, user: UserBase, filename: str):
                 doc.processed = True
 
                 # Update user's uploaded files with the new document information
-                update_result = user_db.update_one(
+                update_result = await user_db.update_one(
                     {"username": user.username, "uploaded_files.name": filename},
                     {"$set": {"uploaded_files.$": doc.dict()}},
                 )
@@ -646,14 +645,16 @@ async def delete_tokens(req: Request, user: UserBase, filename: str):
                     )
 
                 # Retrieve the document from the database
-                doc_in_db = docs_db.find_one({"_id": ObjectId(doc.tokens_id)})
+                doc_in_db = await docs_db.find_one({"_id": ObjectId(doc.tokens_id)})
                 if not doc_in_db:
                     raise ValueError(
                         apiMsg.TOKENS_NOT_FOUND.format(tokens_id=doc.tokens_id)
                     )
 
                 # Delete the document from the database
-                delete_result = docs_db.delete_one({"_id": ObjectId(doc.tokens_id)})
+                delete_result = await docs_db.delete_one(
+                    {"_id": ObjectId(doc.tokens_id)}
+                )
                 if delete_result.deleted_count == 0:
                     raise ValueError(
                         apiMsg.TOKENS_DELETE_FAIL.format(tokens_id=doc.tokens_id)
@@ -666,7 +667,7 @@ async def delete_tokens(req: Request, user: UserBase, filename: str):
                 doc.vec_db_path = None
 
                 # Update the user's uploaded_files with the modified UploadedDoc object
-                update_result = user_db.update_one(
+                update_result = await user_db.update_one(
                     {"username": user.username, "uploaded_files.name": filename},
                     {"$set": {"uploaded_files.$": doc.dict()}},
                 )
@@ -723,12 +724,12 @@ async def delete_tscc(req: Request, user: UserBase, filename: str):
         for doc in user.uploaded_files:
             if doc.name == filename:
                 # Check if the document exists in the TSCC collection
-                tscc_in_db = tscc_db.find_one({"_id": ObjectId(doc.tscc_id)})
+                tscc_in_db = await tscc_db.find_one({"_id": ObjectId(doc.tscc_id)})
                 if not tscc_in_db:
                     raise ValueError(apiMsg.TSCC_NOT_FOUND.format(tscc_id=doc.tscc_id))
 
                 # Delete the document from the TSCC collection
-                delete_result = tscc_db.delete_one({"_id": ObjectId(doc.tscc_id)})
+                delete_result = await tscc_db.delete_one({"_id": ObjectId(doc.tscc_id)})
                 if delete_result.deleted_count == 0:
                     raise ValueError(apiMsg.TSCC_DB_DELETE_FAIL.format(file=filename))
 
@@ -737,7 +738,7 @@ async def delete_tscc(req: Request, user: UserBase, filename: str):
                 doc.processed = False
 
                 # Update the user's uploaded_files with the modified UploadedDoc object
-                update_result = user_db.update_one(
+                update_result = await user_db.update_one(
                     {"username": user.username, "uploaded_files.name": filename},
                     {"$set": {"uploaded_files.$": doc.dict()}},
                 )
