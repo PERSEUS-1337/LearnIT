@@ -72,6 +72,7 @@ def document_tokenizer(
     text_chunks = [
         cleantext.clean(extract_page_content(str(chunk)), extra_spaces=True)
         for chunk in pre_text_chunks
+        if extract_page_content(str(chunk)).strip()
     ]
 
     chunk_dicts = []
