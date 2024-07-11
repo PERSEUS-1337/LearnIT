@@ -31,7 +31,7 @@ async def auth_curr_user(
     except JWTError:
         raise credentials_exception
 
-    user = get_user_data(
+    user = await get_user_data(
         req.app.database[config["USER_DB"]], username=token_data.username
     )
 

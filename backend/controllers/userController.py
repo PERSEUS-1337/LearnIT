@@ -24,7 +24,7 @@ async def login_user(
 ) -> Token:
     try:
         db = req.app.database[config["USER_DB"]]
-        user = get_user_creds(db, form_data.username)
+        user = await get_user_creds(db, form_data.username)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

@@ -1,5 +1,6 @@
 from datetime import datetime, timezone, timedelta
-from typing import Collection
+from motor.motor_asyncio import AsyncIOMotorClient
+from typing import Collection, Optional
 
 from dotenv import dotenv_values
 from jose import jwt
@@ -31,19 +32,18 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-def get_user_creds(db: Collection, username: str) -> UserCreds:
-    user_data = db.find_one({"username": username})
+async def get_user_creds(db: AsyncIOMotorClient, username: str) -> Optional[UserCreds]:
+    # user_collection = db[config["USER_DB"]]
+    user_doc = await db.find_one({"username": username})
+    if user_doc:
+        return UserCreds(**user_doc)
+    return None
 
-    if user_data:
-        return UserCreds(**user_data)
-    else:
-        return None
 
+async def get_user_data(db: AsyncIOMotorClient, username: str) -> Optional[UserBase]:
+    user_doc = await db.find_one({"username": username})
 
-def get_user_data(db: Collection, username: str) -> UserBase:
-    user_data = db.find_one({"username": username})
-
-    if user_data:
-        return UserBase(**user_data)
+    if user_doc:
+        return UserBase(**user_doc)
     else:
         return None

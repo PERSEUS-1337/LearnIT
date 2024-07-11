@@ -1,9 +1,14 @@
-import time
-from dotenv import dotenv_values
+# import time
+# from dotenv import dotenv_values
+# from fastapi import FastAPI, Request
+# from fastapi.middleware.cors import CORSMiddleware
+# from pymongo import MongoClient
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pymongo import MongoClient
-from starlette.responses import Response
+from motor.motor_asyncio import AsyncIOMotorClient
+import time
+from dotenv import dotenv_values
 
 from routes.authRouter import router as auth_router
 from routes.userRouter import router as user_router
@@ -45,18 +50,17 @@ async def root():
 
 
 @app.on_event("startup")
-def startup_db_client():
+async def startup_db_client():
     try:
-        app.mongodb_client = MongoClient(config["MONGO_URI"])
+        app.mongodb_client = AsyncIOMotorClient(config["MONGO_URI"])
         app.database = app.mongodb_client[config["DB_NAME"]]
         print(f"Connected to the {config['DB_NAME']} database!")
     except Exception as e:
         print(f"Failed to connect to the database: {e}")
 
-
 @app.on_event("shutdown")
-def shutdown_db_client():
-    app.mongodb_client.close()
+async def shutdown_db_client():
+    await app.mongodb_client.close()
 
 
 app.include_router(auth_router, tags=["auth"], prefix="/auth")
