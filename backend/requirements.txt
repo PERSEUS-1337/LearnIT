@@ -25,3 +25,4 @@ passlib
 aiofiles
 langchain_openai
 langchain_community
+cleantext

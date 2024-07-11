@@ -2,6 +2,7 @@ from datetime import datetime
 import os
 import re
 import time
+import cleantext
 from typing import Tuple, List
 
 from chromadb import PersistentClient
@@ -67,7 +68,11 @@ def document_tokenizer(
 
     pre_text_chunks = text_splitter.split_documents(document)
 
-    text_chunks = [extract_page_content(str(chunk)) for chunk in pre_text_chunks]
+    # Directly clean and store the extracted page content in text_chunks
+    text_chunks = [
+        cleantext.clean(extract_page_content(str(chunk)), extra_spaces=True)
+        for chunk in pre_text_chunks
+    ]
 
     chunk_dicts = []
     for i in range(len(text_chunks)):
@@ -120,7 +125,7 @@ def retrieve_db(db_dir):
     return vectordb
 
 
-def setup_chain(db_dir, chosen_model=LLMS["dev"]):
+def setup_chain(db_dir, chosen_model=LLMS["default"]):
     db = Chroma(persist_directory=db_dir, embedding_function=OpenAIEmbeddings())
     turbo_llm = ChatOpenAI(temperature=0, model_name=chosen_model)
     retriever = db.as_retriever(search_kwargs={"k": 1}, search_type="mmr")
@@ -134,7 +139,7 @@ def setup_chain(db_dir, chosen_model=LLMS["dev"]):
 
 
 ### TSCC RELATED FUNCTIONS
-def llm_process(curr_chunk, prev_chunk, chosen_model=LLMS["dev"]) -> str:
+def llm_process(curr_chunk, prev_chunk, chosen_model=LLMS["default"]) -> str:
     """_summary_
 
     Args:
@@ -154,7 +159,7 @@ def llm_process(curr_chunk, prev_chunk, chosen_model=LLMS["dev"]) -> str:
     return response["text"]
 
 
-def generate_tscc(document, chosen_model=LLMS["dev"]) -> TSCC:
+def generate_tscc(document, chosen_model=LLMS["default"]) -> TSCC:
     _id = str(document["_id"])
     chunk_dicts = document["chunks"]
     total_chunk_dicts = document["chunk_count"]
