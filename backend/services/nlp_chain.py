@@ -46,7 +46,7 @@ def extract_page_content(chunk: str) -> str:
     return ""
 
 
-def document_tokenizer(
+def document_tokenizer_sync(
     file_path, doc_uid, loader_choice="default"
 ) -> Tuple[DocTokens, List]:
     if LOADERS[loader_choice] == "PyPDFLoader":
@@ -104,6 +104,13 @@ def document_tokenizer(
     )
 
     return doc_tokens, pre_text_chunks
+
+async def document_tokenizer_async(file_path, doc_uid, loader_choice="default") -> str:
+    """Asynchronous wrapper around document_tokenizer_sync"""
+    loop = asyncio.get_event_loop()
+    with ThreadPoolExecutor(max_workers=10) as pool:
+        future = loop.run_in_executor(pool, document_tokenizer_sync, file_path, doc_uid, loader_choice)
+        return await future
 
 
 ### RAG RELATED FUNCTIONS
@@ -183,12 +190,7 @@ async def generate_tscc(document, chosen_model=LLMS["default"]) -> TSCC:
         print(f"> [TSCC]\t{i} / {total_chunk_dicts} processed")
         result = await llm_process_async(chunk["curr"], chunk["prev"], chosen_model)
         processed_chunks.append(result)
-    
-    # Replace the for loop with asyncio.gather
-    # results = await asyncio.gather(*(llm_process(i, total_chunk_dicts, chunk['curr'], chunk['prev'], chosen_model) for i, chunk in enumerate(chunk_dicts)))
 
-    # Filter out None values (in case of errors) and append to processed_chunks
-    # processed_chunks.extend(filter(None, results))
 
     token_count = sum(len(chunk.split()) for chunk in processed_chunks)
     chunk_count = len(chunk_dicts)

@@ -8,7 +8,8 @@ from fastapi import HTTPException, status, Request, UploadFile, status
 from fastapi.responses import JSONResponse
 
 from services.nlp_chain import (
-    document_tokenizer,
+    document_tokenizer_async,
+    document_tokenizer_sync,
     generate_tscc,
     setup_chain,
     setup_db,
@@ -374,7 +375,7 @@ async def generate_tokens(
                 try:
                     # Start tokenization process
                     print(f"{log_prefix} - INFO - START_TOKENIZATION")
-                    doc_tokens, pre_text_chunks = document_tokenizer(
+                    doc_tokens, pre_text_chunks = await document_tokenizer_async(
                         file_path, uid, pdf_loader
                     )
                 except Exception as e:
