@@ -96,7 +96,6 @@ async def query_rag_route(
     req: Request,
     filename: str,
     query: str,
-    llm: str,
     user: UserBase = Depends(auth_curr_user),
 ):
     return await query_rag(req, user, filename, query)

@@ -3,7 +3,7 @@ CHUNK_SIZE_LIST = [750, 1000, 1250, 1500]
 DEFAULT_CHUNK_OVERLAP = 100
 CHUNK_OVERLAP_LIST = [100, 200, 300]
 LLM_TEMP = 0.5
-LLMS = {"default": "gpt-3.5-turbo", "dev": "gpt-3.5-turbo", "prod": "gpt-4o"}
+LLMS = {"default": "gpt-4o", "dev": "gpt-3.5-turbo", "prod": "gpt-4o"}
 LOADERS = {
     "default": "PyMuPDFLoader",
     "0": "TextLoader",
