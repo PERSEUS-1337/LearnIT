@@ -423,7 +423,6 @@ async def generate_tokens(
                                 file=filename, error=str(e)
                             ),
                         )
-                
 
                     # Update document with new token ID
                     doc.tokens_id = str(doc_insert_result.inserted_id)
@@ -467,7 +466,7 @@ async def generate_tokens(
         )
 
 
-async def query_rag(req: Request, user: UserBase, filename: str, query: str):
+async def query_rag(req: Request, user: UserBase, filename: str, query: str, llm: str):
     log_prefix = f"> [LOG]\t{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - QUERY_RAG - {filename}"
 
     try:
@@ -500,7 +499,7 @@ async def query_rag(req: Request, user: UserBase, filename: str, query: str):
 
                 # Set up the QA chain using the vector database path
                 # qa_chain = setup_chain(doc.vec_db_path)
-                response = await qa_chain_async(str(query), doc.vec_db_path)
+                response = await qa_chain_async(str(query), doc.vec_db_path, llm)
 
                 # Return the query response
                 print(f"{log_prefix} - INFO - QUERY_SUCCESS")
@@ -529,7 +528,7 @@ async def query_rag(req: Request, user: UserBase, filename: str, query: str):
         )
 
 
-async def process_tscc(req: Request, user: UserBase, filename: str):
+async def process_tscc(req: Request, user: UserBase, filename: str, llm: str):
     log_prefix = f"> [LOG]\t{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - PROCESS_TSCC - {filename}"
 
     db = req.app.database
@@ -567,7 +566,7 @@ async def process_tscc(req: Request, user: UserBase, filename: str):
                     )
 
                 # Generate TSCC for the document
-                tscc = await generate_tscc(document)
+                tscc = await generate_tscc(document, llm)
 
                 # Insert TSCC into the database
                 tscc_insert_result = await tscc_db.insert_one(tscc.dict())

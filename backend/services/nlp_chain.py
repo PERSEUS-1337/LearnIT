@@ -47,7 +47,7 @@ def extract_page_content(chunk: str) -> str:
 
 
 def document_tokenizer_sync(
-    file_path, doc_uid, loader_choice="default"
+    file_path: str, doc_uid: str, loader_choice: str
 ) -> Tuple[DocTokens, List]:
     if LOADERS[loader_choice] == "PyPDFLoader":
         loader = PyPDFLoader(file_path)
@@ -105,11 +105,14 @@ def document_tokenizer_sync(
 
     return doc_tokens, pre_text_chunks
 
+
 async def document_tokenizer_async(file_path, doc_uid, loader_choice="default") -> str:
     """Asynchronous wrapper around document_tokenizer_sync"""
     loop = asyncio.get_event_loop()
     with ThreadPoolExecutor(max_workers=10) as pool:
-        future = loop.run_in_executor(pool, document_tokenizer_sync, file_path, doc_uid, loader_choice)
+        future = loop.run_in_executor(
+            pool, document_tokenizer_sync, file_path, doc_uid, loader_choice
+        )
         return await future
 
 
@@ -135,9 +138,9 @@ def retrieve_db(db_dir):
     return vectordb
 
 
-def qa_chain_sync(query: str, db_dir: str, chosen_model=LLMS["default"]):
+def qa_chain_sync(query: str, db_dir: str, chosen_model: str):
     db = Chroma(persist_directory=db_dir, embedding_function=OpenAIEmbeddings())
-    turbo_llm = ChatOpenAI(temperature=0, model_name=chosen_model)
+    turbo_llm = ChatOpenAI(temperature=0, model_name=LLMS[chosen_model])
     retriever = db.as_retriever(search_kwargs={"k": 6}, search_type="mmr")
     chain = RetrievalQA.from_chain_type(
         llm=turbo_llm,
@@ -145,36 +148,41 @@ def qa_chain_sync(query: str, db_dir: str, chosen_model=LLMS["default"]):
         retriever=retriever,
         return_source_documents=True,
     )
-    
+
     response = chain(query)
     return response
 
-async def qa_chain_async(query: str, db_dir: str, chosen_model=LLMS["default"]) -> str:
+
+async def qa_chain_async(query: str, db_dir: str, chosen_model="default") -> str:
     """Asynchronous wrapper around qa_chain_sync"""
     loop = asyncio.get_event_loop()
     with ThreadPoolExecutor(max_workers=10) as pool:
         future = loop.run_in_executor(pool, qa_chain_sync, query, db_dir, chosen_model)
         return await future
 
-### TSCC RELATED FUNCTIONS
-def llm_process_sync(curr_chunk: str , prev_chunk, chosen_model=LLMS["default"]) -> str:
 
-    turbo_llm = ChatOpenAI(temperature=LLM_TEMP, model_name=chosen_model)
+### TSCC RELATED FUNCTIONS
+def llm_process_sync(curr_chunk: str, prev_chunk: str, chosen_model: str) -> str:
+
+    turbo_llm = ChatOpenAI(temperature=LLM_TEMP, model_name=LLMS[chosen_model])
 
     prompt = PromptTemplate.from_template(template=PROMPT_MAIN)
     llm_chain = LLMChain(prompt=prompt, llm=turbo_llm)
     response = llm_chain.invoke({"curr_chunk": curr_chunk, "prev_chunk": prev_chunk})
     return response["text"]
 
-async def llm_process_async(curr_chunk, prev_chunk, chosen_model=LLMS["default"]) -> str:
+
+async def llm_process_async(curr_chunk: str, prev_chunk: str, chosen_model: str) -> str:
     """Asynchronous wrapper around llm_process_sync"""
     loop = asyncio.get_event_loop()
     with ThreadPoolExecutor(max_workers=10) as pool:
-        future = loop.run_in_executor(pool, llm_process_sync, curr_chunk, prev_chunk, chosen_model)
+        future = loop.run_in_executor(
+            pool, llm_process_sync, curr_chunk, prev_chunk, chosen_model
+        )
         return await future
 
 
-async def generate_tscc(document, chosen_model=LLMS["default"]) -> TSCC:
+async def generate_tscc(document, chosen_model="default") -> TSCC:
     _id = str(document["_id"])
     chunk_dicts = document["chunks"]
     total_chunk_dicts = document["chunk_count"]
@@ -183,12 +191,11 @@ async def generate_tscc(document, chosen_model=LLMS["default"]) -> TSCC:
     print(f"> [TSCC]\tDocument: {document['_id']}")
 
     processed_chunks = []
-    
+
     for i, chunk in enumerate(chunk_dicts, start=1):
         print(f"> [TSCC]\t{i} / {total_chunk_dicts} processed")
         result = await llm_process_async(chunk["curr"], chunk["prev"], chosen_model)
         processed_chunks.append(result)
-
 
     token_count = sum(len(chunk.split()) for chunk in processed_chunks)
     chunk_count = len(chunk_dicts)
@@ -205,7 +212,7 @@ async def generate_tscc(document, chosen_model=LLMS["default"]) -> TSCC:
         doc_uid=_id,
         processed=datetime.now(),
         process_time=elapsed_time,
-        model_used=chosen_model,
+        model_used=LLMS[chosen_model],
         token_count=token_count,
         chunk_count=chunk_count,
         chunks=processed_chunks,

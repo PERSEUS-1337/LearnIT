@@ -85,14 +85,19 @@ async def generate_tokens_route(
 async def process_tscc_route(
     req: Request,
     filename: str,
+    llm: str,
     user: UserBase = Depends(auth_curr_user),
 ):
-    return await process_tscc(req, user, filename)
+    return await process_tscc(req, user, filename, llm)
 
 
 @router.post("/query-rag")
 async def query_rag_route(
-    req: Request, filename: str, query: str, user: UserBase = Depends(auth_curr_user)
+    req: Request,
+    filename: str,
+    query: str,
+    llm: str,
+    user: UserBase = Depends(auth_curr_user),
 ):
     return await query_rag(req, user, filename, query)
 

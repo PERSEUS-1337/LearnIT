@@ -14,7 +14,7 @@ LOADERS = {
 PROMPT_MAIN = """
     Follow the steps to provide a condensed text chunk:
     
-    Step 1 - Extractively Summarize the following text, try to preserve key details, and condense the text by removing irrelevant words:
+    Step 1 - Extractively Summarize the following text, try to preserve key details, important persons, statistics, keywords, and condense the text by removing irrelevant words and ideas:
     
     "
     {curr_chunk}
