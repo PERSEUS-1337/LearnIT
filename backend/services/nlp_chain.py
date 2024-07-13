@@ -24,8 +24,8 @@ from langchain_community.document_loaders import (
 from fastapi import status
 
 from middleware import apiMsg
-from utils.fileUtils import update_user_doc_status
-from models.document import TSCC, DocTokens, ProcessStatus
+from utils.fileUtils import update_doc_status
+from models.document import TSCC, DocTokens, ProcessStatus, UploadDoc
 from utils.config import (
     DEFAULT_CHUNK_OVERLAP,
     DEFAULT_CHUNK_SIZE,
@@ -194,31 +194,30 @@ async def llm_process_async(curr_chunk, prev_chunk, chosen_model) -> str:
 
 
 async def generate_tscc(
-    db, doc, user, filename, doc_tokens, chosen_model: Optional[str] = None
+    db, doc_data: UploadDoc, chosen_model: Optional[str] = None
 ) -> TSCC:
     chosen_model = "default" if chosen_model is None else chosen_model
 
-    _id = str(doc_tokens["_id"])
-    chunk_dicts = doc_tokens["chunks"]
-    total_chunk_dicts = doc_tokens["chunk_count"]
 
     start_time = time.time()  # Record start time
-    print(f"> [TSCC]\tDocument: {doc_tokens['_id']}")
-
+    print(f"> [TSCC]\tDocument: {doc_data.oid} - {doc_data.name}")
+    
     processed_chunks = []
-
-    for i, chunk in enumerate(chunk_dicts, start=1):
+    for i, chunk in enumerate(doc_data.tokens.chunks, start=1):
         result = await llm_process_async(chunk["curr"], chunk["prev"], chosen_model)
         processed_chunks.append(result)
-        print(f"> [TSCC]\t{i} / {total_chunk_dicts} processed")
-        doc.process_status = ProcessStatus(
+        
+        print(f"> [TSCC]\t{i} / {doc_data.tokens.chunk_count} processed")
+        
+        doc_data.process_status = ProcessStatus(
             code=status.HTTP_202_ACCEPTED,
-            message=f"{i} / {total_chunk_dicts} processed",
+            message=f"{i} / {doc_data.tokens.chunk_count} processed",
         )
-        await update_user_doc_status(db, user, filename, doc)
+        
+        await update_doc_status(db, doc_data)
 
     token_count = sum(len(chunk.split()) for chunk in processed_chunks)
-    chunk_count = len(chunk_dicts)
+    chunk_count = len(processed_chunks)
 
     print("> [TSCC]\tDONE!")
 
@@ -229,7 +228,6 @@ async def generate_tscc(
     )
 
     tscc = TSCC(
-        doc_uid=_id,
         processed=datetime.now(),
         process_time=elapsed_time,
         model_used=LLMS[chosen_model],

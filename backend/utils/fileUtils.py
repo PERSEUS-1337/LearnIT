@@ -2,6 +2,8 @@ import glob
 import hashlib
 import os
 
+from bson import ObjectId
+
 
 def gen_uid(username: str, filename: str) -> str:
     # Encode the username and filename as bytes
@@ -24,14 +26,12 @@ def find_file_by_uid(upload_path, uid):
     return matching_files[0]
 
 
-async def update_user_doc_status(user_db, user, filename, doc):
-    await user_db.update_one(
-        {"username": user.username, "uploaded_files.name": filename},
+async def update_doc_status(files_db, doc_data):
+    await files_db.update_one(
+        {"_id": ObjectId(doc_data.oid)},
         {
             "$set": {
-                "uploaded_files.$.process_status": (
-                    doc.process_status.dict() if doc.process_status else None
-                )
+                "process_status": doc_data.process_status.dict() if doc_data.process_status else None
             }
         },
     )

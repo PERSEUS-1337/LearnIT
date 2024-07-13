@@ -60,9 +60,9 @@ class APIMessages:
     TOKENIZATION_FAIL = "Tokenization failed for file '{file}': {error}"
     TOKENS_DELETE_SUCCESS = "Successfully deleted {file}'s tokens from the database."
     TOKENS_DELETE_FAIL = "Failed to delete document with tokens_id {tokens_id}."
-    TOKENS_INSERT_FAIL = "Failed to insert DocTokens of '{file}' into docs_db: {error}"
-    TOKENS_UPDATE_FAIL = "Failed to updated DocTokens of '{file}' in docs_db: {error}"
-    TOKENS_NOT_FOUND = "DocTokens with ID '{tokens_id}' not found in docs_db."
+    TOKENS_INSERT_FAIL = "Failed to insert DocTokens of '{file}' into files_db: {error}"
+    TOKENS_UPDATE_FAIL = "Failed to update DocTokens of '{file}' in files_db: {error}"
+    TOKENS_NOT_FOUND = "DocTokens with ID '{tokens_id}' not found in files_db."
 
     # RAG
     FILE_NOT_YET_EMBEDDED = "File '{file}' has not yet been embedded to ChromaDB."
@@ -74,6 +74,7 @@ class APIMessages:
     NOT_TSCC_PROCESSED = "File '{file}' is not yet processed for TSCC."
     TSCC_PROCESSING_BACKGROUND = "File '{file}' is currently being processed for TSCC."
     TSCC_PROCESS_SUCCESS = "File '{file}' has been successfully processed for TSCC."
+    TSCC_PROCESS_FAIL = "TSCC processing failed for '{file}'."
     TSCC_ALREADY_PROCESSED = "File '{file}' has already been processed."
     TSCC_DB_DELETE_SUCCESS = "Sucessfully deleted {file}'s tscc from the database."
     TSCC_DB_DELETE_FAIL = (

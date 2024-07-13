@@ -39,9 +39,6 @@ def hello():
     )
 
 
-
-
-
 @router.get("/get-tokens")
 async def get_tokens_route(
     req: Request, filename: str, user: UserBase = Depends(auth_curr_user)
