@@ -193,7 +193,9 @@ async def llm_process_async(curr_chunk, prev_chunk, chosen_model) -> str:
         return await future
 
 
-async def generate_tscc(db, doc, user, filename, doc_tokens, chosen_model: Optional[str] = None) -> TSCC:
+async def generate_tscc(
+    db, doc, user, filename, doc_tokens, chosen_model: Optional[str] = None
+) -> TSCC:
     chosen_model = "default" if chosen_model is None else chosen_model
 
     _id = str(doc_tokens["_id"])
@@ -209,7 +211,10 @@ async def generate_tscc(db, doc, user, filename, doc_tokens, chosen_model: Optio
         result = await llm_process_async(chunk["curr"], chunk["prev"], chosen_model)
         processed_chunks.append(result)
         print(f"> [TSCC]\t{i} / {total_chunk_dicts} processed")
-        doc.process_status = ProcessStatus(code=status.HTTP_202_ACCEPTED, message=f"{i} / {total_chunk_dicts} processed")
+        doc.process_status = ProcessStatus(
+            code=status.HTTP_202_ACCEPTED,
+            message=f"{i} / {total_chunk_dicts} processed",
+        )
         await update_user_doc_status(db, user, filename, doc)
 
     token_count = sum(len(chunk.split()) for chunk in processed_chunks)

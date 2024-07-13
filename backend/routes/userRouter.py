@@ -4,7 +4,7 @@ from controllers.userController import (
     delete_user,
 )
 from middleware.requireAuth import auth_curr_user
-from models.user import UserBase, UserUpdate
+from models.user import UserBase
 
 router = APIRouter()
 

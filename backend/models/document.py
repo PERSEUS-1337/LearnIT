@@ -8,71 +8,18 @@ class ProcessStatus(BaseModel):
     message: str
 
 
-class UploadDoc(BaseModel):
-    uid: str
-    name: str
-    uploaded_at: datetime
-    tokenized: bool = False
-    embedded: bool = False
-    processed: bool = False
-    process_status: Optional[ProcessStatus] = None
-    tokens_id: Optional[str] = None
-    vec_db_path: Optional[str] = None
-    tscc_id: Optional[str] = None
-
-    class Config:
-        json_encoders = {datetime: lambda dt: dt.isoformat()}
-
-    def dict(self):
-        return {
-            "uid": self.uid,
-            "name": self.name,
-            "uploaded_at": self.uploaded_at.isoformat(),
-            "tokenized": self.tokenized,
-            "embedded": self.embedded,
-            "processed": self.processed,
-            "process_status": (
-                self.process_status.dict() if self.process_status else None
-            ),
-            "tokens_id": self.tokens_id,
-            "vec_db_path": self.vec_db_path,
-            "tscc_id": self.tscc_id,
-        }
-
-
 class DocTokens(BaseModel):
-    doc_uid: str
     processed: datetime
     doc_loader_used: str
     token_count: int
     chunk_count: int
-    chunks: List[Dict[str, str]]
+    chunks: List[dict]
 
     class Config:
         json_encoders = {datetime: lambda dt: dt.isoformat()}
 
-    def dict(self):
-        return {
-            "doc_uid": self.doc_uid,
-            "processed": self.processed.isoformat(),
-            "doc_loader_used": self.doc_loader_used,
-            "token_count": self.token_count,
-            "chunk_count": self.chunk_count,
-            "chunks": self.chunks,
-        }
-
-    def details(self):
-        return {
-            "doc_uid": self.doc_uid,
-            "processed": self.processed.isoformat(),
-            "doc_loader_used": self.doc_loader_used,
-            "token_count": self.token_count,
-            "chunk_count": self.chunk_count,
-        }
-
 
 class TSCC(BaseModel):
-    doc_uid: str
     processed: datetime
     process_time: float
     model_used: str
@@ -83,23 +30,29 @@ class TSCC(BaseModel):
     class Config:
         json_encoders = {datetime: lambda dt: dt.isoformat()}
 
+
+class UploadDoc(BaseModel):
+    user_id: str  # Reference to the user's ID
+    name: str
+    file_uid: str
+    uploaded_at: datetime
+    process_status: Optional[ProcessStatus] = None
+    vec_db_path: Optional[str] = None
+    tokens: Optional[DocTokens] = None
+    tscc: Optional[TSCC] = None
+
+    class Config:
+        json_encoders = {datetime: lambda dt: dt.isoformat()}
+
     def dict(self):
         return {
-            "doc_uid": self.doc_uid,
-            "processed": self.processed.isoformat(),
-            "process_time": self.process_time,
-            "model_used": self.model_used,
-            "token_count": self.token_count,
-            "chunk_count": self.chunk_count,
-            "chunks": self.chunks,
+            "user_id": self.user_id,
+            "name": self.name,
+            "file_uid": self.file_uid,
+            "uploaded_at": self.uploaded_at.isoformat(),
+            "process_status": self.process_status.model_dump() if self.process_status else None,
+            "vec_db_path": self.vec_db_path,
+            "tokens": self.tokens.model_dump() if self.tokens else None,
+            "tscc": self.tscc.model_dump() if self.tscc else None,
         }
 
-    def details(self):
-        return {
-            "doc_uid": self.doc_uid,
-            "processed": self.processed.isoformat(),
-            "process_time": self.process_time,
-            "model_used": self.model_used,
-            "token_count": self.token_count,
-            "chunk_count": self.chunk_count,
-        }

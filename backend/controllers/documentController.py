@@ -23,7 +23,9 @@ config = dotenv_values(".env")
 
 
 async def upload_file(req: Request, file: UploadFile, user: UserBase):
-    db = req.app.database[config["USER_DB"]]
+    db = req.app.database
+    user_db = db[config["USER_DB"]]
+    files_db = db[config["FILES_DB"]]
 
     # Generate a unique file name using user's username
     uid = gen_uid(user.username, file.filename)
@@ -50,24 +52,34 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
             content = await file.read()  # async read
             await out_file.write(content)  # async write
             print(f"{log_prefix} - INFO - FILE_SAVED - {file.filename}")
+            
+        # Fetch user document from MongoDB to get user ID
+        user_doc = await user_db.find_one({"username": user.username})
 
-        # Add the uploaded file information to the user's uploaded_files list
+        if not user_doc:
+            print(f"{log_prefix} - ERROR - USER_NOT_FOUND - {user.username}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=apiMsg.USER_NOT_FOUND.format(username=user.username),
+            )
+
+        user_id = str(user_doc["_id"])  # Assuming MongoDB ObjectId as user_id
+
+        # Create an instance of UploadDoc for the uploaded file
         uploaded_file_info = UploadDoc(
-            name=file.filename, uid=uid, uploaded_at=datetime.now()
+            name=file.filename,
+            file_uid=uid,
+            uploaded_at=datetime.now(),
+            user_id=user_id,
         )
 
-        # Update the user in MongoDB with the new uploaded file information
-        update_result = await db.update_one(
-            {"username": user.username},
-            {"$push": {"uploaded_files": uploaded_file_info.dict()}},
-        )
+        # Insert the uploaded file information into MongoDB
+        insert_result = await files_db.insert_one(uploaded_file_info.dict())
 
-        if update_result.modified_count == 0:
-            print(f"{log_prefix} - ERROR - USER_UPDATE_FAIL - {user.username}")
+        if not insert_result.inserted_id:
+            print(f"{log_prefix} - ERROR - UPLOAD_DOC_INSERT_FAIL - {file.filename}")
             raise ValueError(
-                apiMsg.USER_FILE_INSERT_FAIL.format(
-                    file=file.filename, user=user.username
-                )
+                apiMsg.UPLOAD_DOC_INSERT_FAIL.format(file=file.filename)
             )
 
         print(f"{log_prefix} - INFO - FILE_UPLOADED - {file.filename}")
@@ -94,7 +106,9 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
 
 
 async def delete_file(req: Request, user: UserBase, filename):
-    db = req.app.database[config["USER_DB"]]
+    db = req.app.database
+    user_db = db[config["USER_DB"]]
+    files_db = db[config["FILES_DB"]]
 
     # Generate the unique identifier for the file using the user's username and filename
     uid = gen_uid(user.username, filename)
@@ -103,47 +117,38 @@ async def delete_file(req: Request, user: UserBase, filename):
     )
 
     try:
-        # Construct the file path
-        file_path = find_file_by_uid(config["UPLOAD_PATH"], uid)
-
-        # Retrieve the user's files from the database
-        user_files = await db.find_one(
-            {"username": user.username}, {"uploaded_files": 1}
-        )
-        if not user_files:
+        # Retrieve the user's ID from the database
+        user_data = await user_db.find_one({"username": user.username}, {"_id": 1})
+        if not user_data:
+            print(f"{log_prefix} - ERROR - USER_NOT_FOUND_DB - {user.username}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=apiMsg.USER_NOT_FOUND_DB.format(user=user.username),
+            )
+        
+        user_id = str(user_data["_id"])  # Convert ObjectId to str if needed
+        
+        # Retrieve the file document from files_db based on user_id and file_uid
+        file_doc = await files_db.find_one({"user_id": user_id, "file_uid": uid})
+        if not file_doc:
             print(f"{log_prefix} - ERROR - FILE_NOT_FOUND_DB - {filename}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=apiMsg.FILE_NOT_FOUND_DB.format(file=filename),
             )
-
-        # Get the list of all files
-        uploaded_files = user_files.get("uploaded_files", [])
-        # Check if the file is registered in the user_db
-        file_registered = any(file["uid"] == uid for file in uploaded_files)
-        if not file_registered:
-            print(f"{log_prefix} - ERROR - FILE_NOT_REGISTERED - {filename}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=apiMsg.FILE_NOT_FOUND_DB.format(file=filename),
-            )
-
-        # Remove the file to be deleted
-        updated_files = [file for file in uploaded_files if file["uid"] != uid]
-
-        # Update the database with the updated list without the deleted file
-        update_result = await db.update_one(
-            {"username": user.username},
-            {"$set": {"uploaded_files": updated_files}},
-        )
-        if update_result.modified_count == 0:
-            print(f"{log_prefix} - ERROR - USER_FILE_DELETE_FAIL - {filename}")
+        
+        # Remove the file from files_db
+        delete_result = await files_db.delete_one({"user_id": user_id, "file_uid": uid})
+        if delete_result.deleted_count == 0:
+            print(f"{log_prefix} - ERROR - FILE_DELETE_FAIL_DB - {filename}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=apiMsg.USER_FILE_DELETE_FAIL.format(
-                    file=filename, user=user.username
-                ),
+                detail=apiMsg.FILE_DELETE_FAIL_DB.format(file=filename),
             )
+            
+    
+        # Construct the file path
+        file_path = find_file_by_uid(config["UPLOAD_PATH"], uid)
 
         # Check if the file exists on the filesystem
         if os.path.exists(file_path):
@@ -569,7 +574,9 @@ async def process_tscc(
         )
 
 
-async def process_tscc_background(req: Request, user: UserBase, filename, doc, doc_tokens, llm, log_prefix):
+async def process_tscc_background(
+    req: Request, user: UserBase, filename, doc, doc_tokens, llm, log_prefix
+):
     db = req.app.database
     user_db = db[config["USER_DB"]]
     tscc_db = db[config["TSCC_DB"]]
@@ -581,7 +588,10 @@ async def process_tscc_background(req: Request, user: UserBase, filename, doc, d
         # Insert TSCC into the database
         tscc_insert_result = await tscc_db.insert_one(tscc.dict())
         if not tscc_insert_result.inserted_id:
-            doc.process_status = ProcessStatus(code=status.HTTP_400_BAD_REQUEST, message=apiMsg.TSCC_DB_INSERT_FAIL.format(file=filename))
+            doc.process_status = ProcessStatus(
+                code=status.HTTP_400_BAD_REQUEST,
+                message=apiMsg.TSCC_DB_INSERT_FAIL.format(file=filename),
+            )
             await update_user_doc_status(user_db, user, filename, doc)
             print(f"{log_prefix} - ERROR - TSCC_DB_INSERT_FAIL")
             raise HTTPException(
@@ -592,7 +602,10 @@ async def process_tscc_background(req: Request, user: UserBase, filename, doc, d
         # Update document with TSCC information
         doc.tscc_id = str(tscc_insert_result.inserted_id)
         doc.processed = True
-        doc.process_status = ProcessStatus(code=status.HTTP_200_OK, message=apiMsg.TSCC_PROCESS_SUCCESS.format(file=filename))
+        doc.process_status = ProcessStatus(
+            code=status.HTTP_200_OK,
+            message=apiMsg.TSCC_PROCESS_SUCCESS.format(file=filename),
+        )
 
         # Update user's uploaded files with the new document information
         update_result = await user_db.update_one(
@@ -602,7 +615,12 @@ async def process_tscc_background(req: Request, user: UserBase, filename, doc, d
 
         # Check if the update was successful
         if update_result.modified_count == 0:
-            doc.process_status = ProcessStatus(code=status.HTTP_400_BAD_REQUEST, message=apiMsg.USER_TSCC_INSERT_FAIL.format(user=user.username, file=filename))
+            doc.process_status = ProcessStatus(
+                code=status.HTTP_400_BAD_REQUEST,
+                message=apiMsg.USER_TSCC_INSERT_FAIL.format(
+                    user=user.username, file=filename
+                ),
+            )
             await update_user_doc_status(user_db, user, filename, doc)
             print(f"{log_prefix} - ERROR - USER_TSCC_INSERT_FAIL")
             raise HTTPException(
@@ -619,7 +637,9 @@ async def process_tscc_background(req: Request, user: UserBase, filename, doc, d
         await update_user_doc_status(user_db, user, filename, doc)
         raise e  # Re-raise the HTTP exceptions
     except Exception as e:
-        doc.process_status = ProcessStatus(code=status.HTTP_500_INTERNAL_SERVER_ERROR, message=str(e))
+        doc.process_status = ProcessStatus(
+            code=status.HTTP_500_INTERNAL_SERVER_ERROR, message=str(e)
+        )
         await update_user_doc_status(user_db, user, filename, doc)
         print(f"{log_prefix} - ERROR - UNEXPECTED_ERROR - {str(e)}")
         raise HTTPException(
@@ -629,7 +649,6 @@ async def process_tscc_background(req: Request, user: UserBase, filename, doc, d
     finally:
         if doc.process_status.code != status.HTTP_200_OK:
             await update_user_doc_status(user_db, user, filename, doc)
-
 
 
 async def delete_tokens(req: Request, user: UserBase, filename):

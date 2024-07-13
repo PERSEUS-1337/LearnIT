@@ -13,7 +13,7 @@ from utils.authUtils import (
     get_user_creds,
     create_access_token,
 )
-from models.user import UserBase, Token, UserInDB, UserReg, UserUpdate
+from models.user import UserBase, Token, UserInDB, UserReg
 
 
 config = dotenv_values(".env")
@@ -155,5 +155,5 @@ async def delete_user(req: Request, user: UserBase):
         # Handle any unexpected errors
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"message": APIMessages.INTERNAL_SERVER_ERROR, "data": str(e)},
+            detail={"message": "Internal Server Error", "data": str(e)},
         )

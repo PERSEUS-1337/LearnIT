@@ -43,9 +43,12 @@ class APIMessages:
     FILE_ALREADY_EXISTS = "File '{file}' already exists in the server."
     FILE_DELETED = "File '{file}' successfilly deleted."
     FILE_DELETED_DB_ONLY = "File '{file}' successfilly deleted on the database but was not found locally on the server."
+    FILE_DELETE_FAIL_DB = "File '{file}' was not deleted from the database successflly."
     FILE_NOT_FOUND_LOCAL = "The file '{file}' does not exist on the server."
     FILE_NOT_FOUND_DB = "The file '{file}' does not exist on the database."
     FILES_NOT_FOUND = "There are no files uploaded on the server yet."
+    
+    UPLOAD_DOC_INSERT_FAIL = "File '{file}' failed to insert in the files database."
 
     # Tokenization
     TOKEN_GET_SUCCESS = "Token '{tokens_id}' has successfully been retrieved."
