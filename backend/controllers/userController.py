@@ -20,8 +20,10 @@ config = dotenv_values(".env")
 
 
 async def login_user(
-    req: Request, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
-, remember_me) -> Token:
+    req: Request,
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    remember_me,
+) -> Token:
     try:
         db = req.app.database[config["USER_DB"]]
         user = await get_user_creds(db, form_data.username)
@@ -46,7 +48,7 @@ async def login_user(
             access_token_expires = timedelta(
                 minutes=int(config["ACCESS_TOKEN_EXPIRE_MINUTES"])
             )
-            
+
         access_token = create_access_token(
             data={"sub": user.username}, expires_delta=access_token_expires
         )

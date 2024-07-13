@@ -42,20 +42,6 @@ def get_uploaded_files_route(req: Request):
     return get_uploaded_files()
 
 
-@router.post("/upload")
-async def upload_file_route(
-    req: Request, file: UploadFile, user: UserBase = Depends(auth_curr_user)
-):
-    return await upload_file(req, file, user)
-
-
-@router.delete("/")
-async def delete_file_route(
-    req: Request, filename: str, user: UserBase = Depends(auth_curr_user)
-):
-    return await delete_file(req, user, filename)
-
-
 @router.get("/get-tokens")
 async def get_tokens_route(
     req: Request, filename: str, user: UserBase = Depends(auth_curr_user)
@@ -68,6 +54,13 @@ async def get_tscc_route(
     req: Request, filename: str, user: UserBase = Depends(auth_curr_user)
 ):
     return await get_tscc(req, user, filename)
+
+
+@router.post("/upload")
+async def upload_file_route(
+    req: Request, file: UploadFile, user: UserBase = Depends(auth_curr_user)
+):
+    return await upload_file(req, file, user)
 
 
 @router.post("/gen-tokens")
@@ -99,6 +92,13 @@ async def query_rag_route(
     user: UserBase = Depends(auth_curr_user),
 ):
     return await query_rag(req, user, filename, query)
+
+
+@router.delete("/")
+async def delete_file_route(
+    req: Request, filename: str, user: UserBase = Depends(auth_curr_user)
+):
+    return await delete_file(req, user, filename)
 
 
 @router.delete("/delete-tokens")
