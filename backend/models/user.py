@@ -7,16 +7,13 @@ class UserBase(BaseModel):
     username: str
     email: EmailStr
     full_name: str
-    uploaded_files: List[UploadDoc] = []
 
     class Config:
-        from_attributes = True
         json_schema_extra = {
             "example": {
                 "username": "johndoe",
                 "email": "johndoe@example.com",
                 "full_name": "John Doe",
-                "uploaded_files": [],
             }
         }
 
@@ -25,7 +22,6 @@ class UserBase(BaseModel):
             "username": self.username,
             "email": self.email,
             "full_name": self.full_name,
-            "uploaded_files": [file.dict() for file in self.uploaded_files],
         }
 
 
@@ -62,34 +58,6 @@ class UserCreds(BaseModel):
 
     def dict(self):
         return {"username": self.username, "hashed_password": self.hashed_password}
-
-
-class UserUpdate(BaseModel):
-    username: Optional[str] = None
-    full_name: Optional[str] = None
-    email: Optional[EmailStr] = None
-    uploaded_files: Optional[List[UploadDoc]] = None
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "username": "johndoe",
-                "email": "johndoe@example.com",
-                "full_name": "John Doe",
-            }
-        }
-
-    def dict(self):
-        return {
-            "username": self.username,
-            "full_name": self.full_name,
-            "email": self.email,
-            "uploaded_files": (
-                [file.dict() for file in self.uploaded_files]
-                if self.uploaded_files
-                else None
-            ),
-        }
 
 
 class Token(BaseModel):

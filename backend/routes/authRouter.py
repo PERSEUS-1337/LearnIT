@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 
 from controllers.userController import login_user, register_user
 from middleware.apiMsg import APIMessages
-from models.user import UserReg, UserUpdate
+from models.user import UserReg
 
 router = APIRouter()
 

@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Body, Request, Depends
 
+from controllers.documentController import get_file_details, list_user_files
 from controllers.userController import (
     delete_user,
 )
 from middleware.requireAuth import auth_curr_user
-from models.user import UserBase, UserUpdate
+from models.user import UserBase
 
 router = APIRouter()
 
@@ -22,3 +23,17 @@ async def edit_user_route(
     current_user: UserBase = Depends(auth_curr_user),
 ):
     return await delete_user(req, current_user)
+
+@router.get("/file")
+async def list_user_files_route(
+    req: Request, filename: str, user: UserBase = Depends(auth_curr_user)
+):
+    return await get_file_details(req, user, filename)
+
+@router.get("/file/list")
+async def list_user_files_route(
+    req: Request, user: UserBase = Depends(auth_curr_user)
+):
+    return await list_user_files(req, user)
+
+

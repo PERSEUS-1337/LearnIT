@@ -43,9 +43,12 @@ class APIMessages:
     FILE_ALREADY_EXISTS = "File '{file}' already exists in the server."
     FILE_DELETED = "File '{file}' successfilly deleted."
     FILE_DELETED_DB_ONLY = "File '{file}' successfilly deleted on the database but was not found locally on the server."
+    FILE_DELETE_FAIL_DB = "File '{file}' was not deleted from the database successflly."
     FILE_NOT_FOUND_LOCAL = "The file '{file}' does not exist on the server."
     FILE_NOT_FOUND_DB = "The file '{file}' does not exist on the database."
     FILES_NOT_FOUND = "There are no files uploaded on the server yet."
+    
+    UPLOAD_DOC_INSERT_FAIL = "File '{file}' failed to insert in the files database."
 
     # Tokenization
     TOKEN_GET_SUCCESS = "Token '{tokens_id}' has successfully been retrieved."
@@ -57,9 +60,9 @@ class APIMessages:
     TOKENIZATION_FAIL = "Tokenization failed for file '{file}': {error}"
     TOKENS_DELETE_SUCCESS = "Successfully deleted {file}'s tokens from the database."
     TOKENS_DELETE_FAIL = "Failed to delete document with tokens_id {tokens_id}."
-    TOKENS_INSERT_FAIL = "Failed to insert DocTokens of '{file}' into docs_db: {error}"
-    TOKENS_UPDATE_FAIL = "Failed to updated DocTokens of '{file}' in docs_db: {error}"
-    TOKENS_NOT_FOUND = "DocTokens with ID '{tokens_id}' not found in docs_db."
+    TOKENS_INSERT_FAIL = "Failed to insert DocTokens of '{file}' into files_db: {error}"
+    TOKENS_UPDATE_FAIL = "Failed to update DocTokens of '{file}' in files_db: {error}"
+    TOKENS_NOT_FOUND = "DocTokens with ID '{tokens_id}' not found in files_db."
 
     # RAG
     FILE_NOT_YET_EMBEDDED = "File '{file}' has not yet been embedded to ChromaDB."
@@ -71,6 +74,7 @@ class APIMessages:
     NOT_TSCC_PROCESSED = "File '{file}' is not yet processed for TSCC."
     TSCC_PROCESSING_BACKGROUND = "File '{file}' is currently being processed for TSCC."
     TSCC_PROCESS_SUCCESS = "File '{file}' has been successfully processed for TSCC."
+    TSCC_PROCESS_FAIL = "TSCC processing failed for '{file}'."
     TSCC_ALREADY_PROCESSED = "File '{file}' has already been processed."
     TSCC_DB_DELETE_SUCCESS = "Sucessfully deleted {file}'s tscc from the database."
     TSCC_DB_DELETE_FAIL = (
