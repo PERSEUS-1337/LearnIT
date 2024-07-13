@@ -13,7 +13,7 @@ router = APIRouter()
 async def get_curr_user_route(
     req: Request, current_user: UserBase = Depends(auth_curr_user)
 ):
-    return await current_user
+    return current_user
 
 
 @router.delete("/", response_description="Delete user")

@@ -1,5 +1,8 @@
+from typing import Annotated, Optional
 from fastapi import (
     APIRouter,
+    Body,
+    Form,
     Request,
     Depends,
     UploadFile,
@@ -11,7 +14,6 @@ from models.user import UserBase
 from middleware.apiMsg import APIMessages
 from controllers.documentController import (
     delete_tokens,
-    get_uploaded_files,
     query_rag,
     process_tscc,
     upload_file,
@@ -35,11 +37,6 @@ def hello():
         status_code=status.HTTP_200_OK,
         content={"message": APIMessages.DOC_ROUTE_SUCCESS},
     )
-
-
-@router.get("/list", response_description="Get a list of uploaded files")
-def get_uploaded_files_route(req: Request):
-    return get_uploaded_files()
 
 
 @router.get("/get-tokens")
@@ -66,19 +63,22 @@ async def upload_file_route(
 @router.post("/gen-tokens")
 async def generate_tokens_route(
     req: Request,
-    filename: str,
-    pdf_loader: str,
-    overwrite: bool,
+    filename: str = Form(...),
+    pdf_loader: Optional[str] = Form(None),
+    overwrite: Optional[bool] = Form(None),
     user: UserBase = Depends(auth_curr_user),
 ):
+    # print(filename, pdf_loader, overwrite)
     return await generate_tokens(req, user, filename, pdf_loader, overwrite)
 
 
 @router.post("/process-tscc")
 async def process_tscc_route(
     req: Request,
-    filename: str,
-    llm: str,
+    filename: str = Form(...),
+    llm: Optional[str] = Form(
+        None
+    ),  # Adjusted to accept None and differentiate from empty string
     user: UserBase = Depends(auth_curr_user),
 ):
     return await process_tscc(req, user, filename, llm)
@@ -86,12 +86,11 @@ async def process_tscc_route(
 
 @router.post("/query-rag")
 async def query_rag_route(
-    req: Request,
-    filename: str,
-    query: str,
+    filename: str = Form(...),
+    query: str = Form(...),
     user: UserBase = Depends(auth_curr_user),
 ):
-    return await query_rag(req, user, filename, query)
+    return await query_rag(user, filename, query)
 
 
 @router.delete("/")

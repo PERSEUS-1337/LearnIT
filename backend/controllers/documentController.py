@@ -135,7 +135,7 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
         )
 
 
-async def delete_file(req: Request, user: UserBase, filename: str):
+async def delete_file(req: Request, user: UserBase, filename):
     db = req.app.database[config["USER_DB"]]
 
     # Generate the unique identifier for the file using the user's username and filename
@@ -218,7 +218,7 @@ async def delete_file(req: Request, user: UserBase, filename: str):
         )
 
 
-async def get_tokens(req: Request, user: UserBase, filename: str):
+async def get_tokens(req: Request, user: UserBase, filename):
     docs_db = req.app.database[config["DOCS_DB"]]
     uid = gen_uid(user.username, filename)
     log_prefix = (
@@ -275,7 +275,7 @@ async def get_tokens(req: Request, user: UserBase, filename: str):
         )
 
 
-async def get_tscc(req: Request, user: UserBase, filename: str):
+async def get_tscc(req: Request, user: UserBase, filename):
     tscc_db = req.app.database[config["TSCC_DB"]]
     uid = gen_uid(user.username, filename)
     log_prefix = (
@@ -339,7 +339,7 @@ async def get_tscc(req: Request, user: UserBase, filename: str):
 
 
 async def generate_tokens(
-    req: Request, user: UserBase, filename: str, pdf_loader: str, overwrite: bool
+    req: Request, user: UserBase, filename, pdf_loader, overwrite: bool
 ):
     db = req.app.database
     user_db = db[config["USER_DB"]]
@@ -466,7 +466,7 @@ async def generate_tokens(
         )
 
 
-async def query_rag(req: Request, user: UserBase, filename: str, query: str):
+async def query_rag(user: UserBase, filename, query):
     log_prefix = f"> [LOG]\t{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - QUERY_RAG - {filename}"
 
     try:
@@ -528,7 +528,7 @@ async def query_rag(req: Request, user: UserBase, filename: str, query: str):
         )
 
 
-async def process_tscc(req: Request, user: UserBase, filename: str, llm: str):
+async def process_tscc(req: Request, user: UserBase, filename, llm):
     log_prefix = f"> [LOG]\t{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - PROCESS_TSCC - {filename}"
 
     db = req.app.database
@@ -624,7 +624,7 @@ async def process_tscc(req: Request, user: UserBase, filename: str, llm: str):
         )
 
 
-async def delete_tokens(req: Request, user: UserBase, filename: str):
+async def delete_tokens(req: Request, user: UserBase, filename):
     log_prefix = f"> [LOG]\t{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - DELETE_TOKENS - {filename}"
 
     db = req.app.database
@@ -711,7 +711,7 @@ async def delete_tokens(req: Request, user: UserBase, filename: str):
         )
 
 
-async def delete_tscc(req: Request, user: UserBase, filename: str):
+async def delete_tscc(req: Request, user: UserBase, filename):
     log_prefix = f"> [LOG]\t{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - DELETE_TSCC - {filename}"
 
     db = req.app.database

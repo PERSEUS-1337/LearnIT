@@ -4,7 +4,7 @@ import os
 import re
 import time
 import cleantext
-from typing import Tuple, List
+from typing import Optional, Tuple, List
 
 import asyncio
 
@@ -38,7 +38,7 @@ load_dotenv()
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 
 
-def extract_page_content(chunk: str) -> str:
+def extract_page_content(chunk) -> str:
     """Extract page content from a chunk string."""
     match = re.search(r"page_content='(.*?)' metadata=", chunk, re.DOTALL)
     if match:
@@ -47,8 +47,12 @@ def extract_page_content(chunk: str) -> str:
 
 
 def document_tokenizer_sync(
-    file_path: str, doc_uid: str, loader_choice: str
+    file_path, doc_uid, loader_choice
 ) -> Tuple[DocTokens, List]:
+    
+    
+    loader_choice = "default" if loader_choice is None else loader_choice
+    
     if LOADERS[loader_choice] == "PyPDFLoader":
         loader = PyPDFLoader(file_path)
     elif LOADERS[loader_choice] == "PyPDFium2Loader":
@@ -106,7 +110,9 @@ def document_tokenizer_sync(
     return doc_tokens, pre_text_chunks
 
 
-async def document_tokenizer_async(file_path, doc_uid, loader_choice="default") -> str:
+async def document_tokenizer_async(
+    file_path, doc_uid, loader_choice: Optional[str] = None
+) -> str:
     """Asynchronous wrapper around document_tokenizer_sync"""
     loop = asyncio.get_event_loop()
     with ThreadPoolExecutor(max_workers=10) as pool:
@@ -138,7 +144,10 @@ def retrieve_db(db_dir):
     return vectordb
 
 
-def qa_chain_sync(query: str, db_dir: str, chosen_model: str):
+def qa_chain_sync(query, db_dir, chosen_model):
+    
+    chosen_model = "default" if chosen_model is None else chosen_model
+    
     db = Chroma(persist_directory=db_dir, embedding_function=OpenAIEmbeddings())
     turbo_llm = ChatOpenAI(temperature=0, model_name=LLMS[chosen_model])
     retriever = db.as_retriever(search_kwargs={"k": 6}, search_type="mmr")
@@ -153,7 +162,7 @@ def qa_chain_sync(query: str, db_dir: str, chosen_model: str):
     return response
 
 
-async def qa_chain_async(query: str, db_dir: str, chosen_model="default") -> str:
+async def qa_chain_async(query, db_dir, chosen_model: Optional[str] = None) -> str:
     """Asynchronous wrapper around qa_chain_sync"""
     loop = asyncio.get_event_loop()
     with ThreadPoolExecutor(max_workers=10) as pool:
@@ -162,8 +171,7 @@ async def qa_chain_async(query: str, db_dir: str, chosen_model="default") -> str
 
 
 ### TSCC RELATED FUNCTIONS
-def llm_process_sync(curr_chunk: str, prev_chunk: str, chosen_model: str) -> str:
-
+def llm_process_sync(curr_chunk, prev_chunk, chosen_model) -> str:
     turbo_llm = ChatOpenAI(temperature=LLM_TEMP, model_name=LLMS[chosen_model])
 
     prompt = PromptTemplate.from_template(template=PROMPT_MAIN)
@@ -172,7 +180,7 @@ def llm_process_sync(curr_chunk: str, prev_chunk: str, chosen_model: str) -> str
     return response["text"]
 
 
-async def llm_process_async(curr_chunk: str, prev_chunk: str, chosen_model: str) -> str:
+async def llm_process_async(curr_chunk, prev_chunk, chosen_model) -> str:
     """Asynchronous wrapper around llm_process_sync"""
     loop = asyncio.get_event_loop()
     with ThreadPoolExecutor(max_workers=10) as pool:
@@ -182,7 +190,9 @@ async def llm_process_async(curr_chunk: str, prev_chunk: str, chosen_model: str)
         return await future
 
 
-async def generate_tscc(document, chosen_model="default") -> TSCC:
+async def generate_tscc(document, chosen_model: Optional[str] = None) -> TSCC:
+    chosen_model = "default" if chosen_model is None else chosen_model
+    
     _id = str(document["_id"])
     chunk_dicts = document["chunks"]
     total_chunk_dicts = document["chunk_count"]
