@@ -25,8 +25,8 @@ def hello():
 @router.post(
     "/login", response_description="Login a user", status_code=status.HTTP_202_ACCEPTED
 )
-async def login_route(req: Request, form_data: OAuth2PasswordRequestForm = Depends()):
-    return await login_user(req, form_data)
+async def login_route(req: Request, form_data: OAuth2PasswordRequestForm = Depends(), remember_me = Body(...)):
+    return await login_user(req, form_data, remember_me)
 
 
 @router.post(
