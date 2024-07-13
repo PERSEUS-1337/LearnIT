@@ -44,10 +44,10 @@ async def get_file_details(req: Request, user: UserBase, filename: str) -> Optio
         # Query the files_db to get the uploaded file by user_id and filename
         file_data = await files_db.find_one({"user_id": user_id, "name": filename})
         if not file_data:
-            print(f"{log_prefix} - ERROR - FILE_NOT_FOUND - {filename}")
+            print(f"{log_prefix} - ERROR - FILE_NOT_FOUND_DB - {filename}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=apiMsg.FILE_NOT_FOUND.format(file=filename),
+                detail=apiMsg.FILE_NOT_FOUND_DB.format(file=filename),
             )
 
         # Convert the file document to an UploadDoc instance
@@ -523,10 +523,10 @@ async def query_rag(req: Request, user: UserBase, filename, query):
         # Query the files_db to find the document by user_id and filename
         doc_data = await files_db.find_one({"user_id": user_id, "name": filename})
         if not doc_data:
-            print(f"{log_prefix} - ERROR - FILE_NOT_FOUND - {filename}")
+            print(f"{log_prefix} - ERROR - FILE_NOT_FOUND_DB - {filename}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=apiMsg.FILE_NOT_FOUND.format(file=filename),
+                detail=apiMsg.FILE_NOT_FOUND_DB.format(file=filename),
             )
         doc_data["oid"] = str(doc_data["_id"])
         doc_data = UploadDoc(**doc_data)
@@ -603,10 +603,10 @@ async def process_tscc(
         # Query the files_db to find the document by user_id and filename
         doc_data = await files_db.find_one({"user_id": user_id, "name": filename})
         if not doc_data:
-            print(f"{log_prefix} - ERROR - FILE_NOT_FOUND - {filename}")
+            print(f"{log_prefix} - ERROR - FILE_NOT_FOUND_DB - {filename}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=apiMsg.FILE_NOT_FOUND.format(file=filename),
+                detail=apiMsg.FILE_NOT_FOUND_DB.format(file=filename),
             )
     
         doc_data["oid"] = str(doc_data["_id"])
@@ -744,10 +744,10 @@ async def delete_tokens(req: Request, user: UserBase, filename):
         # Query the files_db to find the document by user_id and filename
         doc_data = await files_db.find_one({"user_id": user_id, "name": filename})
         if not doc_data:
-            print(f"{log_prefix} - ERROR - FILE_NOT_FOUND - {filename}")
+            print(f"{log_prefix} - ERROR - FILE_NOT_FOUND_DB - {filename}")
             return JSONResponse(
                 status_code=status.HTTP_404_NOT_FOUND,
-                content={"message": apiMsg.FILE_NOT_FOUND.format(file=filename)},
+                content={"message": apiMsg.FILE_NOT_FOUND_DB.format(file=filename)},
             )
         doc_data["oid"] = str(doc_data["_id"])
         doc_data = UploadDoc(**doc_data)
@@ -817,10 +817,10 @@ async def delete_tscc(req: Request, user: UserBase, filename):
         # Query the files_db to find the document by user_id and filename
         doc_data = await files_db.find_one({"user_id": user_id, "name": filename})
         if not doc_data:
-            print(f"{log_prefix} - ERROR - FILE_NOT_FOUND - {filename}")
+            print(f"{log_prefix} - ERROR - FILE_NOT_FOUND_DB - {filename}")
             return JSONResponse(
                 status_code=status.HTTP_404_NOT_FOUND,
-                content={"message": apiMsg.FILE_NOT_FOUND.format(file=filename)},
+                content={"message": apiMsg.FILE_NOT_FOUND_DB.format(file=filename)},
             )
         doc_data["oid"] = str(doc_data["_id"])
         doc_data = UploadDoc(**doc_data)
