@@ -22,48 +22,6 @@ from models.document import TSCC, DocTokens, ProcessStatus, UploadDoc
 config = dotenv_values(".env")
 
 
-def get_uploaded_files():
-    # Define the directory where uploaded files are stored
-    directory = config["UPLOAD_PATH"]
-    log_prefix = (
-        f"> [LOG]\t{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - GET_UPLOADED_FILES"
-    )
-
-    try:
-        # Check if the directory exists
-        if not os.path.exists(directory):
-            # Log and raise a FileNotFoundError
-            print(f"{log_prefix} - ERROR - FILES_NOT_FOUND")
-            raise FileNotFoundError(apiMsg.FILES_NOT_FOUND)
-
-        # Get a list of all files in the directory
-        files = os.listdir(directory)
-        # Filter out directories (if any)
-        files = [
-            file for file in files if os.path.isfile(os.path.join(directory, file))
-        ]
-
-        # Log and return the list of files or an empty list if no files found
-        print(f"{log_prefix} - INFO - FILES_RETRIEVED - {len(files)} files found")
-        return JSONResponse(
-            status_code=status.HTTP_200_OK, content={"files": files if files else []}
-        )
-    except FileNotFoundError as e:
-        # Handle file not found errors
-        print(f"{log_prefix} - ERROR - FILE_NOT_FOUND - {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e),
-        )
-    except Exception as e:
-        # Handle any other unexpected errors
-        print(f"{log_prefix} - ERROR - UNEXPECTED_ERROR - {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error",
-        )
-
-
 async def upload_file(req: Request, file: UploadFile, user: UserBase):
     db = req.app.database[config["USER_DB"]]
 
@@ -567,7 +525,6 @@ async def process_tscc(
                         detail=apiMsg.TOKENS_NOT_FOUND.format(tokens_id=doc.tokens_id),
                     )
 
-                # Add the long-running process to background tasks
                 # Add the long-running process to background tasks
                 doc.process_status = ProcessStatus(
                     code=status.HTTP_202_ACCEPTED,

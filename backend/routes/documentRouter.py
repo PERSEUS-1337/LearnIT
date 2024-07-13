@@ -81,15 +81,6 @@ async def process_tscc_route(
     user: UserBase = Depends(auth_curr_user),
 ):
 
-    # background_tasks.add_task(process_tscc, req, user, filename, llm)
-
-    # # Immediately return a response to the client
-    # response = {
-    #     "message": "Processing started",
-    #     "status": "in_progress"
-    # }
-    # return JSONResponse(status_code=202, content=response)
-
     return await process_tscc(background_tasks, req, user, filename, llm)
 
 
