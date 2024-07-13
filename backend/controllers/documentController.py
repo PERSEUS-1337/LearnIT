@@ -220,51 +220,63 @@ async def delete_file(req: Request, user: UserBase, filename):
 
 
 async def get_tokens(req: Request, user: UserBase, filename):
-    docs_db = req.app.database[config["DOCS_DB"]]
+    user_db = req.app.database[config["USER_DB"]]
+    files_db = req.app.database[config["FILES_DB"]]
+    
     uid = gen_uid(user.username, filename)
     log_prefix = (
         f"> [LOG]\t{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - GET_TOKENS - {uid}"
     )
 
+
     try:
-        # Loop through the user's uploaded files to find the requested filename
-        for doc in user.uploaded_files:
-            if doc.name == filename:
-                # Check if the document is tokenized
-                if not doc.tokenized:
-                    print(f"{log_prefix} - ERROR - NOT_TOKENIZED - {filename}")
-                    raise HTTPException(
-                        status_code=status.HTTP_409_CONFLICT,
-                        detail=apiMsg.NOT_TOKENIZED.format(file=filename),
-                    )
+        # Retrieve the user's _id from the user_db
+        user_data = await user_db.find_one({"username": user.username})
+        if not user_data:
+            print(f"{log_prefix} - ERROR - USER_NOT_FOUND")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=apiMsg.USER_NOT_FOUND.format(username=user.username),
+            )
 
-                # Retrieve tokenized document from the database
-                doc_tokens = await docs_db.find_one({"_id": ObjectId(doc.tokens_id)})
-                if not doc_tokens:
-                    print(f"{log_prefix} - ERROR - TOKENS_NOT_FOUND - {doc.tokens_id}")
-                    raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND,
-                        detail=apiMsg.TOKENS_NOT_FOUND.format(tokens_id=doc.tokens_id),
-                    )
+        user_id = str(user_data["_id"])
 
-                doc_tokens = DocTokens(**doc_tokens)
-                print(f"{log_prefix} - INFO - TOKEN_GET_SUCCESS - {doc.tokens_id}")
-                return JSONResponse(
-                    status_code=status.HTTP_200_OK,
-                    content={
-                        "message": apiMsg.TOKEN_GET_SUCCESS.format(
-                            tokens_id=doc.tokens_id
-                        ),
-                        "data": doc_tokens.dict(),
-                    },
-                )
+        # Query the files_db to find the document by user_id and filename
+        doc = await files_db.find_one({"user_id": user_id, "name": filename})
+        if not doc:
+            print(f"{log_prefix} - ERROR - FILE_NOT_FOUND_DB - {filename}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=apiMsg.FILE_NOT_FOUND_DB.format(file=filename),
+            )
 
-        # If the document is not found in the user's uploaded files
-        print(f"{log_prefix} - ERROR - USER_UPLOAD_NOT_FOUND - {filename}")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=apiMsg.USER_UPLOAD_NOT_FOUND.format(file=filename),
+       # Check if the document is tokenized
+        if not doc.get("tokens"):
+            print(f"{log_prefix} - ERROR - NOT_TOKENIZED - {filename}")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=apiMsg.NOT_TOKENIZED.format(file=filename),
+            )
+
+        # Retrieve tokenized document from the files_db
+        doc_tokens = doc["tokens"]
+        if not doc_tokens:
+            print(f"{log_prefix} - ERROR - TOKENS_NOT_FOUND")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=apiMsg.TOKENS_NOT_FOUND.format(tokens_id=filename),
+            )
+
+        doc_tokens = DocTokens(**doc_tokens)
+        print(f"{log_prefix} - INFO - TOKEN_GET_SUCCESS")
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "message": apiMsg.TOKEN_GET_SUCCESS.format(tokens_id=filename),
+                "data": doc_tokens.dict(),
+            },
         )
+
     except HTTPException as e:
         raise e  # Re-raise the HTTP exceptions
     except Exception as e:
@@ -480,57 +492,68 @@ async def generate_tokens(
         )
        
 
-async def query_rag(user: UserBase, filename, query):
+async def query_rag(req: Request, user: UserBase, filename, query):
+    files_db = req.app.database[config["FILES_DB"]]
     log_prefix = f"> [LOG]\t{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - QUERY_RAG - {filename}"
 
     try:
-        # Iterate through user's uploaded files to find the target file
-        for doc in user.uploaded_files:
-            if doc.name == filename:
-                # Check if the document is tokenized
-                if not doc.tokenized:
-                    print(f"{log_prefix} - ERROR - FILE_NOT_YET_TOKENIZED")
-                    raise HTTPException(
-                        status_code=status.HTTP_409_CONFLICT,
-                        detail=apiMsg.FILE_NOT_YET_TOKENIZED.format(file=filename),
-                    )
+        # Retrieve the user's _id from the user_db
+        user_data = await req.app.database[config["USER_DB"]].find_one({"username": user.username})
+        if not user_data:
+            print(f"{log_prefix} - ERROR - USER_NOT_FOUND")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=apiMsg.USER_NOT_FOUND.format(username=user.username),
+            )
 
-                # Check if the document is embedded
-                if not doc.embedded:
-                    print(f"{log_prefix} - ERROR - FILE_NOT_YET_EMBEDDED")
-                    raise HTTPException(
-                        status_code=status.HTTP_409_CONFLICT,
-                        detail=apiMsg.FILE_NOT_YET_EMBEDDED.format(file=filename),
-                    )
+        user_id = str(user_data["_id"])
 
-                # Check if the vector database path exists
-                if not os.path.exists(doc.vec_db_path):
-                    print(f"{log_prefix} - ERROR - FILE_NOT_FOUND_LOCAL")
-                    raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND,
-                        detail=apiMsg.FILE_NOT_FOUND_LOCAL.format(file=doc.vec_db_path),
-                    )
+        # Query the files_db to find the document by user_id and filename
+        doc = await files_db.find_one({"user_id": user_id, "name": filename})
+        if not doc:
+            print(f"{log_prefix} - ERROR - FILE_NOT_FOUND - {filename}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=apiMsg.FILE_NOT_FOUND.format(file=filename),
+            )
 
-                # Set up the QA chain using the vector database path
-                # qa_chain = setup_chain(doc.vec_db_path)
-                response = await qa_chain_async(str(query), doc.vec_db_path)
+        # Check if the document is tokenized
+        if not doc.get("tokens"):
+            print(f"{log_prefix} - ERROR - FILE_NOT_YET_TOKENIZED")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=apiMsg.FILE_NOT_YET_TOKENIZED.format(file=filename),
+            )
 
-                # Return the query response
-                print(f"{log_prefix} - INFO - QUERY_SUCCESS")
-                return JSONResponse(
-                    status_code=status.HTTP_200_OK,
-                    content={
-                        "message": apiMsg.RAG_QUERY_SUCCESS,
-                        "data": {"query": str(query), "response": response["result"]},
-                    },
-                )
+        # Check if the document is embedded
+        if not doc.get("vec_db_path"):
+            print(f"{log_prefix} - ERROR - FILE_NOT_YET_EMBEDDED")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=apiMsg.FILE_NOT_YET_EMBEDDED.format(file=filename),
+            )
 
-        # Raise an error if the file is not found in user's uploaded files
-        print(f"{log_prefix} - ERROR - USER_UPLOAD_NOT_FOUND")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=apiMsg.USER_UPLOAD_NOT_FOUND.format(file=filename),
+        # Check if the vector database path exists
+        if not os.path.exists(doc["vec_db_path"]):
+            print(f"{log_prefix} - ERROR - FILE_NOT_FOUND_LOCAL")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=apiMsg.FILE_NOT_FOUND_LOCAL.format(file=doc["vec_db_path"]),
+            )
+
+        # Set up the QA chain using the vector database path
+        response = await qa_chain_async(str(query), doc["vec_db_path"])
+
+        # Return the query response
+        print(f"{log_prefix} - INFO - QUERY_SUCCESS")
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "message": apiMsg.RAG_QUERY_SUCCESS,
+                "data": {"query": str(query), "response": response["result"]},
+            },
         )
+
     except HTTPException as e:
         raise e  # Re-raise the HTTP exceptions
     except Exception as e:

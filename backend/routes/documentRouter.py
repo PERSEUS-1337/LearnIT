@@ -88,11 +88,12 @@ async def process_tscc_route(
 
 @router.post("/query-rag")
 async def query_rag_route(
+    req: Request,
     filename: str = Form(...),
     query: str = Form(...),
     user: UserBase = Depends(auth_curr_user),
 ):
-    return await query_rag(user, filename, query)
+    return await query_rag(req, user, filename, query)
 
 
 @router.delete("/")
