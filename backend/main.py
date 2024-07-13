@@ -21,11 +21,21 @@ async def measure_request_time(request: Request, call_next):
     response.headers["X-Process-Time"] = f"{process_time} s"
     return response
 
+origins = [
+    "http://localhost",  # Add the origin where Swagger UI is served
+    "http://localhost/api",  # Add the origin where Swagger UI is served
+    "http://127.0.0.1",
+    "http://127.0.0.1/api",
+    "http://178.128.90.113/",
+    "http://178.128.90.113/api",
+]
+
+
 
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust this to match your SvelteKit application's origin
+    allow_origins=origins,  # Adjust this to match your SvelteKit application's origin
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
