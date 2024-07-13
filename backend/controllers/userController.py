@@ -125,52 +125,6 @@ async def register_user(req: Request, user: UserReg = Body(...)):
         )
 
 
-async def get_all_users(req: Request):
-    db = req.app.database[config["USER_DB"]]
-    user_list = list(db.find({}, {"_id": 0, "hashed_password": 0}))
-
-    if not list:
-        return JSONResponse(
-            status_code=status.HTTP_404_NOT_FOUND,
-            content={"message": APIMessages.USERS_NOT_FOUND},
-        )
-
-    return user_list
-
-
-async def update_user(
-    req: Request, user: UserBase, user_update: UserUpdate
-) -> Optional[UserBase]:
-    db = req.app.database[config["USER_DB"]]
-
-    # Create a dictionary to hold the updated data
-    updated_data = {}
-
-    # Copy existing data from user to updated_data
-    for field, value in user.model_dump().items():
-        updated_data[field] = value
-
-    # Update the fields that are provided in user_update
-    if user_update.email:
-        updated_data["email"] = user_update.email
-    if user_update.full_name:
-        updated_data["full_name"] = user_update.full_name
-
-    # Update the user's information in the database
-    db.update_one({"username": user.username}, {"$set": updated_data})
-
-    # Fetch the updated user data from the database
-    updated_user_data = db.find_one({"username": user.username})
-    updated_user_data = UserBase(**updated_user_data)
-    updated_user_data = updated_user_data.model_dump()
-
-    # Create a UserBase object using the updated data and return it
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={"message": APIMessages.USER_UPDATED, "data": updated_user_data},
-    )
-
-
 async def delete_user(req: Request, user: UserBase):
     try:
         # Find the user in the database by username
