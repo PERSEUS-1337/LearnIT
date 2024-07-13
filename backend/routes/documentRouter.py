@@ -1,6 +1,7 @@
 from typing import Annotated, Optional
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     Body,
     Form,
     Request,
@@ -68,20 +69,28 @@ async def generate_tokens_route(
     overwrite: Optional[bool] = Form(None),
     user: UserBase = Depends(auth_curr_user),
 ):
-    # print(filename, pdf_loader, overwrite)
     return await generate_tokens(req, user, filename, pdf_loader, overwrite)
 
 
 @router.post("/process-tscc")
 async def process_tscc_route(
+    background_tasks: BackgroundTasks,
     req: Request,
     filename: str = Form(...),
-    llm: Optional[str] = Form(
-        None
-    ),  # Adjusted to accept None and differentiate from empty string
+    llm: Optional[str] = Form(None),
     user: UserBase = Depends(auth_curr_user),
 ):
-    return await process_tscc(req, user, filename, llm)
+
+    # background_tasks.add_task(process_tscc, req, user, filename, llm)
+
+    # # Immediately return a response to the client
+    # response = {
+    #     "message": "Processing started",
+    #     "status": "in_progress"
+    # }
+    # return JSONResponse(status_code=202, content=response)
+
+    return await process_tscc(background_tasks, req, user, filename, llm)
 
 
 @router.post("/query-rag")

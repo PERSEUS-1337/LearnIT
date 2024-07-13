@@ -22,3 +22,16 @@ def find_file_by_uid(upload_path, uid):
         return ""
 
     return matching_files[0]
+
+
+async def update_user_doc_status(user_db, user, filename, doc):
+    await user_db.update_one(
+        {"username": user.username, "uploaded_files.name": filename},
+        {
+            "$set": {
+                "uploaded_files.$.process_status": (
+                    doc.process_status.dict() if doc.process_status else None
+                )
+            }
+        },
+    )

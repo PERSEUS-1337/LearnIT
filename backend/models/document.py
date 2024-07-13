@@ -3,6 +3,11 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel
 
 
+class ProcessStatus(BaseModel):
+    code: int
+    message: str
+
+
 class UploadDoc(BaseModel):
     uid: str
     name: str
@@ -10,6 +15,7 @@ class UploadDoc(BaseModel):
     tokenized: bool = False
     embedded: bool = False
     processed: bool = False
+    process_status: Optional[ProcessStatus] = None
     tokens_id: Optional[str] = None
     vec_db_path: Optional[str] = None
     tscc_id: Optional[str] = None
@@ -25,6 +31,9 @@ class UploadDoc(BaseModel):
             "tokenized": self.tokenized,
             "embedded": self.embedded,
             "processed": self.processed,
+            "process_status": (
+                self.process_status.dict() if self.process_status else None
+            ),
             "tokens_id": self.tokens_id,
             "vec_db_path": self.vec_db_path,
             "tscc_id": self.tscc_id,

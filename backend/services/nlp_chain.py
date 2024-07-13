@@ -49,10 +49,9 @@ def extract_page_content(chunk) -> str:
 def document_tokenizer_sync(
     file_path, doc_uid, loader_choice
 ) -> Tuple[DocTokens, List]:
-    
-    
+
     loader_choice = "default" if loader_choice is None else loader_choice
-    
+
     if LOADERS[loader_choice] == "PyPDFLoader":
         loader = PyPDFLoader(file_path)
     elif LOADERS[loader_choice] == "PyPDFium2Loader":
@@ -145,9 +144,9 @@ def retrieve_db(db_dir):
 
 
 def qa_chain_sync(query, db_dir, chosen_model):
-    
+
     chosen_model = "default" if chosen_model is None else chosen_model
-    
+
     db = Chroma(persist_directory=db_dir, embedding_function=OpenAIEmbeddings())
     turbo_llm = ChatOpenAI(temperature=0, model_name=LLMS[chosen_model])
     retriever = db.as_retriever(search_kwargs={"k": 6}, search_type="mmr")
@@ -192,7 +191,7 @@ async def llm_process_async(curr_chunk, prev_chunk, chosen_model) -> str:
 
 async def generate_tscc(document, chosen_model: Optional[str] = None) -> TSCC:
     chosen_model = "default" if chosen_model is None else chosen_model
-    
+
     _id = str(document["_id"])
     chunk_dicts = document["chunks"]
     total_chunk_dicts = document["chunk_count"]

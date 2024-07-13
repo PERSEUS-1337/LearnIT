@@ -69,8 +69,9 @@ class APIMessages:
     TSCC_GET_SUCCESS = "TSCC '{tscc_id}' has successfully been retrieved."
     TSCC_NOT_FOUND = "TSCC with tscc_id '{tscc_id}' does not exist in tscc_db."
     NOT_TSCC_PROCESSED = "File '{file}' is not yet processed for TSCC."
-    TSCC_ALREADY_PROCESSED = "File '{file}' has already been processed."
+    TSCC_PROCESSING_BACKGROUND = "File '{file}' is currently being processed for TSCC."
     TSCC_PROCESS_SUCCESS = "File '{file}' has been successfully processed for TSCC."
+    TSCC_ALREADY_PROCESSED = "File '{file}' has already been processed."
     TSCC_DB_DELETE_SUCCESS = "Sucessfully deleted {file}'s tscc from the database."
     TSCC_DB_DELETE_FAIL = (
         "Failed to delete TSCC document of file '{file}' from tscc_db."

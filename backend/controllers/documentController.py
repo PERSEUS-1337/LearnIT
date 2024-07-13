@@ -4,7 +4,7 @@ import aiofiles
 from bson import ObjectId
 from dotenv import dotenv_values
 
-from fastapi import HTTPException, status, Request, UploadFile, status
+from fastapi import BackgroundTasks, HTTPException, status, Request, UploadFile, status
 from fastapi.responses import JSONResponse
 
 from services.nlp_chain import (
@@ -13,10 +13,10 @@ from services.nlp_chain import (
     qa_chain_async,
     setup_db,
 )
-from utils.fileUtils import find_file_by_uid, gen_uid
+from utils.fileUtils import find_file_by_uid, gen_uid, update_user_doc_status
 from middleware.apiMsg import APIMessages as apiMsg
 from models.user import UserBase
-from models.document import TSCC, DocTokens, UploadDoc
+from models.document import TSCC, DocTokens, ProcessStatus, UploadDoc
 
 
 config = dotenv_values(".env")
@@ -528,7 +528,9 @@ async def query_rag(user: UserBase, filename, query):
         )
 
 
-async def process_tscc(req: Request, user: UserBase, filename, llm):
+async def process_tscc(
+    background_tasks: BackgroundTasks, req: Request, user: UserBase, filename, llm
+):
     log_prefix = f"> [LOG]\t{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - PROCESS_TSCC - {filename}"
 
     db = req.app.database
@@ -565,45 +567,31 @@ async def process_tscc(req: Request, user: UserBase, filename, llm):
                         detail=apiMsg.TOKENS_NOT_FOUND.format(tokens_id=doc.tokens_id),
                     )
 
-                # Generate TSCC for the document
-                tscc = await generate_tscc(document, llm)
-
-                # Insert TSCC into the database
-                tscc_insert_result = await tscc_db.insert_one(tscc.dict())
-                if not tscc_insert_result.inserted_id:
-                    print(f"{log_prefix} - ERROR - TSCC_DB_INSERT_FAIL")
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=apiMsg.TSCC_DB_INSERT_FAIL.format(file=filename),
-                    )
-
-                # Update document with TSCC information
-                doc.tscc_id = str(tscc_insert_result.inserted_id)
-                doc.processed = True
-
-                # Update user's uploaded files with the new document information
-                update_result = await user_db.update_one(
-                    {"username": user.username, "uploaded_files.name": filename},
-                    {"$set": {"uploaded_files.$": doc.dict()}},
+                # Add the long-running process to background tasks
+                # Add the long-running process to background tasks
+                doc.process_status = ProcessStatus(
+                    code=status.HTTP_202_ACCEPTED,
+                    message=apiMsg.TSCC_PROCESSING_BACKGROUND.format(file=filename),
+                )
+                await update_user_doc_status(user_db, user, filename, doc)
+                background_tasks.add_task(
+                    process_tscc_background,
+                    req,
+                    user,
+                    filename,
+                    doc,
+                    document,
+                    llm,
+                    log_prefix,
                 )
 
-                # Check if the update was successful
-                if update_result.modified_count == 0:
-                    print(f"{log_prefix} - ERROR - USER_TSCC_INSERT_FAIL")
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=apiMsg.USER_TSCC_INSERT_FAIL.format(
-                            user=user.username, file=filename
-                        ),
-                    )
-
-                # Return success message with TSCC ID
-                print(f"{log_prefix} - INFO - TSCC_PROCESS_SUCCESS")
+                # Return immediate response indicating background processing
                 return JSONResponse(
-                    status_code=status.HTTP_200_OK,
+                    status_code=status.HTTP_202_ACCEPTED,
                     content={
-                        "message": apiMsg.TSCC_PROCESS_SUCCESS.format(file=filename),
-                        "tscc_id": doc.tscc_id,
+                        "message": apiMsg.TSCC_PROCESSING_BACKGROUND.format(
+                            file=filename
+                        ),
                     },
                 )
 
@@ -613,6 +601,75 @@ async def process_tscc(req: Request, user: UserBase, filename, llm):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=apiMsg.USER_UPLOAD_NOT_FOUND.format(file=filename),
         )
+    except HTTPException as e:
+        raise e  # Re-raise the HTTP exceptions
+    except Exception as e:
+        # Log unexpected errors
+        print(f"{log_prefix} - ERROR - UNEXPECTED_ERROR - {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+
+
+async def process_tscc_background(
+    req: Request, user: UserBase, filename, doc, document, llm, log_prefix
+):
+    db = req.app.database
+    user_db = db[config["USER_DB"]]
+    tscc_db = db[config["TSCC_DB"]]
+
+    try:
+        # Generate TSCC for the document
+        tscc = await generate_tscc(document, llm)
+
+        # Insert TSCC into the database
+        tscc_insert_result = await tscc_db.insert_one(tscc.dict())
+        if not tscc_insert_result.inserted_id:
+            doc.process_status = ProcessStatus(
+                code=status.HTTP_400_BAD_REQUEST,
+                message=apiMsg.TSCC_DB_INSERT_FAIL.format(file=filename),
+            )
+            await update_user_doc_status(user_db, user, filename, doc)
+            print(f"{log_prefix} - ERROR - TSCC_DB_INSERT_FAIL")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=apiMsg.TSCC_DB_INSERT_FAIL.format(file=filename),
+            )
+
+        # Update document with TSCC information
+        doc.tscc_id = str(tscc_insert_result.inserted_id)
+        doc.processed = True
+        doc.process_status = ProcessStatus(
+            code=status.HTTP_200_OK,
+            message=apiMsg.TSCC_PROCESS_SUCCESS.format(file=filename),
+        )
+
+        # Update user's uploaded files with the new document information
+        update_result = await user_db.update_one(
+            {"username": user.username, "uploaded_files.name": filename},
+            {"$set": {"uploaded_files.$": doc.dict()}},
+        )
+
+        # Check if the update was successful
+        if update_result.modified_count == 0:
+            doc.process_status = ProcessStatus(
+                code=status.HTTP_400_BAD_REQUEST,
+                message=apiMsg.USER_TSCC_INSERT_FAIL.format(
+                    user=user.username, file=filename
+                ),
+            )
+            await update_user_doc_status(user_db, user, filename, doc)
+            print(f"{log_prefix} - ERROR - USER_TSCC_INSERT_FAIL")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=apiMsg.USER_TSCC_INSERT_FAIL.format(
+                    user=user.username, file=filename
+                ),
+            )
+
+        # Log success message
+        print(f"{log_prefix} - INFO - TSCC_PROCESS_SUCCESS")
     except HTTPException as e:
         raise e  # Re-raise the HTTP exceptions
     except Exception as e:
