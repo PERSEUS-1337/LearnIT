@@ -559,8 +559,8 @@ async def process_tscc(
                     )
 
                 # Retrieve the document tokens from the database
-                document = await docs_db.find_one({"_id": ObjectId(doc.tokens_id)})
-                if not document:
+                doc_tokens = await docs_db.find_one({"_id": ObjectId(doc.tokens_id)})
+                if not doc_tokens:
                     print(f"{log_prefix} - ERROR - TOKENS_NOT_FOUND")
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
@@ -580,7 +580,7 @@ async def process_tscc(
                     user,
                     filename,
                     doc,
-                    document,
+                    doc_tokens,
                     llm,
                     log_prefix,
                 )
@@ -612,24 +612,19 @@ async def process_tscc(
         )
 
 
-async def process_tscc_background(
-    req: Request, user: UserBase, filename, doc, document, llm, log_prefix
-):
+async def process_tscc_background(req: Request, user: UserBase, filename, doc, doc_tokens, llm, log_prefix):
     db = req.app.database
     user_db = db[config["USER_DB"]]
     tscc_db = db[config["TSCC_DB"]]
 
     try:
-        # Generate TSCC for the document
-        tscc = await generate_tscc(document, llm)
+        # Generate TSCC for the doc_tokens
+        tscc = await generate_tscc(user_db, doc, user, filename, doc_tokens, llm)
 
         # Insert TSCC into the database
         tscc_insert_result = await tscc_db.insert_one(tscc.dict())
         if not tscc_insert_result.inserted_id:
-            doc.process_status = ProcessStatus(
-                code=status.HTTP_400_BAD_REQUEST,
-                message=apiMsg.TSCC_DB_INSERT_FAIL.format(file=filename),
-            )
+            doc.process_status = ProcessStatus(code=status.HTTP_400_BAD_REQUEST, message=apiMsg.TSCC_DB_INSERT_FAIL.format(file=filename))
             await update_user_doc_status(user_db, user, filename, doc)
             print(f"{log_prefix} - ERROR - TSCC_DB_INSERT_FAIL")
             raise HTTPException(
@@ -640,10 +635,7 @@ async def process_tscc_background(
         # Update document with TSCC information
         doc.tscc_id = str(tscc_insert_result.inserted_id)
         doc.processed = True
-        doc.process_status = ProcessStatus(
-            code=status.HTTP_200_OK,
-            message=apiMsg.TSCC_PROCESS_SUCCESS.format(file=filename),
-        )
+        doc.process_status = ProcessStatus(code=status.HTTP_200_OK, message=apiMsg.TSCC_PROCESS_SUCCESS.format(file=filename))
 
         # Update user's uploaded files with the new document information
         update_result = await user_db.update_one(
@@ -653,12 +645,7 @@ async def process_tscc_background(
 
         # Check if the update was successful
         if update_result.modified_count == 0:
-            doc.process_status = ProcessStatus(
-                code=status.HTTP_400_BAD_REQUEST,
-                message=apiMsg.USER_TSCC_INSERT_FAIL.format(
-                    user=user.username, file=filename
-                ),
-            )
+            doc.process_status = ProcessStatus(code=status.HTTP_400_BAD_REQUEST, message=apiMsg.USER_TSCC_INSERT_FAIL.format(user=user.username, file=filename))
             await update_user_doc_status(user_db, user, filename, doc)
             print(f"{log_prefix} - ERROR - USER_TSCC_INSERT_FAIL")
             raise HTTPException(
@@ -671,14 +658,21 @@ async def process_tscc_background(
         # Log success message
         print(f"{log_prefix} - INFO - TSCC_PROCESS_SUCCESS")
     except HTTPException as e:
+        doc.process_status = ProcessStatus(code=e.status_code, message=str(e.detail))
+        await update_user_doc_status(user_db, user, filename, doc)
         raise e  # Re-raise the HTTP exceptions
     except Exception as e:
-        # Log unexpected errors
+        doc.process_status = ProcessStatus(code=status.HTTP_500_INTERNAL_SERVER_ERROR, message=str(e))
+        await update_user_doc_status(user_db, user, filename, doc)
         print(f"{log_prefix} - ERROR - UNEXPECTED_ERROR - {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
         )
+    finally:
+        if doc.process_status.code != status.HTTP_200_OK:
+            await update_user_doc_status(user_db, user, filename, doc)
+
 
 
 async def delete_tokens(req: Request, user: UserBase, filename):
