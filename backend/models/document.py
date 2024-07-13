@@ -17,6 +17,15 @@ class DocTokens(BaseModel):
 
     class Config:
         json_encoders = {datetime: lambda dt: dt.isoformat()}
+    
+    def dict(self):
+        return {
+            "processed": self.processed.isoformat(),
+            "doc_loader_used": self.doc_loader_used,
+            "token_count": self.token_count,
+            "chunk_count": self.chunk_count,
+            "chunks": self.chunks,
+        }
 
 
 class TSCC(BaseModel):
@@ -29,6 +38,16 @@ class TSCC(BaseModel):
 
     class Config:
         json_encoders = {datetime: lambda dt: dt.isoformat()}
+    
+    def dict(self):
+        return {
+            "processed": self.processed.isoformat(),
+            "process_time": self.process_time,
+            "model_used": self.model_used,
+            "token_count": self.token_count,
+            "chunk_count": self.chunk_count,
+            "chunks": self.chunks,
+        }
 
 
 class UploadDoc(BaseModel):

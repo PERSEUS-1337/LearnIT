@@ -1,5 +1,6 @@
 from datetime import datetime
 import os
+from typing import List
 import aiofiles
 from bson import ObjectId
 from dotenv import dotenv_values
@@ -20,6 +21,43 @@ from models.document import TSCC, DocTokens, ProcessStatus, UploadDoc
 
 
 config = dotenv_values(".env")
+
+async def get_user_files(req: Request, user: UserBase) -> List[UploadDoc]:
+    db = req.app.database
+    user_db = db[config["USER_DB"]]
+    files_db = db[config["FILES_DB"]]
+
+    log_prefix = f"> [LOG]\t{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - GET_UPLOADED_FILES - {user.username}"
+
+    try:
+        # Retrieve the user's _id from the user_db
+        user_data = await user_db.find_one({"username": user.username})
+        if not user_data:
+            print(f"{log_prefix} - ERROR - USER_NOT_FOUND")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=apiMsg.USER_NOT_FOUND.format(username=user.username),
+            )
+
+        user_id = str(user_data["_id"])
+
+        # Query the files_db to get the uploaded files by user_id
+        uploaded_files_cursor = files_db.find({"user_id": user_id})
+        uploaded_files = await uploaded_files_cursor.to_list(length=None)
+
+        # Convert each file document to an UploadDoc instance
+        uploaded_files_list = [UploadDoc(**file) for file in uploaded_files]
+
+        print(f"{log_prefix} - INFO - FILES_RETRIEVED")
+        return uploaded_files_list
+
+    except HTTPException as e:
+        raise e  # Re-raise the HTTP exceptions
+    except Exception as e:
+        print(f"{log_prefix} - ERROR - UNEXPECTED_ERROR - {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
 
 
 async def upload_file(req: Request, file: UploadFile, user: UserBase):
@@ -306,7 +344,7 @@ async def generate_tokens(
 ):
     db = req.app.database
     user_db = db[config["USER_DB"]]
-    docs_db = db[config["DOCS_DB"]]
+    files_db = db[config["FILES_DB"]]
 
     uid = gen_uid(user.username, filename)
     log_prefix = f"> [LOG]\t{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - GENERATE_TOKENS - {uid}"
@@ -322,103 +360,116 @@ async def generate_tokens(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=apiMsg.FILE_NOT_FOUND_LOCAL.format(file=filename),
             )
+            
+            
+         # Retrieve the user's ID from the database
+        user_data = await user_db.find_one({"username": user.username}, {"_id": 1})
+        if not user_data:
+            print(f"{log_prefix} - ERROR - USER_NOT_FOUND_DB - {user.username}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=apiMsg.USER_NOT_FOUND_DB.format(user=user.username),
+            )
+        
+        user_id = str(user_data["_id"])  # Convert ObjectId to str if needed
 
-        # Iterate through user's uploaded files to find the target file
-        for doc in user.uploaded_files:
-            if doc.name == filename:
-                # Check if the document is already tokenized and not set to overwrite
-                if doc.tokenized and not overwrite:
-                    print(f"{log_prefix} - ERROR - TOKENS_EXISTS")
-                    raise HTTPException(
-                        status_code=status.HTTP_409_CONFLICT,
-                        detail=apiMsg.TOKENS_EXISTS.format(file=filename),
-                    )
+        # Retrieve the file document from files_db based on user_id and file_uid
+        file_doc = await files_db.find_one({"user_id": user_id, "file_uid": uid})
+        if not file_doc:
+            print(f"{log_prefix} - ERROR - FILE_NOT_FOUND_DB - {filename}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=apiMsg.FILE_NOT_FOUND_DB.format(file=filename),
+            )
 
-                try:
-                    # Start tokenization process
-                    print(f"{log_prefix} - INFO - START_TOKENIZATION")
-                    doc_tokens, pre_text_chunks = await document_tokenizer_async(
-                        file_path, uid, pdf_loader
-                    )
-                except Exception as e:
-                    print(f"{log_prefix} - ERROR - TOKENIZATION_FAIL - {str(e)}")
+        # Check if the document is already tokenized and not set to overwrite
+        if file_doc.get("tokens") and not overwrite:
+            print(f"{log_prefix} - ERROR - TOKENS_EXISTS")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=apiMsg.TOKENS_EXISTS.format(file=filename),
+            )
+
+        try:
+            # Start tokenization process
+            print(f"{log_prefix} - INFO - START_TOKENIZATION")
+            doc_tokens, pre_text_chunks = await document_tokenizer_async(
+                file_path, uid, pdf_loader
+            )
+        except Exception as e:
+            print(f"{log_prefix} - ERROR - TOKENIZATION_FAIL - {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=apiMsg.TOKENIZATION_FAIL.format(
+                    file=filename, error=str(e)
+                ),
+            )
+        
+        # Set up vector database path
+        vec_db_path = setup_db(uid, pre_text_chunks)
+        file_doc["vec_db_path"] = str(vec_db_path)
+        file_doc["embedded"] = True
+
+         # If overwrite is enabled and document is already tokenized, update the tokens
+        if file_doc.get("tokens") and overwrite:
+            try:
+                update_result = await files_db.update_one(
+                    {"user_id": user_id, "file_uid": uid},
+                    {"$set": {"tokens": doc_tokens.dict()}},
+                )
+                if update_result.modified_count == 0:
+                    print(f"{log_prefix} - ERROR - TOKENS_UPDATE_FAIL")
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=apiMsg.TOKENIZATION_FAIL.format(
-                            file=filename, error=str(e)
-                        ),
+                        detail=apiMsg.TOKENS_UPDATE_FAIL.format(file=filename),
                     )
-
-                # Set up vector database path
-                vec_db_path = setup_db(uid, pre_text_chunks)
-                doc.vec_db_path = str(vec_db_path)
-                doc.embedded = True
-
-                # If overwrite is enabled and document is already tokenized, update the tokens
-                if doc.tokenized and overwrite:
-                    try:
-                        update_result = await docs_db.update_one(
-                            {"_id": ObjectId(doc.tokens_id)},
-                            {"$set": doc_tokens.dict()},
-                        )
-                        if update_result.modified_count == 0:
-                            print(f"{log_prefix} - ERROR - TOKENS_UPDATE_FAIL")
-                            raise HTTPException(
-                                status_code=status.HTTP_400_BAD_REQUEST,
-                                detail=apiMsg.TOKENS_UPDATE_FAIL.format(file=filename),
-                            )
-                    except Exception as e:
-                        print(f"{log_prefix} - ERROR - TOKENS_UPDATE_FAIL - {str(e)}")
-                        raise HTTPException(
-                            status_code=status.HTTP_400_BAD_REQUEST,
-                            detail=apiMsg.TOKENS_UPDATE_FAIL.format(
-                                file=filename, error=str(e)
-                            ),
-                        )
-                else:
-                    # Insert new token data into the database
-                    doc_insert_result = await docs_db.insert_one(doc_tokens.dict())
-                    if not doc_insert_result.inserted_id:
-                        print(f"{log_prefix} - ERROR - TOKENS_INSERT_FAIL - {str(e)}")
-                        raise HTTPException(
-                            status_code=status.HTTP_400_BAD_REQUEST,
-                            detail=apiMsg.TOKENS_INSERT_FAIL.format(
-                                file=filename, error=str(e)
-                            ),
-                        )
-
-                    # Update document with new token ID
-                    doc.tokens_id = str(doc_insert_result.inserted_id)
-                    doc.tokenized = True
-
-                    update_result = await user_db.update_one(
-                        {"username": user.username, "uploaded_files.name": filename},
-                        {"$set": {"uploaded_files.$": doc.dict()}},
-                    )
-
-                    if update_result.modified_count == 0:
-                        print(f"{log_prefix} - ERROR - USER_TOKENS_INSERT_FAIL")
-                        raise HTTPException(
-                            status_code=status.HTTP_400_BAD_REQUEST,
-                            detail=apiMsg.USER_TOKENS_INSERT_FAIL.format(
-                                tokens_id=doc.tokens_id, user=user.username
-                            ),
-                        )
-
-                print(f"{log_prefix} - INFO - TOKENIZATION_SUCCESS")
-                return JSONResponse(
-                    status_code=status.HTTP_200_OK,
-                    content={
-                        "message": apiMsg.TOKENIZE_SUCCESS.format(file=filename),
-                        "data": doc_tokens.dict(),
-                    },
+            except Exception as e:
+                print(f"{log_prefix} - ERROR - TOKENS_UPDATE_FAIL - {str(e)}")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=apiMsg.TOKENS_UPDATE_FAIL.format(
+                        file=filename, error=str(e)
+                    ),
+                )
+        else:
+            # Insert new token data into the database
+            doc_insert_result = await files_db.insert_one(doc_tokens.dict())
+            if not doc_insert_result.inserted_id:
+                print(f"{log_prefix} - ERROR - TOKENS_INSERT_FAIL - {str(e)}")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=apiMsg.TOKENS_INSERT_FAIL.format(
+                        file=filename, error=str(e)
+                    ),
                 )
 
-        print(f"{log_prefix} - ERROR - USER_UPLOAD_NOT_FOUND")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=apiMsg.USER_UPLOAD_NOT_FOUND.format(file=filename),
+            # Update document with new token data
+            file_doc["tokens"] = doc_tokens.dict()
+            file_doc["tokenized"] = True
+
+            update_result = await files_db.update_one(
+                {"user_id": user_id, "file_uid": uid},
+                {"$set": file_doc},
+            )
+
+            if update_result.modified_count == 0:
+                print(f"{log_prefix} - ERROR - USER_TOKENS_INSERT_FAIL")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=apiMsg.USER_TOKENS_INSERT_FAIL.format(
+                        tokens_id=str(doc_insert_result.inserted_id), user=user.username
+                    ),
+                )
+
+        print(f"{log_prefix} - INFO - TOKENIZATION_SUCCESS")
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "message": apiMsg.TOKENIZE_SUCCESS.format(file=filename),
+                "data": doc_tokens.dict(),
+            },
         )
+
     except HTTPException as e:
         raise e  # Re-raise the HTTP exceptions
     except Exception as e:
@@ -427,7 +478,7 @@ async def generate_tokens(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
         )
-
+       
 
 async def query_rag(user: UserBase, filename, query):
     log_prefix = f"> [LOG]\t{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - QUERY_RAG - {filename}"

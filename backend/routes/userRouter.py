@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Body, Request, Depends
 
+from controllers.documentController import get_user_files
 from controllers.userController import (
     delete_user,
 )
@@ -22,3 +23,10 @@ async def edit_user_route(
     current_user: UserBase = Depends(auth_curr_user),
 ):
     return await delete_user(req, current_user)
+
+
+@router.get("/files")
+async def get_user_files_route(
+    req: Request, user: UserBase = Depends(auth_curr_user)
+):
+    return await get_user_files(req, user)
