@@ -533,10 +533,10 @@ async def query_rag(req: Request, user: UserBase, filename, query):
 
         # Check if the document is tokenized
         if not doc_data.tokenized:
-            print(f"{log_prefix} - ERROR - FILE_NOT_YET_TOKENIZED")
+            print(f"{log_prefix} - ERROR - NOT_TOKENIZED")
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=apiMsg.FILE_NOT_YET_TOKENIZED.format(file=filename),
+                detail=apiMsg.NOT_TOKENIZED.format(file=filename),
             )
 
         # Check if the document is embedded
@@ -614,7 +614,7 @@ async def process_tscc(
 
         # Check if the document is tokenized
         if not doc_data.tokenized:
-            print(f"{log_prefix} - ERROR - FILE_NOT_YET_TOKENIZED")
+            print(f"{log_prefix} - ERROR - NOT_TOKENIZED")
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=apiMsg.NOT_TOKENIZED.format(file=doc_data.name),
