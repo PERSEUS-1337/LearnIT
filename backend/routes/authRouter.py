@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Body, status, Request
+from fastapi import APIRouter, Depends, Body, Form, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse
 
@@ -38,8 +38,14 @@ async def login_route(
     response_description="Register a user",
     status_code=status.HTTP_201_CREATED,
 )
-async def register_route(req: Request, user: UserReg = Body(...)):
-    return await register_user(req, user)
+async def register_route(
+    req: Request, 
+    username: str = Form(...),
+    full_name: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...)
+):
+    return await register_user(req, username, full_name, email, password)
 
 
 @router.post(

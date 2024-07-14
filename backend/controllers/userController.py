@@ -1,6 +1,6 @@
 from dotenv import dotenv_values
 from datetime import timedelta
-from typing import Annotated, Collection, List, Optional
+from typing import Annotated
 from fastapi import Depends, HTTPException, status, Request, Body
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
@@ -69,10 +69,10 @@ async def login_user(
         )
 
 
-async def register_user(req: Request, user: UserReg = Body(...)):
+async def register_user(req: Request, username: str, full_name: str, email: str, password: str):
     try:
         db = req.app.database[config["USER_DB"]]
-        user_exists = await get_user_creds(db, user.username)
+        user_exists = await get_user_creds(db, username)
         if user_exists:
             return JSONResponse(
                 status_code=status.HTTP_409_CONFLICT,
@@ -80,12 +80,12 @@ async def register_user(req: Request, user: UserReg = Body(...)):
                 content={"message": APIMessages.USER_ALREADY_EXISTS},
             )
 
-        hashed_pass = get_password_hash(user.password)
+        hashed_pass = get_password_hash(password)
 
         new_user_data = UserInDB(
-            username=user.username,
-            email=user.email,
-            full_name=user.full_name,
+            username=username,
+            email=email,
+            full_name=full_name,
             hashed_password=hashed_pass,
         )
 
@@ -102,7 +102,6 @@ async def register_user(req: Request, user: UserReg = Body(...)):
             username=new_user_data.username,
             email=new_user_data.email,
             full_name=new_user_data.full_name,
-            uploaded_files=new_user_data.uploaded_files,
         )
 
         return JSONResponse(
