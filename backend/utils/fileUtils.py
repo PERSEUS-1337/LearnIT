@@ -31,7 +31,9 @@ async def update_doc_status(files_db, doc_data):
         {"_id": ObjectId(doc_data.oid)},
         {
             "$set": {
-                "process_status": doc_data.process_status.dict() if doc_data.process_status else None
+                "process_status": (
+                    doc_data.process_status.dict() if doc_data.process_status else None
+                )
             }
         },
     )

@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 
 from controllers.userController import login_user, register_user
 from middleware.apiMsg import APIMessages
-from models.user import UserReg
+import utils.responses as responses
 
 router = APIRouter()
 
@@ -23,7 +23,10 @@ def hello():
 
 
 @router.post(
-    "/login", response_description="Login a user", status_code=status.HTTP_202_ACCEPTED
+    "/login",
+    response_description="Login a user",
+    status_code=status.HTTP_202_ACCEPTED,
+    responses=responses.login_responses,
 )
 async def login_route(
     req: Request,
@@ -37,13 +40,14 @@ async def login_route(
     "/register",
     response_description="Register a user",
     status_code=status.HTTP_201_CREATED,
+    responses=responses.register_responses,
 )
 async def register_route(
-    req: Request, 
+    req: Request,
     username: str = Form(...),
     full_name: str = Form(...),
     email: str = Form(...),
-    password: str = Form(...)
+    password: str = Form(...),
 ):
     return await register_user(req, username, full_name, email, password)
 

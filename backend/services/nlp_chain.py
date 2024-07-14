@@ -198,22 +198,21 @@ async def generate_tscc(
 ) -> TSCC:
     chosen_model = "default" if chosen_model is None else chosen_model
 
-
     start_time = time.time()  # Record start time
     print(f"> [TSCC]\tDocument: {doc_data.oid} - {doc_data.name}")
-    
+
     processed_chunks = []
     for i, chunk in enumerate(doc_data.tokens.chunks, start=1):
         result = await llm_process_async(chunk["curr"], chunk["prev"], chosen_model)
         processed_chunks.append(result)
-        
+
         print(f"> [TSCC]\t{i} / {doc_data.tokens.chunk_count} processed")
-        
+
         doc_data.process_status = ProcessStatus(
             code=status.HTTP_202_ACCEPTED,
             message=f"{i} / {doc_data.tokens.chunk_count} processed",
         )
-        
+
         await update_doc_status(db, doc_data)
 
     token_count = sum(len(chunk.split()) for chunk in processed_chunks)

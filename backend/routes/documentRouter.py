@@ -24,6 +24,8 @@ from controllers.documentController import (
     get_tscc,
 )
 
+import utils.responses as responses
+
 router = APIRouter()
 
 
@@ -39,28 +41,44 @@ def hello():
     )
 
 
-@router.get("/get-tokens")
+@router.get(
+    "/get-tokens",
+    response_description="Get tokens of a document",
+    responses=responses.get_tokens_responses,
+)
 async def get_tokens_route(
     req: Request, filename: str, user: UserBase = Depends(auth_curr_user)
 ):
     return await get_tokens(req, user, filename)
 
 
-@router.get("/get-tscc")
+@router.get(
+    "/get-tscc",
+    response_description="Get TSCC data of a document",
+    responses=responses.get_tscc_responses,
+)
 async def get_tscc_route(
     req: Request, filename: str, user: UserBase = Depends(auth_curr_user)
 ):
     return await get_tscc(req, user, filename)
 
 
-@router.post("/upload")
+@router.post(
+    "/upload",
+    response_description="Upload a file",
+    responses=responses.upload_file_responses,
+)
 async def upload_file_route(
     req: Request, file: UploadFile, user: UserBase = Depends(auth_curr_user)
 ):
     return await upload_file(req, file, user)
 
 
-@router.post("/gen-tokens")
+@router.post(
+    "/gen-tokens",
+    response_description="Generate tokens for a file",
+    responses=responses.generate_tokens_responses,
+)
 async def generate_tokens_route(
     req: Request,
     filename: str = Form(...),
@@ -71,7 +89,11 @@ async def generate_tokens_route(
     return await generate_tokens(req, user, filename, pdf_loader, overwrite)
 
 
-@router.post("/process-tscc")
+@router.post(
+    "/process-tscc",
+    response_description="Process TSCC for a file",
+    responses=responses.process_tscc_responses,
+)
 async def process_tscc_route(
     background_tasks: BackgroundTasks,
     req: Request,
@@ -83,7 +105,11 @@ async def process_tscc_route(
     return await process_tscc(background_tasks, req, user, filename, llm)
 
 
-@router.post("/query-rag")
+@router.post(
+    "/query-rag",
+    response_description="Query using RAG model",
+    responses=responses.query_rag_responses,
+)
 async def query_rag_route(
     req: Request,
     filename: str = Form(...),
@@ -93,21 +119,31 @@ async def query_rag_route(
     return await query_rag(req, user, filename, query)
 
 
-@router.delete("/")
+@router.delete(
+    "/", response_description="Delete a file", responses=responses.delete_file_responses
+)
 async def delete_file_route(
     req: Request, filename: str, user: UserBase = Depends(auth_curr_user)
 ):
     return await delete_file(req, user, filename)
 
 
-@router.delete("/delete-tokens")
+@router.delete(
+    "/delete-tokens",
+    response_description="Delete tokens from a document",
+    responses=responses.delete_tokens_responses,
+)
 async def delete_tokens_route(
     req: Request, filename: str, user: UserBase = Depends(auth_curr_user)
 ):
     return await delete_tokens(req, user, filename)
 
 
-@router.delete("/delete-tscc")
+@router.delete(
+    "/delete-tscc",
+    response_description="Delete TSCC from a document",
+    responses=responses.delete_tscc_responses,
+)
 async def delete_tscc_route(
     req: Request, filename: str, user: UserBase = Depends(auth_curr_user)
 ):

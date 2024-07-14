@@ -17,7 +17,7 @@ class DocTokens(BaseModel):
 
     class Config:
         json_encoders = {datetime: lambda dt: dt.isoformat()}
-    
+
     def details(self):
         return {
             "processed": self.processed.isoformat(),
@@ -25,7 +25,7 @@ class DocTokens(BaseModel):
             "token_count": self.token_count,
             "chunk_count": self.chunk_count,
         }
-    
+
     def dict(self):
         return {
             "processed": self.processed.isoformat(),
@@ -46,7 +46,7 @@ class TSCC(BaseModel):
 
     class Config:
         json_encoders = {datetime: lambda dt: dt.isoformat()}
-        
+
     def details(self):
         return {
             "processed": self.processed.isoformat(),
@@ -55,7 +55,7 @@ class TSCC(BaseModel):
             "token_count": self.token_count,
             "chunk_count": self.chunk_count,
         }
-    
+
     def dict(self):
         return {
             "processed": self.processed.isoformat(),
@@ -83,7 +83,7 @@ class UploadDoc(BaseModel):
 
     class Config:
         json_encoders = {datetime: lambda dt: dt.isoformat()}
-        
+
     def details(self):
         return {
             "name": self.name,
@@ -91,7 +91,9 @@ class UploadDoc(BaseModel):
             "tokenized": self.tokenized,
             "embedded": self.embedded,
             "processed": self.processed,
-            "process_status": self.process_status.model_dump() if self.process_status else None,
+            "process_status": (
+                self.process_status.model_dump() if self.process_status else None
+            ),
         }
 
     def dict(self):
@@ -100,7 +102,9 @@ class UploadDoc(BaseModel):
             "name": self.name,
             "file_uid": self.file_uid,
             "uploaded_at": self.uploaded_at.isoformat(),
-            "process_status": self.process_status.model_dump() if self.process_status else None,
+            "process_status": (
+                self.process_status.model_dump() if self.process_status else None
+            ),
             "tokenized": self.tokenized,
             "embedded": self.embedded,
             "processed": self.processed,
@@ -108,4 +112,3 @@ class UploadDoc(BaseModel):
             "tokens": self.tokens.model_dump() if self.tokens else None,
             "tscc": self.tscc.model_dump() if self.tscc else None,
         }
-

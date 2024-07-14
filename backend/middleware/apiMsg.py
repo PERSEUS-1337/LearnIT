@@ -32,6 +32,7 @@ class APIMessages:
     LOGIN_SUCCESSFUL = "Login successful."
     LOGOUT_SUCCESSFUL = "Logout successful."
     INCORRECT_PASSWORD = "Password is incorrect. Try again"
+    VALIDATION_ERROR = "Could not validate credentials. Try logging in again"
 
     # Routes
     AUTH_ROUTE_SUCCESS = "This is the AUTH Route"
@@ -39,6 +40,7 @@ class APIMessages:
     QNA_ROUTE_SUCCESS = "This is the QnA Route"
 
     # File Operations
+    FILES_RETRIEVED = "Files successfully retrieves from user files"
     FILE_UPLOADED = "File '{file}' successfully uploaded."
     FILE_ALREADY_EXISTS = "File '{file}' already exists in the server."
     FILE_DELETED = "File '{file}' successfilly deleted."
@@ -47,7 +49,7 @@ class APIMessages:
     FILE_NOT_FOUND_LOCAL = "The file '{file}' does not exist on the server."
     FILE_NOT_FOUND_DB = "The file '{file}' does not exist on the database."
     FILES_NOT_FOUND = "There are no files uploaded on the server yet."
-    
+
     UPLOAD_DOC_INSERT_FAIL = "File '{file}' failed to insert in the files database."
 
     # Tokenization

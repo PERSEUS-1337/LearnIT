@@ -19,7 +19,7 @@ async def auth_curr_user(
 ) -> UserBase:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail=APIMessages.VALIDATION_ERROR,
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:

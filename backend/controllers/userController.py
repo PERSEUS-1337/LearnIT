@@ -69,7 +69,9 @@ async def login_user(
         )
 
 
-async def register_user(req: Request, username: str, full_name: str, email: str, password: str):
+async def register_user(
+    req: Request, username: str, full_name: str, email: str, password: str
+):
     try:
         db = req.app.database[config["USER_DB"]]
         user_exists = await get_user_creds(db, username)
