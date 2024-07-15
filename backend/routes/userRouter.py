@@ -13,6 +13,7 @@ import utils.responses as responses
 
 router = APIRouter()
 
+
 @router.get(
     "/hello",
     response_description="To test if the route is alive and working well",

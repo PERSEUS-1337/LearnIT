@@ -36,6 +36,7 @@ class APIMessages:
 
     # Routes
     AUTH_ROUTE_SUCCESS = "This is the AUTH Route"
+    USER_ROUTE_SUCCESS = "This is the USER Route"
     DOC_ROUTE_SUCCESS = "This is the DOCU Route"
     QNA_ROUTE_SUCCESS = "This is the QnA Route"
 
@@ -85,3 +86,5 @@ class APIMessages:
     TSCC_DB_INSERT_FAIL = (
         "Failed to insert TSCC document of file '{file}' into tscc_db."
     )
+
+    APP_DETAILS_SUCCESS = "App details retrieved successfully."

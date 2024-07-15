@@ -5,7 +5,7 @@ import aiofiles
 from bson import ObjectId
 from dotenv import dotenv_values
 
-from fastapi import BackgroundTasks, HTTPException, status, Request, UploadFile, status
+from fastapi import BackgroundTasks, HTTPException, status, Request, UploadFile
 from fastapi.responses import JSONResponse
 
 from services.nlp_chain import (
@@ -17,7 +17,7 @@ from services.nlp_chain import (
 from utils.fileUtils import find_file_by_uid, gen_uid, update_doc_status
 from middleware.apiMsg import APIMessages
 from models.user import UserBase
-from models.document import TSCC, DocTokens, ProcessStatus, UploadDoc
+from models.document import ProcessStatus, UploadDoc
 
 
 config = dotenv_values(".env")
