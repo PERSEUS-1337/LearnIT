@@ -1,5 +1,7 @@
-from fastapi import APIRouter, Body, Request, Depends
+from fastapi import APIRouter, Body, Request, Depends, status
+from fastapi.responses import JSONResponse
 
+from middleware.apiMsg import APIMessages
 from controllers.documentController import get_file_details, list_user_files
 from controllers.userController import (
     delete_user,
@@ -11,9 +13,20 @@ import utils.responses as responses
 
 router = APIRouter()
 
+@router.get(
+    "/hello",
+    response_description="To test if the route is alive and working well",
+    status_code=status.HTTP_200_OK,
+)
+def hello():
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"message": APIMessages.DOC_ROUTE_SUCCESS},
+    )
+
 
 @router.get(
-    "/",
+    "/me",
     response_description="Get current logged in user details",
     responses=responses.get_curr_user_responses,
 )
@@ -23,8 +36,8 @@ async def get_curr_user_route(
     return current_user
 
 
-@router.delete("/", response_description="Delete user")
-async def edit_user_route(
+@router.delete("/me", response_description="Delete user")
+async def delete_user_route(
     req: Request,
     current_user: UserBase = Depends(auth_curr_user),
 ):
