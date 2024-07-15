@@ -107,7 +107,7 @@ get_file_responses = {
                     "tokenized": True,
                     "embedded": False,
                     "processed": False,
-                    "process_status": None,
+                    "status": None,
                 }
             }
         },
@@ -140,7 +140,7 @@ list_user_files_responses = {
                         "tokenized": True,
                         "embedded": False,
                         "processed": False,
-                        "process_status": None,
+                        "status": None,
                     }
                 ]
             }

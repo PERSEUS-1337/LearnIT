@@ -3,9 +3,10 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel
 
 
-class ProcessStatus(BaseModel):
+class Status(BaseModel):
     code: int
     message: str
+    progress: Optional[int] = 0
 
 
 class DocTokens(BaseModel):
@@ -79,7 +80,8 @@ class UploadDoc(BaseModel):
     tokenized: bool = False
     embedded: bool = False
     processed: bool = False
-    process_status: Optional[ProcessStatus] = None
+    status: Optional[Status] = None
+    
 
     class Config:
         json_encoders = {datetime: lambda dt: dt.isoformat()}
@@ -91,8 +93,18 @@ class UploadDoc(BaseModel):
             "tokenized": self.tokenized,
             "embedded": self.embedded,
             "processed": self.processed,
-            "process_status": (
-                self.process_status.model_dump() if self.process_status else None
+            "status": (
+                self.status.model_dump() if self.status else None
+            ),
+        }
+    
+    def stat(self):
+        return {
+            "name": self.name,
+            "uploaded_at": self.uploaded_at.isoformat(),
+            "processed": self.processed,
+            "status": (
+                self.status.model_dump() if self.status else None
             ),
         }
 
@@ -102,8 +114,8 @@ class UploadDoc(BaseModel):
             "name": self.name,
             "file_uid": self.file_uid,
             "uploaded_at": self.uploaded_at.isoformat(),
-            "process_status": (
-                self.process_status.model_dump() if self.process_status else None
+            "status": (
+                self.status.model_dump() if self.status else None
             ),
             "tokenized": self.tokenized,
             "embedded": self.embedded,

@@ -25,7 +25,7 @@ from fastapi import status
 
 from middleware import apiMsg
 from utils.fileUtils import update_doc_status
-from models.document import TSCC, DocTokens, ProcessStatus, UploadDoc
+from models.document import TSCC, DocTokens, Status, UploadDoc
 from utils.config import (
     DEFAULT_CHUNK_OVERLAP,
     DEFAULT_CHUNK_SIZE,
@@ -208,9 +208,10 @@ async def generate_tscc(
 
         print(f"> [TSCC]\t{i} / {doc_data.tokens.chunk_count} processed")
 
-        doc_data.process_status = ProcessStatus(
+        doc_data.status = Status(
             code=status.HTTP_202_ACCEPTED,
             message=f"{i} / {doc_data.tokens.chunk_count} processed",
+            progress=int((i / doc_data.tokens.chunk_count) * 100)
         )
 
         await update_doc_status(db, doc_data)

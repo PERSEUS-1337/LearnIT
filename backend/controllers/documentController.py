@@ -17,7 +17,7 @@ from services.nlp_chain import (
 from utils.fileUtils import find_file_by_uid, gen_uid, update_doc_status
 from middleware.apiMsg import APIMessages
 from models.user import UserBase
-from models.document import ProcessStatus, UploadDoc
+from models.document import Status, UploadDoc
 
 
 config = dotenv_values(".env")
@@ -94,7 +94,7 @@ async def list_user_files(req: Request, user: UserBase) -> List[UploadDoc]:
         # Convert each file document to an UploadDoc instance
         uploaded_files_list = [UploadDoc(**file) for file in uploaded_files]
         # Convert each UploadDoc instance to its .dict() format
-        uploaded_files_list = [doc.details() for doc in uploaded_files_list]
+        uploaded_files_list = [doc.stat() for doc in uploaded_files_list]
 
         print(f"{log_prefix} - INFO - FILES_RETRIEVED")
         return uploaded_files_list
@@ -635,7 +635,7 @@ async def process_tscc(
             )
 
         # Add the long-running process to background tasks
-        doc_data.process_status = ProcessStatus(
+        doc_data.status = Status(
             code=status.HTTP_202_ACCEPTED,
             message=APIMessages.TSCC_PROCESSING_BACKGROUND.format(file=doc_data.name),
         )
@@ -670,6 +670,136 @@ async def process_tscc(
         )
 
 
+async def generate_and_process_tscc(
+    background_tasks: BackgroundTasks, req: Request, user: UserBase, filename, pdf_loader, llm, overwrite: bool
+):
+    db = req.app.database
+    user_db = db[config["USER_DB"]]
+    files_db = db[config["FILES_DB"]]
+
+    uid = gen_uid(user.username, filename)
+    log_prefix = f"> [LOG]\t{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - GENERATE_AND_PROCESS_TSCC - {uid}"
+
+    try:
+        # Find the file path by uid
+        file_path = find_file_by_uid(config["UPLOAD_PATH"], uid)
+
+        # Check if the file exists locally
+        if not os.path.exists(file_path):
+            print(f"{log_prefix} - ERROR - FILE_NOT_FOUND_LOCAL")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=APIMessages.FILE_NOT_FOUND_LOCAL.format(file=filename),
+            )
+
+        # Retrieve the user's ID from the database
+        user_data = await user_db.find_one({"username": user.username}, {"_id": 1})
+        if not user_data:
+            print(f"{log_prefix} - ERROR - USER_NOT_FOUND_DB - {user.username}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=APIMessages.USER_NOT_FOUND_DB.format(user=user.username),
+            )
+
+        user_id = str(user_data["_id"])  # Convert ObjectId to str if needed
+
+        # Retrieve the file document from files_db based on user_id and file_uid
+        doc_data = await files_db.find_one({"user_id": user_id, "file_uid": uid})
+        if not doc_data:
+            print(f"{log_prefix} - ERROR - FILE_NOT_FOUND_DB - {filename}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=APIMessages.FILE_NOT_FOUND_DB.format(file=filename),
+            )
+
+        doc_data["oid"] = str(doc_data["_id"])
+        doc_data = UploadDoc(**doc_data)
+
+        # Check if the document is already tokenized and not set to overwrite
+        if doc_data.tokenized and not overwrite:
+            print(f"{log_prefix} - ERROR - TOKENS_EXISTS")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=APIMessages.TOKENS_EXISTS.format(file=filename),
+            )
+
+        try:
+            # Start tokenization process
+            print(f"{log_prefix} - INFO - START_TOKENIZATION")
+            doc_tokens, pre_text_chunks = await document_tokenizer_async(
+                file_path, uid, pdf_loader
+            )
+        except Exception as e:
+            print(f"{log_prefix} - ERROR - TOKENIZATION_FAIL - {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=APIMessages.TOKENIZATION_FAIL.format(
+                    file=filename, error=str(e)
+                ),
+            )
+        doc_data.tokens = doc_tokens
+        doc_data.tokenized = True
+
+        vec_db_path = setup_db(uid, pre_text_chunks)
+        doc_data.vec_db_path = str(vec_db_path)
+        doc_data.embedded = True
+
+        update_result = await files_db.update_one(
+            {"_id": ObjectId(doc_data.oid)}, {"$set": doc_data.dict()}
+        )
+        if update_result.modified_count == 0:
+            print(f"{log_prefix} - ERROR - TOKENS_UPDATE_FAIL")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=APIMessages.TOKENS_UPDATE_FAIL.format(file=filename),
+            )
+
+        print(f"{log_prefix} - INFO - TOKENIZATION_SUCCESS")
+
+        # Check if the document is already processed
+        if doc_data.processed:
+            print(f"{log_prefix} - ERROR - TSCC_ALREADY_PROCESSED")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=APIMessages.TSCC_ALREADY_PROCESSED.format(file=doc_data.name),
+            )
+
+        # Add the long-running process to background tasks
+        doc_data.status = Status(
+            code=status.HTTP_202_ACCEPTED,
+            message=APIMessages.TSCC_PROCESSING_BACKGROUND.format(file=doc_data.name),
+        )
+
+        await update_doc_status(files_db, doc_data)
+
+        background_tasks.add_task(
+            process_tscc_background,
+            files_db,
+            doc_data,
+            llm,
+            log_prefix,
+        )
+
+        # Return immediate response indicating background processing
+        return JSONResponse(
+            status_code=status.HTTP_202_ACCEPTED,
+            content={
+                "message": APIMessages.TSCC_PROCESSING_BACKGROUND.format(
+                    file=doc_data.name
+                ),
+                "data": doc_tokens.details(),
+            },
+        )
+
+    except HTTPException as e:
+        raise e  # Re-raise the HTTP exceptions
+    except Exception as e:
+        print(f"{log_prefix} - ERROR - UNEXPECTED_ERROR - {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+
 async def process_tscc_background(files_db, doc_data: UploadDoc, llm, log_prefix):
     try:
         try:
@@ -698,21 +828,22 @@ async def process_tscc_background(files_db, doc_data: UploadDoc, llm, log_prefix
                 detail=APIMessages.TSCC_DB_INSERT_FAIL.format(file=doc_data.name),
             )
         # Add the long-running process to background tasks
-        doc_data.process_status = ProcessStatus(
+        doc_data.status = Status(
             code=status.HTTP_202_ACCEPTED,
             message=APIMessages.TSCC_PROCESS_SUCCESS.format(file=doc_data.name),
+            progress=100
         )
         await update_doc_status(files_db, doc_data)
         # Log success message
         print(f"{log_prefix} - INFO - TSCC_PROCESS_SUCCESS")
     except HTTPException as e:
-        doc_data.process_status = ProcessStatus(
+        doc_data.status = Status(
             code=e.status_code, message=str(e.detail)
         )
         await update_doc_status(files_db, doc_data)
         raise e  # Re-raise the HTTP exceptions
     except Exception as e:
-        doc_data.process_status = ProcessStatus(
+        doc_data.status = Status(
             code=status.HTTP_500_INTERNAL_SERVER_ERROR, message=str(e)
         )
         await update_doc_status(files_db, doc_data)
@@ -722,7 +853,7 @@ async def process_tscc_background(files_db, doc_data: UploadDoc, llm, log_prefix
             detail=str(e),
         )
     finally:
-        if doc_data.process_status.code != status.HTTP_200_OK:
+        if doc_data.status.code != status.HTTP_200_OK:
             await update_doc_status(files_db, doc_data)
 
 
@@ -771,7 +902,7 @@ async def delete_tokens(req: Request, user: UserBase, filename):
         # Delete the tokens from the document in the database
         delete_result = await files_db.update_one(
             {"user_id": user_id, "name": filename},
-            {"$unset": {"tokens": "", "vec_db_path": ""}, "$set": {"embedded": False}},
+            {"$unset": {"tokens": "", "vec_db_path": ""}, "$set": {"tokenized": False, "embedded": False}},
         )
         if delete_result.modified_count == 0:
             raise ValueError(

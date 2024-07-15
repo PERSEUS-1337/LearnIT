@@ -14,6 +14,7 @@ from models.user import UserBase
 from middleware.apiMsg import APIMessages
 from controllers.documentController import (
     delete_tokens,
+    generate_and_process_tscc,
     query_rag,
     process_tscc,
     upload_file,
@@ -103,6 +104,23 @@ async def process_tscc_route(
 ):
 
     return await process_tscc(background_tasks, req, user, filename, llm)
+
+@router.post(
+    "/gen-proc-tscc",
+    response_description="Generate tokens and process TSCC for a file",
+    responses=responses.process_tscc_responses,
+)
+async def generate_and_process_tscc_route(
+    background_tasks: BackgroundTasks,
+    req: Request,
+    filename: str = Form(...),
+    pdf_loader: Optional[str] = Form(None),
+    llm: Optional[str] = Form(None),
+    overwrite: Optional[bool] = Form(None),
+    user: UserBase = Depends(auth_curr_user),
+):
+    return await generate_and_process_tscc(background_tasks, req, user, filename, pdf_loader, llm, overwrite)
+
 
 
 @router.post(
