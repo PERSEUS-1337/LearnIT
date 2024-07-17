@@ -63,6 +63,19 @@ async def get_tscc_route(
 ):
     return await get_tscc(req, user, filename)
 
+@router.get(
+    "/query-rag",
+    response_description="Query using RAG model",
+    responses=responses.query_rag_responses,
+)
+async def query_rag_route(
+    req: Request,
+    filename: str,
+    query: str,
+    user: UserBase = Depends(auth_curr_user),
+):
+    return await query_rag(req, user, filename, query)
+
 
 @router.post(
     "/upload",
@@ -120,21 +133,6 @@ async def generate_and_process_tscc_route(
     user: UserBase = Depends(auth_curr_user),
 ):
     return await generate_and_process_tscc(background_tasks, req, user, filename, pdf_loader, llm, overwrite)
-
-
-
-@router.post(
-    "/query-rag",
-    response_description="Query using RAG model",
-    responses=responses.query_rag_responses,
-)
-async def query_rag_route(
-    req: Request,
-    filename: str = Form(...),
-    query: str = Form(...),
-    user: UserBase = Depends(auth_curr_user),
-):
-    return await query_rag(req, user, filename, query)
 
 
 @router.delete(

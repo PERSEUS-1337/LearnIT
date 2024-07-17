@@ -32,7 +32,7 @@ async def measure_request_time(request: Request, call_next):
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust this to match your SvelteKit application's origin
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
