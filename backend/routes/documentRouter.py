@@ -63,6 +63,7 @@ async def get_tscc_route(
 ):
     return await get_tscc(req, user, filename)
 
+
 @router.get(
     "/query-rag",
     response_description="Query using RAG model",
@@ -118,6 +119,7 @@ async def upload_file_route(
 
 #     return await process_tscc(background_tasks, req, user, filename, llm)
 
+
 @router.post(
     "/gen-proc-tscc",
     response_description="Generate tokens and process TSCC for a file",
@@ -132,7 +134,9 @@ async def generate_and_process_tscc_route(
     overwrite: Optional[bool] = Form(None),
     user: UserBase = Depends(auth_curr_user),
 ):
-    return await generate_and_process_tscc(background_tasks, req, user, filename, pdf_loader, llm, overwrite)
+    return await generate_and_process_tscc(
+        background_tasks, req, user, filename, pdf_loader, llm, overwrite
+    )
 
 
 @router.delete(

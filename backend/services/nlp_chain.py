@@ -211,7 +211,7 @@ async def generate_tscc(
         doc_data.status = Status(
             code=status.HTTP_202_ACCEPTED,
             message=f"{i} / {doc_data.tokens.chunk_count} processed",
-            progress=int((i / doc_data.tokens.chunk_count) * 100)
+            progress=int((i / doc_data.tokens.chunk_count) * 100),
         )
 
         await update_doc_status(db, doc_data)

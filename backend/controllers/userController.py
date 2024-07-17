@@ -1,5 +1,5 @@
 from dotenv import dotenv_values
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Annotated
 from fastapi import Depends, HTTPException, status, Request, Body
 from fastapi import Request, status
@@ -24,10 +24,13 @@ async def login_user(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     remember_me,
 ) -> Token:
+    log_prefix = f"> [LOG]\t{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - LOGIN_USER - {form_data.username}"
+
     try:
         db = req.app.database[config["USER_DB"]]
         user = await get_user_creds(db, form_data.username)
         if not user:
+            print(f"{log_prefix} - ERROR - USER_NOT_FOUND")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=APIMessages.USER_NOT_FOUND,
@@ -36,6 +39,7 @@ async def login_user(
 
         match_pass = verify_password(form_data.password, user.hashed_password)
         if not match_pass:
+            print(f"{log_prefix} - ERROR - INCORRECT_PASSWORD")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=APIMessages.INCORRECT_PASSWORD,
@@ -52,16 +56,17 @@ async def login_user(
         access_token = create_access_token(
             data={"sub": user.username}, expires_delta=access_token_expires
         )
+        print(f"{log_prefix} - INFO - LOGIN_SUCCESS")
         return Token(access_token=access_token, token_type="bearer")
 
     except HTTPException as he:
         # Re-raise if it already has a status code
-        print(f"An unexpected error occurred: {str(he)}")
+        print(f"{log_prefix} - ERROR - HTTP_EXCEPTION - {str(he)}")
         raise he
 
     except Exception as e:
         # Print the error
-        print(f"An unexpected error occurred: {str(e)}")
+        print(f"{log_prefix} - ERROR - UNEXPECTED_ERROR - {str(e)}")
         # Handle exceptions here and return a proper status code and detail message
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -72,10 +77,13 @@ async def login_user(
 async def register_user(
     req: Request, username: str, full_name: str, email: str, password: str
 ):
+    log_prefix = f"> [LOG]\t{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - REGISTER_USER - {username}"
+
     try:
         db = req.app.database[config["USER_DB"]]
         user_exists = await get_user_creds(db, username)
         if user_exists:
+            print(f"{log_prefix} - ERROR - USER_ALREADY_EXISTS")
             return JSONResponse(
                 status_code=status.HTTP_409_CONFLICT,
                 headers={"WWW-Authenticate": "Bearer"},
@@ -105,7 +113,7 @@ async def register_user(
             email=new_user_data.email,
             full_name=new_user_data.full_name,
         )
-
+        print(f"{log_prefix} - INFO - USER_REGISTERED")
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
             content={
@@ -116,12 +124,14 @@ async def register_user(
 
     except HTTPException as he:
         # Re-raise HTTPException with additional logging
-        print(f"HTTP error occurred: {str(he.detail)} (status code: {he.status_code})")
+        print(
+            f"{log_prefix} - ERROR - HTTP_EXCEPTION - {str(he.detail)} (status code: {he.status_code})"
+        )
         raise he
 
     except Exception as e:
         # Log the detailed error and re-raise with a generic message
-        print(f"Unexpected error during user registration: {str(e)}")
+        print(f"{log_prefix} - ERROR - UNEXPECTED_ERROR - {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred during user registration. Please try again later.",
@@ -129,6 +139,8 @@ async def register_user(
 
 
 async def delete_user(req: Request, user: UserBase):
+    log_prefix = f"> [LOG]\t{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - DELETE_USER - {user.username}"
+
     try:
         # Find the user in the database by username
         db = req.app.database[config["USER_DB"]]
@@ -137,10 +149,12 @@ async def delete_user(req: Request, user: UserBase):
         result = db.delete_one({"username": user.username})
 
         if result.deleted_count == 0:
+            print(f"{log_prefix} - ERROR - USER_NOT_FOUND")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
             )
 
+        print(f"{log_prefix} - INFO - USER_DELETED")
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={
@@ -150,10 +164,12 @@ async def delete_user(req: Request, user: UserBase):
         )
     except HTTPException as e:
         # Re-raise HTTPExceptions if necessary
+        print(f"{log_prefix} - ERROR - HTTP_EXCEPTION - {str(e)}")
         raise e
 
     except Exception as e:
         # Handle any unexpected errors
+        print(f"{log_prefix} - ERROR - UNEXPECTED_ERROR - {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"message": "Internal Server Error", "data": str(e)},

@@ -81,7 +81,6 @@ class UploadDoc(BaseModel):
     embedded: bool = False
     processed: bool = False
     status: Optional[Status] = None
-    
 
     class Config:
         json_encoders = {datetime: lambda dt: dt.isoformat()}
@@ -93,19 +92,15 @@ class UploadDoc(BaseModel):
             "tokenized": self.tokenized,
             "embedded": self.embedded,
             "processed": self.processed,
-            "status": (
-                self.status.model_dump() if self.status else None
-            ),
+            "status": (self.status.model_dump() if self.status else None),
         }
-    
+
     def stat(self):
         return {
             "name": self.name,
             "uploaded_at": self.uploaded_at.isoformat(),
             "processed": self.processed,
-            "status": (
-                self.status.model_dump() if self.status else None
-            ),
+            "status": (self.status.model_dump() if self.status else None),
         }
 
     def dict(self):
@@ -114,9 +109,7 @@ class UploadDoc(BaseModel):
             "name": self.name,
             "file_uid": self.file_uid,
             "uploaded_at": self.uploaded_at.isoformat(),
-            "status": (
-                self.status.model_dump() if self.status else None
-            ),
+            "status": (self.status.model_dump() if self.status else None),
             "tokenized": self.tokenized,
             "embedded": self.embedded,
             "processed": self.processed,

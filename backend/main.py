@@ -32,7 +32,7 @@ async def measure_request_time(request: Request, call_next):
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -74,18 +74,24 @@ async def get_app_details_route(req: Request, user: UserBase = Depends(auth_curr
                 detail=APIMessages.USER_NOT_FOUND.format(username=user.username),
             )
 
-         # Retrieve the user's uploads from the files_db
-        upload_docs = await files_db.find({"user_id": str(user_data["_id"])}).to_list(length=None)
+        # Retrieve the user's uploads from the files_db
+        upload_docs = await files_db.find({"user_id": str(user_data["_id"])}).to_list(
+            length=None
+        )
         uploads = [UploadDoc(**upload_doc) for upload_doc in upload_docs]
         total_uploads = len(uploads)
 
         # Calculate total tokens in doc_tokens and tscc_tokens
-        total_doc_tokens = sum(upload.tokens.token_count for upload in uploads if upload.tokens)
-        total_tscc_tokens = sum(upload.tscc.token_count for upload in uploads if upload.tscc)
+        total_doc_tokens = sum(
+            upload.tokens.token_count for upload in uploads if upload.tokens
+        )
+        total_tscc_tokens = sum(
+            upload.tscc.token_count for upload in uploads if upload.tscc
+        )
 
         # Calculate the total number of files processed
         total_files_processed = sum(1 for upload in uploads if upload.tscc)
-        
+
         # Calculate the average token reduction percentage
         reduction_percentages = []
         for upload in uploads:
@@ -93,15 +99,20 @@ async def get_app_details_route(req: Request, user: UserBase = Depends(auth_curr
                 doc_tokens = upload.tokens.token_count
                 tscc_tokens = upload.tscc.token_count
                 if doc_tokens > 0:
-                    reduction_percentage = ((doc_tokens - tscc_tokens) / doc_tokens) * 100
+                    reduction_percentage = (
+                        (doc_tokens - tscc_tokens) / doc_tokens
+                    ) * 100
                     reduction_percentages.append(reduction_percentage)
-        
-        average_token_reduction_percentage = sum(reduction_percentages) / len(reduction_percentages) if reduction_percentages else 0
+
+        average_token_reduction_percentage = (
+            sum(reduction_percentages) / len(reduction_percentages)
+            if reduction_percentages
+            else 0
+        )
 
         # Calculate the total approximated reading time
         words_per_minute = 250
         total_reading_time_minutes = total_tscc_tokens / words_per_minute
-
 
         # Create the response object
         response_data = {

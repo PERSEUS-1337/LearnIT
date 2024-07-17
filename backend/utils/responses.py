@@ -436,7 +436,9 @@ gen_proc_tscc_responses = {
         "content": {
             "application/json": {
                 "example": {
-                    "message": APIMessages.TSCC_PROCESSING_BACKGROUND.format(file="filename"),
+                    "message": APIMessages.TSCC_PROCESSING_BACKGROUND.format(
+                        file="filename"
+                    ),
                 }
             }
         },
@@ -446,7 +448,9 @@ gen_proc_tscc_responses = {
         "content": {
             "application/json": {
                 "example": {
-                    "detail": APIMessages.TSCC_PROCESS_FAIL.format(file="filename", error="error_message"),
+                    "detail": APIMessages.TSCC_PROCESS_FAIL.format(
+                        file="filename", error="error_message"
+                    ),
                 }
             }
         },

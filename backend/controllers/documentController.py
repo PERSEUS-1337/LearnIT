@@ -34,6 +34,7 @@ async def get_file_details(
 
     try:
         # Retrieve the user's _id from the user_db
+        print(f"{log_prefix} - INFO - RETRIEVING_USER_ID")
         user_data = await user_db.find_one({"username": user.username})
         if not user_data:
             print(f"{log_prefix} - ERROR - USER_NOT_FOUND")
@@ -43,8 +44,10 @@ async def get_file_details(
             )
 
         user_id = str(user_data["_id"])
+        print(f"{log_prefix} - INFO - USER_ID_RETRIEVED - {user_id}")
 
         # Query the files_db to get the uploaded file by user_id and filename
+        print(f"{log_prefix} - INFO - RETRIEVING_FILE")
         file_data = await files_db.find_one({"user_id": user_id, "name": filename})
         if not file_data:
             print(f"{log_prefix} - ERROR - FILE_NOT_FOUND_DB - {filename}")
@@ -55,11 +58,12 @@ async def get_file_details(
 
         # Convert the file document to an UploadDoc instance
         upload_doc = UploadDoc(**file_data)
-
         print(f"{log_prefix} - INFO - FILE_RETRIEVED")
+
         return upload_doc.details()
 
     except HTTPException as e:
+        print(f"{log_prefix} - ERROR - HTTP_EXCEPTION - {str(e.detail)}")
         raise e  # Re-raise the HTTP exceptions
     except Exception as e:
         print(f"{log_prefix} - ERROR - UNEXPECTED_ERROR - {str(e)}")
@@ -77,6 +81,7 @@ async def list_user_files(req: Request, user: UserBase) -> List[UploadDoc]:
 
     try:
         # Retrieve the user's _id from the user_db
+        print(f"{log_prefix} - INFO - RETRIEVING_USER_ID")
         user_data = await user_db.find_one({"username": user.username})
         if not user_data:
             print(f"{log_prefix} - ERROR - USER_NOT_FOUND")
@@ -86,8 +91,10 @@ async def list_user_files(req: Request, user: UserBase) -> List[UploadDoc]:
             )
 
         user_id = str(user_data["_id"])
+        print(f"{log_prefix} - INFO - USER_ID_RETRIEVED - {user_id}")
 
         # Query the files_db to get the uploaded files by user_id
+        print(f"{log_prefix} - INFO - RETRIEVING_FILES")
         uploaded_files_cursor = files_db.find({"user_id": user_id})
         uploaded_files = await uploaded_files_cursor.to_list(length=None)
 
@@ -100,6 +107,7 @@ async def list_user_files(req: Request, user: UserBase) -> List[UploadDoc]:
         return uploaded_files_list
 
     except HTTPException as e:
+        print(f"{log_prefix} - ERROR - HTTP_EXCEPTION - {str(e.detail)}")
         raise e  # Re-raise the HTTP exceptions
     except Exception as e:
         print(f"{log_prefix} - ERROR - UNEXPECTED_ERROR - {str(e)}")
@@ -112,24 +120,27 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
     db = req.app.database
     user_db = db[config["USER_DB"]]
     files_db = db[config["FILES_DB"]]
-    
-    # Check if the uploaded file is a PDF
-    if not file.filename.endswith(".pdf"):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=APIMessages.FILE_NOT_ALLOWED
-        )
 
-    # Generate a unique file name using user's username
-    uid = gen_uid(user.username, file.filename)
-
-    # Construct the file path
-    file_path = os.path.join(config["UPLOAD_PATH"], f"{uid}.pdf")
-    log_prefix = (
-        f"> [LOG]\t{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - UPLOAD_FILE - {uid}"
-    )
+    log_prefix = f"> [LOG]\t{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - UPLOAD_FILE - {user.username} - {file.filename}"
 
     try:
+        # Check if the uploaded file is a PDF
+        if not file.filename.endswith(".pdf"):
+            print(f"{log_prefix} - ERROR - FILE_NOT_ALLOWED - {file.filename}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=APIMessages.FILE_NOT_ALLOWED,
+            )
+        print(f"{log_prefix} - INFO - FILE_TYPE_VALIDATED - {file.filename}")
+
+        # Generate a unique file name using user's username
+        uid = gen_uid(user.username, file.filename)
+        print(f"{log_prefix} - INFO - UID_GENERATED - {uid}")
+
+        # Construct the file path
+        file_path = os.path.join(config["UPLOAD_PATH"], f"{uid}.pdf")
+        print(f"{log_prefix} - INFO - FILE_PATH_CONSTRUCTED - {file_path}")
+
         # Check if the directory exists, if not, create it
         if not os.path.exists(config["UPLOAD_PATH"]):
             os.makedirs(config["UPLOAD_PATH"])
@@ -159,6 +170,7 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
             )
 
         user_id = str(user_doc["_id"])  # Assuming MongoDB ObjectId as user_id
+        print(f"{log_prefix} - INFO - USER_ID_RETRIEVED - {user_id}")
 
         # Create an instance of UploadDoc for the uploaded file
         uploaded_file_info = UploadDoc(
@@ -222,6 +234,7 @@ async def delete_file(req: Request, user: UserBase, filename):
             )
 
         user_id = str(user_data["_id"])  # Convert ObjectId to str if needed
+        print(f"{log_prefix} - INFO - USER_ID_RETRIEVED - {user_id}")
 
         # Retrieve the file document from files_db based on user_id and file_uid
         file_doc = await files_db.find_one({"user_id": user_id, "file_uid": uid})
@@ -240,6 +253,8 @@ async def delete_file(req: Request, user: UserBase, filename):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=APIMessages.FILE_DELETE_FAIL_DB.format(file=filename),
             )
+
+        print(f"{log_prefix} - INFO - FILE_RECORD_DELETED - {filename}")
 
         # Construct the file path
         file_path = find_file_by_uid(config["UPLOAD_PATH"], uid)
@@ -297,6 +312,7 @@ async def get_tokens(req: Request, user: UserBase, filename):
             )
 
         user_id = str(user_data["_id"])
+        print(f"{log_prefix} - INFO - USER_ID_RETRIEVED - {user_id}")
 
         # Query the files_db to find the document by user_id and filename
         doc_data = await files_db.find_one({"user_id": user_id, "name": filename})
@@ -317,8 +333,6 @@ async def get_tokens(req: Request, user: UserBase, filename):
                 status_code=status.HTTP_409_CONFLICT,
                 detail=APIMessages.NOT_TOKENIZED.format(file=filename),
             )
-
-        # doc_tokens = DocTokens(**doc_data.tokens)
 
         print(f"{log_prefix} - INFO - TOKEN_GET_SUCCESS")
         return JSONResponse(
@@ -360,6 +374,7 @@ async def get_tscc(req: Request, user: UserBase, filename):
             )
 
         user_id = str(user_data["_id"])
+        print(f"{log_prefix} - INFO - USER_ID_RETRIEVED - {user_id}")
 
         # Query the files_db to find the document by user_id and filename
         doc_data = await files_db.find_one({"user_id": user_id, "name": filename})
@@ -387,8 +402,6 @@ async def get_tscc(req: Request, user: UserBase, filename):
                 status_code=status.HTTP_409_CONFLICT,
                 detail=APIMessages.NOT_TSCC_PROCESSED.format(file=filename),
             )
-
-        # tscc = TSCC(**doc_data.tscc)
 
         print(f"{log_prefix} - INFO - TOKEN_GET_SUCCESS")
         return JSONResponse(
@@ -678,7 +691,13 @@ async def process_tscc(
 
 
 async def generate_and_process_tscc(
-    background_tasks: BackgroundTasks, req: Request, user: UserBase, filename, pdf_loader, llm, overwrite: bool
+    background_tasks: BackgroundTasks,
+    req: Request,
+    user: UserBase,
+    filename,
+    pdf_loader,
+    llm,
+    overwrite: bool,
 ):
     db = req.app.database
     user_db = db[config["USER_DB"]]
@@ -699,6 +718,8 @@ async def generate_and_process_tscc(
                 detail=APIMessages.FILE_NOT_FOUND_LOCAL.format(file=filename),
             )
 
+        print(f"{log_prefix} - INFO - FILE_PATH_FOUND - {file_path}")
+
         # Retrieve the user's ID from the database
         user_data = await user_db.find_one({"username": user.username}, {"_id": 1})
         if not user_data:
@@ -709,6 +730,7 @@ async def generate_and_process_tscc(
             )
 
         user_id = str(user_data["_id"])  # Convert ObjectId to str if needed
+        print(f"{log_prefix} - INFO - USER_ID_RETRIEVED - {user_id}")
 
         # Retrieve the file document from files_db based on user_id and file_uid
         doc_data = await files_db.find_one({"user_id": user_id, "file_uid": uid})
@@ -721,6 +743,7 @@ async def generate_and_process_tscc(
 
         doc_data["oid"] = str(doc_data["_id"])
         doc_data = UploadDoc(**doc_data)
+        print(f"{log_prefix} - INFO - FILE_DOC_RETRIEVED")
 
         # Check if the document is already tokenized and not set to overwrite
         if doc_data.tokenized and not overwrite:
@@ -788,6 +811,7 @@ async def generate_and_process_tscc(
         )
 
         # Return immediate response indicating background processing
+        print(f"{log_prefix} - INFO - BACKGROUND_PROCESSING_STARTED")
         return JSONResponse(
             status_code=status.HTTP_202_ACCEPTED,
             content={
@@ -806,6 +830,7 @@ async def generate_and_process_tscc(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
         )
+
 
 async def process_tscc_background(files_db, doc_data: UploadDoc, llm, log_prefix):
     try:
@@ -838,15 +863,13 @@ async def process_tscc_background(files_db, doc_data: UploadDoc, llm, log_prefix
         doc_data.status = Status(
             code=status.HTTP_202_ACCEPTED,
             message=APIMessages.TSCC_PROCESS_SUCCESS.format(file=doc_data.name),
-            progress=100
+            progress=100,
         )
         await update_doc_status(files_db, doc_data)
         # Log success message
         print(f"{log_prefix} - INFO - TSCC_PROCESS_SUCCESS")
     except HTTPException as e:
-        doc_data.status = Status(
-            code=e.status_code, message=str(e.detail)
-        )
+        doc_data.status = Status(code=e.status_code, message=str(e.detail))
         await update_doc_status(files_db, doc_data)
         raise e  # Re-raise the HTTP exceptions
     except Exception as e:
@@ -884,6 +907,7 @@ async def delete_tokens(req: Request, user: UserBase, filename):
             )
 
         user_id = str(user_data["_id"])
+        print(f"{log_prefix} - INFO - USER_ID_RETRIEVED - {user_id}")
 
         # Query the files_db to find the document by user_id and filename
         doc_data = await files_db.find_one({"user_id": user_id, "name": filename})
@@ -897,6 +921,7 @@ async def delete_tokens(req: Request, user: UserBase, filename):
             )
         doc_data["oid"] = str(doc_data["_id"])
         doc_data = UploadDoc(**doc_data)
+        print(f"{log_prefix} - INFO - FILE_DOC_RETRIEVED")
 
         # Check if the document is tokenized
         if not doc_data.tokenized:
@@ -909,7 +934,10 @@ async def delete_tokens(req: Request, user: UserBase, filename):
         # Delete the tokens from the document in the database
         delete_result = await files_db.update_one(
             {"user_id": user_id, "name": filename},
-            {"$unset": {"tokens": "", "vec_db_path": ""}, "$set": {"tokenized": False, "embedded": False}},
+            {
+                "$unset": {"tokens": "", "vec_db_path": ""},
+                "$set": {"tokenized": False, "embedded": False},
+            },
         )
         if delete_result.modified_count == 0:
             raise ValueError(
@@ -926,10 +954,12 @@ async def delete_tokens(req: Request, user: UserBase, filename):
         )
 
     except FileNotFoundError as e:
+        print(f"{log_prefix} - ERROR - FILE_NOT_FOUND_ERROR - {str(e)}")
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND, content={"message": str(e)}
         )
     except ValueError as e:
+        print(f"{log_prefix} - ERROR - VALUE_ERROR - {str(e)}")
         return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST, content={"message": str(e)}
         )

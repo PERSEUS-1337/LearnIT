@@ -29,11 +29,5 @@ def find_file_by_uid(upload_path, uid):
 async def update_doc_status(files_db, doc_data):
     await files_db.update_one(
         {"_id": ObjectId(doc_data.oid)},
-        {
-            "$set": {
-                "status": (
-                    doc_data.status.dict() if doc_data.status else None
-                )
-            }
-        },
+        {"$set": {"status": (doc_data.status.dict() if doc_data.status else None)}},
     )
