@@ -112,6 +112,13 @@ async def upload_file(req: Request, file: UploadFile, user: UserBase):
     db = req.app.database
     user_db = db[config["USER_DB"]]
     files_db = db[config["FILES_DB"]]
+    
+    # Check if the uploaded file is a PDF
+    if not file.filename.endswith(".pdf"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=APIMessages.FILE_NOT_ALLOWED
+        )
 
     # Generate a unique file name using user's username
     uid = gen_uid(user.username, file.filename)

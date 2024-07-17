@@ -88,40 +88,40 @@ async def upload_file_route(
     return await upload_file(req, file, user)
 
 
-@router.post(
-    "/gen-tokens",
-    response_description="Generate tokens for a file",
-    responses=responses.generate_tokens_responses,
-)
-async def generate_tokens_route(
-    req: Request,
-    filename: str = Form(...),
-    pdf_loader: Optional[str] = Form(None),
-    overwrite: Optional[bool] = Form(None),
-    user: UserBase = Depends(auth_curr_user),
-):
-    return await generate_tokens(req, user, filename, pdf_loader, overwrite)
+# @router.post(
+#     "/gen-tokens",
+#     response_description="Generate tokens for a file",
+#     responses=responses.generate_tokens_responses,
+# )
+# async def generate_tokens_route(
+#     req: Request,
+#     filename: str = Form(...),
+#     pdf_loader: Optional[str] = Form(None),
+#     overwrite: Optional[bool] = Form(None),
+#     user: UserBase = Depends(auth_curr_user),
+# ):
+#     return await generate_tokens(req, user, filename, pdf_loader, overwrite)
 
 
-@router.post(
-    "/process-tscc",
-    response_description="Process TSCC for a file",
-    responses=responses.process_tscc_responses,
-)
-async def process_tscc_route(
-    background_tasks: BackgroundTasks,
-    req: Request,
-    filename: str = Form(...),
-    llm: Optional[str] = Form(None),
-    user: UserBase = Depends(auth_curr_user),
-):
+# @router.post(
+#     "/process-tscc",
+#     response_description="Process TSCC for a file",
+#     responses=responses.process_tscc_responses,
+# )
+# async def process_tscc_route(
+#     background_tasks: BackgroundTasks,
+#     req: Request,
+#     filename: str = Form(...),
+#     llm: Optional[str] = Form(None),
+#     user: UserBase = Depends(auth_curr_user),
+# ):
 
-    return await process_tscc(background_tasks, req, user, filename, llm)
+#     return await process_tscc(background_tasks, req, user, filename, llm)
 
 @router.post(
     "/gen-proc-tscc",
     response_description="Generate tokens and process TSCC for a file",
-    responses=responses.process_tscc_responses,
+    responses=responses.gen_proc_tscc_responses,
 )
 async def generate_and_process_tscc_route(
     background_tasks: BackgroundTasks,

@@ -419,6 +419,90 @@ process_tscc_responses = {
     },
 }
 
+gen_proc_tscc_responses = {
+    status.HTTP_200_OK: {
+        "description": "TSCC processing completed successfully",
+        "content": {
+            "application/json": {
+                "example": {
+                    "message": APIMessages.TSCC_PROCESS_SUCCESS.format(file="filename"),
+                    "data": "TSCC data",
+                }
+            }
+        },
+    },
+    status.HTTP_202_ACCEPTED: {
+        "description": "TSCC processing initiated in the background",
+        "content": {
+            "application/json": {
+                "example": {
+                    "message": APIMessages.TSCC_PROCESSING_BACKGROUND.format(file="filename"),
+                }
+            }
+        },
+    },
+    status.HTTP_400_BAD_REQUEST: {
+        "description": APIMessages.TSCC_PROCESS_FAIL,
+        "content": {
+            "application/json": {
+                "example": {
+                    "detail": APIMessages.TSCC_PROCESS_FAIL.format(file="filename", error="error_message"),
+                }
+            }
+        },
+    },
+    status.HTTP_401_UNAUTHORIZED: {
+        "description": "Unauthorized access",
+        "content": {
+            "application/json": {
+                "example": {
+                    "detail": "Not authenticated",
+                }
+            }
+        },
+    },
+    status.HTTP_403_FORBIDDEN: {
+        "description": "Forbidden access",
+        "content": {
+            "application/json": {
+                "example": {
+                    "detail": "You do not have permission to access this resource",
+                }
+            }
+        },
+    },
+    status.HTTP_404_NOT_FOUND: {
+        "description": APIMessages.FILE_NOT_FOUND_DB,
+        "content": {
+            "application/json": {
+                "example": {
+                    "detail": APIMessages.FILE_NOT_FOUND_DB.format(file="filename"),
+                }
+            }
+        },
+    },
+    status.HTTP_409_CONFLICT: {
+        "description": "Conflict: File already processed or not tokenized",
+        "content": {
+            "application/json": {
+                "example": {
+                    "detail": APIMessages.NOT_TOKENIZED.format(file="filename"),
+                }
+            }
+        },
+    },
+    status.HTTP_500_INTERNAL_SERVER_ERROR: {
+        "description": "Internal server error during TSCC processing",
+        "content": {
+            "application/json": {
+                "example": {
+                    "detail": "An unexpected error occurred during TSCC processing. Please try again later.",
+                }
+            }
+        },
+    },
+}
+
 query_rag_responses = {
     status.HTTP_200_OK: {
         "description": "Query successful with RAG model",

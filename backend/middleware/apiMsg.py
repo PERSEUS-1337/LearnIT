@@ -50,6 +50,7 @@ class APIMessages:
     FILE_NOT_FOUND_LOCAL = "The file '{file}' does not exist on the server."
     FILE_NOT_FOUND_DB = "The file '{file}' does not exist on the database."
     FILES_NOT_FOUND = "There are no files uploaded on the server yet."
+    FILE_NOT_ALLOWED = "Only PDF files are allowed."
 
     UPLOAD_DOC_INSERT_FAIL = "File '{file}' failed to insert in the files database."
 
