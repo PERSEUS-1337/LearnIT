@@ -146,9 +146,9 @@ async def delete_user(req: Request, user: UserBase):
         db = req.app.database[config["USER_DB"]]
 
         # If user is found, delete the user from the database
-        result = db.delete_one({"username": user.username})
+        delete_result = await db.delete_one({"username": user.username})
 
-        if result.deleted_count == 0:
+        if delete_result.deleted_count == 0:
             print(f"{log_prefix} - ERROR - USER_NOT_FOUND")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
