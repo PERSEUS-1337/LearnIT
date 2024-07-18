@@ -12,7 +12,7 @@ LOADERS = {
     "3": "PyMuPDFLoader",
 }
 PROMPT_MAIN = """
-    Follow the steps to provide a condensed text chunk:
+    Follow the steps to provide a condensed text chunk, but make sure to generate the text without any escape characters like `\r` or `\n` to make sure that the output is purely a paragraph:
     
     Step 1 - Extractively Summarize the following text, try to preserve key details, important persons, statistics, keywords, and condense the text by removing irrelevant words and ideas:
     
@@ -25,6 +25,6 @@ PROMPT_MAIN = """
     
     {prev_chunk}
     
-    
+    Step 3: Make sure to not use any 
     Step 4: Output ONLY the summarized chunk
 """
