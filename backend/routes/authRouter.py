@@ -31,7 +31,7 @@ def hello():
 async def login_route(
     req: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
-    remember_me=Body(...),
+    remember_me=Body(None),
 ):
     return await login_user(req, form_data, remember_me)
 

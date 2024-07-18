@@ -22,7 +22,7 @@ config = dotenv_values(".env")
 async def login_user(
     req: Request,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    remember_me,
+    remember_me=None,
 ) -> Token:
     log_prefix = f"> [LOG]\t{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - LOGIN_USER - {form_data.username}"
 
@@ -47,7 +47,7 @@ async def login_user(
             )
 
         if remember_me:
-            access_token_expires = timedelta(days=3)  # Override to 3 days
+            access_token_expires = timedelta(days=10)  # Override to 3 days
         else:
             access_token_expires = timedelta(
                 minutes=int(config["ACCESS_TOKEN_EXPIRE_MINUTES"])
