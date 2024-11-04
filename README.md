@@ -6,7 +6,8 @@ Contextual Condensing
 ## Installation
 
 ### Dependencies
-- SvelteKit
+- ReactJS
+- NextJS
 - Playwright
 - Python FastAPI
 - Docker
